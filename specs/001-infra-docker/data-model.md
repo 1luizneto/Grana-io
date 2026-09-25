@@ -4,8 +4,8 @@
 
 Esta feature **não cria entidades de domínio nem tabelas próprias**. As primeiras entidades de
 domínio (usuário, `OwnedModel`) chegam nas specs 002 e 003. As únicas tabelas criadas são as dos
-apps nativos do Django (`auth`, `contenttypes`, `sessions`, `admin`), pela migração automática do
-FR-004.
+apps nativos do Django instalados nesta spec (`auth` e `contenttypes`), pela migração automática
+do FR-004. O `admin` entra quando algum item do backlog precisar dele (ex.: US-04).
 
 Abaixo estão os três elementos da seção *Key Entities* da spec, descritos como estruturas técnicas.
 

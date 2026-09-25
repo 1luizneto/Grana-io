@@ -143,7 +143,7 @@ frontend/
     ├── main.jsx
     ├── App.jsx
     ├── api/
-    │   ├── client.js        # base = VITE_API_URL ?? '' ; requisições centralizadas
+    │   ├── client.js        # base = VITE_API_URL || '/api'; requisições centralizadas
     │   └── saude.js         # obterSaude()
     ├── hooks/
     │   └── useSaudeApi.js   # estados: carregando | ok | banco-indisponivel | inacessivel
@@ -162,9 +162,9 @@ raiz do repositório.
 
 Nenhuma violação da constituição ou de `docs/arquitetura.md`. Nada a justificar.
 
-## Pontos para revisão do responsável
+## Decisões confirmadas pelo responsável (2026-09-25)
 
-Estas decisões seguem o YAGNI, mas mudam o formato das próximas specs. Vale confirmá-las antes do
+Estas decisões seguem o YAGNI e mudam o formato das próximas specs. Foram confirmadas antes do
 `/speckit-tasks`:
 
 1. **Sem testes de frontend nesta spec** ([R-14](research.md)): o Vitest entra na US-26. Até lá,

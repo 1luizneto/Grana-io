@@ -19,7 +19,7 @@ padrão e um comentário explicativo.
 | `DJANGO_CORS_ALLOWED_ORIGINS` | backend | *(vazia)* | Origens extras autorizadas a chamar a API pelo navegador, separadas por vírgula (ex.: `http://localhost:3000`). A própria interface não precisa estar aqui ([research R-06](../research.md)). |
 | `BACKEND_PORT` | compose | `8000` | Porta do host para a API. |
 | `FRONTEND_PORT` | compose | `5173` | Porta do host para a interface. |
-| `VITE_API_URL` | frontend | *(vazia → mesmo endereço da interface, via proxy)* | URL absoluta da API, para cenários futuros (RNF-08). |
+| `VITE_API_URL` | frontend | *(vazia → `/api`, no mesmo endereço da interface, via proxy)* | URL base absoluta da API, **incluindo** o `/api` (ex.: `http://localhost:8000/api`), para cenários futuros (RNF-08). |
 
 ## Fixas no `compose.yaml` (internas, fora do `.env.example`)
 
