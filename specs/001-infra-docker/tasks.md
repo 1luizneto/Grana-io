@@ -112,12 +112,14 @@ trailers de IA.
 ### Implementation for User Story 1
 
 - [ ] T020 [US1] Implementar `backend/core/services/saude.py` com `verificar_banco() -> bool`. A função executa `SELECT 1` via `connection.cursor()`, captura **somente** `django.db.Error` e retorna `False` nesse caso, sem logar nem propagar detalhes (research R-11)
-- [ ] T021 [US1] Implementar `HealthView(APIView)` em `backend/core/views.py`, que importa `verificar_banco` de `core.services.saude`, com:
+- [ ] T021 [US1] Implementar `SaudeView(APIView)` em `backend/core/views.py`, que importa `verificar_banco` de `core.services.saude`, com:
   - `permission_classes = [AllowAny]`, `authentication_classes = []`, `http_method_names = ["get", "head", "options"]`;
   - `get()` devolve 200 `{"status": "ok", "database": "ok"}` ou 503 `{"status": "error", "database": "unavailable"}`.
 
-  A view é fina, sem regra (`docs/arquitetura.md` §2.1).
-- [ ] T022 [US1] Registrar `path("health/", HealthView.as_view(), name="health")` em `backend/core/urls.py`. Rodar `docker compose run --rm backend pytest` e confirmar T018 e T019 **verdes**
+  A view é fina, sem regra (`docs/arquitetura.md` §2.1). Nome em pt-BR com sufixo técnico, e rota
+  `/api/health/` mantida em inglês por convenção de infraestrutura (`docs/arquitetura.md` §4,
+  "Nomenclatura").
+- [ ] T022 [US1] Registrar `path("health/", SaudeView.as_view(), name="saude")` em `backend/core/urls.py`. Rodar `docker compose run --rm backend pytest` e confirmar T018 e T019 **verdes**
 - [ ] T023 [P] [US1] Implementar o cliente de API centralizado em `frontend/src/api/client.js`:
   - `const API_BASE = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')`;
   - `export async function requisitar(caminho, opcoes = {})` faz `fetch(`${API_BASE}${caminho}`, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(5000), ...opcoes })` e devolve a `Response`.
@@ -139,6 +141,8 @@ trailers de IA.
   (FR-001, FR-015, FR-018; research R-06, R-08, R-09)
 - [ ] T028 [US1] Validar pelo [quickstart.md](quickstart.md):
   - V1 (exceto o passo 4, sobre migrations, que é validado na US4), V2, V3 e V4;
+  - V8 (recarga sem rebuild no backend e no frontend; FR-015), para detectar cedo qualquer
+    problema de polling nos bind mounts do Windows;
   - `docker compose down` encerra todos os serviços (US1, cenário 5).
 
   Registrar o resultado no resumo do checkpoint.
@@ -193,8 +197,8 @@ trailers de IA.
 
   Rodar a suíte e confirmar T031 e T032 **verdes** (depende de T033).
 - [ ] T035 [US3] Em `compose.yaml`, adicionar ao `backend` a variável `DJANGO_CORS_ALLOWED_ORIGINS: ${DJANGO_CORS_ALLOWED_ORIGINS:-}`. Conferir que todas as variáveis da tabela "Configuráveis" de [contracts/environment.md](contracts/environment.md) chegam ao compose com os padrões documentados (FR-009, FR-010)
-- [ ] T036 [P] [US3] Criar `.env.example` na raiz com **todas** as 10 variáveis da tabela "Configuráveis" de [contracts/environment.md](contracts/environment.md): mesmos padrões e um comentário em pt-BR por variável. `DJANGO_SECRET_KEY` fica vazia, com o comentário "obrigatória se DJANGO_DEBUG=0". O comentário de `POSTGRES_PASSWORD` avisa que ela só vale ao inicializar um volume vazio (FR-011, research R-05)
-- [ ] T037 [US3] Rodar `docker compose run --rm backend pytest` (verde) e validar o cenário V6 do [quickstart.md](quickstart.md), passos 1 a 4 e 6: sobe sem `.env`, `.env` sobrescreve padrões, `.env` ignorado pelo Git e `DJANGO_DEBUG=0` com a chave padrão falha citando `DJANGO_SECRET_KEY`
+- [ ] T036 [P] [US3] Criar `.env.example` na raiz com **todas** as 10 variáveis da tabela "Configuráveis" de [contracts/environment.md](contracts/environment.md): mesmos padrões e um comentário em pt-BR por variável. `DJANGO_SECRET_KEY` fica vazia, com o comentário "obrigatória se DJANGO_DEBUG=0". O comentário de `POSTGRES_PASSWORD` avisa que ela só vale ao inicializar um volume vazio. O comentário de `DJANGO_ALLOWED_HOSTS` avisa que um valor personalizado MUST incluir `localhost` e `backend` (ex.: `localhost,backend,192.168.0.10`) (FR-011, research R-05, R-07)
+- [ ] T037 [US3] Rodar `docker compose run --rm backend pytest` (verde) e validar o cenário V6 do [quickstart.md](quickstart.md), passos 1 a 4 e 6: sobe sem `.env`, `.env` sobrescreve padrões, `.env` ignorado pelo Git e `DJANGO_DEBUG=0` com a chave padrão falha citando `DJANGO_SECRET_KEY`. No passo 4, validar tanto `manage.py check` quanto a subida real da API (`docker compose run --rm -e DJANGO_DEBUG=0 backend`), que usa o comando padrão do serviço (US3, cenário 4)
 
 **Checkpoint**: configuração por ambiente segura; CORS fechado por padrão. Suíte verde.
 
@@ -208,7 +212,7 @@ trailers de IA.
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T038 [P] [US4] Escrever `backend/tests/test_migrations.py`, que chama `call_command("makemigrations", "--check", "--dry-run")` dentro de `@pytest.mark.django_db` e espera que **não** haja `SystemExit` (sem migrations pendentes, Definition of Done da constituição). Rodar a suíte: esperado **verde** já neste ponto, porque é um teste de guarda contra regressões futuras
+- [ ] T038 [P] [US4] **Teste de guarda. Não há implementação associada, então o ciclo Red-Green do Princípio IV não se aplica.** Escrever `backend/tests/test_migrations.py`, que chama `call_command("makemigrations", "--check", "--dry-run")` dentro de `@pytest.mark.django_db` e espera que **não** haja `SystemExit` (sem migrations pendentes, Definition of Done da constituição). Rodar a suíte: esperado **verde** já neste ponto. O teste protege as specs futuras contra models alterados sem migration
 
 ### Implementation for User Story 4
 
@@ -234,18 +238,18 @@ trailers de IA.
 - [ ] T042 [US5] Reescrever `README.md` em pt-BR, com as seções:
   1. O que é o Grana.io.
   2. Pré-requisitos (só Docker com Compose v2, em execução).
-  3. Subir: `docker compose up` e `docker compose up -d --wait`.
+  3. Subir: `docker compose up` e `docker compose up -d --wait`. Reconstruir após mudar dependências: `docker compose up --build -V`, explicando que o `-V` descarta o `node_modules` antigo do frontend sem tocar nos dados do banco ([contracts/commands.md](contracts/commands.md)).
   4. Acessar: tabela de URLs da interface, da API e da saúde, segundo [contracts/commands.md](contracts/commands.md).
   5. Acessar pela rede local:
      - descobrir o IP (`ipconfig` / `ip addr`);
-     - abrir `http://<IP>:5173`;
+     - abrir `http://<IP>:5173`, **pelo IP**, porque nomes de host como `meu-pc.local` são bloqueados pelo Vite ("Blocked request. This host is not allowed");
      - liberar as portas TCP 5173 e 8000 no firewall, só no perfil de rede **privada**;
      - aviso de que expor à internet não é suportado.
   6. Parar: `docker compose down`.
   7. Rodar os testes: `docker compose run --rm backend pytest`.
-  8. Personalizar a configuração: `.env.example` → `.env`, mais o aviso sobre `POSTGRES_PASSWORD` e o volume já inicializado.
+  8. Personalizar a configuração: `.env.example` → `.env`. Incluir o aviso sobre `POSTGRES_PASSWORD` e o volume já inicializado, e o aviso de que um `DJANGO_ALLOWED_HOSTS` personalizado precisa incluir `localhost` e `backend`.
   9. Remover os dados locais: `docker compose down -v`, com aviso de **irreversível**.
-  10. Solução de problemas: Docker parado, porta ocupada (`FRONTEND_PORT`/`BACKEND_PORT`), "API inacessível", "banco indisponível".
+  10. Solução de problemas: Docker parado, porta ocupada (`FRONTEND_PORT`/`BACKEND_PORT`), "API inacessível" (incluindo a causa `DJANGO_ALLOWED_HOSTS` sem `localhost`/`backend`), "banco indisponível", "Blocked request" ao acessar por nome de host, e dependências desatualizadas após rebuild (usar `-V`).
   11. Link para `docs/arquitetura.md` e `BACKLOG.md`.
 
   (FR-017)

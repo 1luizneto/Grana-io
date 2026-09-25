@@ -105,6 +105,13 @@ Este documento resolve as decisões técnicas do Technical Context. Não restou 
   (desnecessário agora). Com rede doméstica confiável e sem dados reais (Assumptions da spec), o risco
   de *Host header poisoning* é aceitável no modo de desenvolvimento. O RNF-09 (modo de uso) deve exigir
   hosts explícitos.
+- **Consequência**: se `DJANGO_ALLOWED_HOSTS` for personalizada, ela precisa incluir `localhost`
+  (healthcheck do container) e `backend` (o proxy do Vite usa `changeOrigin: true` e envia
+  `Host: backend:8000`). Caso contrário, o container fica unhealthy e a interface mostra "API
+  inacessível". Isso está documentado em `contracts/environment.md`, no `.env.example` e no README.
+- **Hostnames no Vite**: o Vite aceita `localhost` e IPs, mas bloqueia nomes de host
+  (ex.: `meu-pc.local`) com "Blocked request. This host is not allowed". O acesso suportado pela
+  rede é pelo IP, como diz a spec, e o README avisa sobre isso.
 - **Alternatives considered**: um middleware que aceita faixas privadas (RFC 1918) seria complexidade
   especulativa, adiada para o RNF-09 se necessário.
 

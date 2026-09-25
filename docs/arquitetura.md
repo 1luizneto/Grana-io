@@ -129,6 +129,7 @@ frontend/src/
 | **12-Factor Config** | Toda configuração vem de variáveis de ambiente (`.env` fora do Git, `.env.example` versionado). Preparação para o RNF-08. |
 | **REST orientado a recursos** | Endpoints no plural sob `/api/`, verbos HTTP padrão, contratos documentados em `specs/<feature>/contracts/`. |
 | **Erros padronizados** | Erros de validação no formato padrão do DRF (`{"campo": ["mensagem"]}`), com mensagens em pt-BR que digam como corrigir. |
+| **Nomenclatura** | Domínio, services, funções, hooks e componentes em pt-BR (ex.: `verificar_banco`, `useSaudeApi`, `RotaProtegida`). Classes de framework levam o conceito em pt-BR com o sufixo técnico em inglês (ex.: `SaudeView`, `CriarMesService`, `GastoSerializer`). Rotas de domínio em pt-BR no plural (ex.: `/api/gastos/`). A exceção são rotas de infraestrutura com nome consagrado por ferramentas, que ficam em inglês (ex.: `/api/health/`). |
 | **Testes: Arrange-Act-Assert + fixtures** | Fixtures do pytest para usuários e clientes autenticados. Casos fiscais parametrizados (`@pytest.mark.parametrize`) com os valores conferidos manualmente citados no teste. |
 
 ---

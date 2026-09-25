@@ -15,7 +15,7 @@ padrão e um comentário explicativo.
 | `POSTGRES_PASSWORD` | db, backend | `grana-dev-senha` | Senha do banco. Só vale ao inicializar um volume vazio. |
 | `DJANGO_SECRET_KEY` | backend | *(vazia → chave padrão de dev definida em `config/env.py`)* | Chave secreta do Django. Obrigatória fora do modo de desenvolvimento (FR-012). |
 | `DJANGO_DEBUG` | backend | `1` | Modo de desenvolvimento (`1`/`0`). |
-| `DJANGO_ALLOWED_HOSTS` | backend | `*` | Hosts aceitos, separados por vírgula. `*` só no modo de desenvolvimento ([research R-07](../research.md)). |
+| `DJANGO_ALLOWED_HOSTS` | backend | `*` | Hosts aceitos, separados por vírgula. `*` só no modo de desenvolvimento ([research R-07](../research.md)). Um valor personalizado MUST incluir `localhost` (healthcheck do container) e `backend` (proxy do Vite, que envia `Host: backend:8000`), além do IP da máquina. Ex.: `localhost,backend,192.168.0.10`. |
 | `DJANGO_CORS_ALLOWED_ORIGINS` | backend | *(vazia)* | Origens extras autorizadas a chamar a API pelo navegador, separadas por vírgula (ex.: `http://localhost:3000`). A própria interface não precisa estar aqui ([research R-06](../research.md)). |
 | `BACKEND_PORT` | compose | `8000` | Porta do host para a API. |
 | `FRONTEND_PORT` | compose | `5173` | Porta do host para a interface. |

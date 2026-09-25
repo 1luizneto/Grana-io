@@ -81,8 +81,12 @@ Execute na raiz do repositório, na ordem. Cada cenário indica o requisito que 
    [research R-05](research.md).)*
 3. **`.env` ignorado**: `git status --short` não lista `.env`, e `git check-ignore .env` imprime `.env`.
 4. **Chave padrão fora do modo de dev**:
-   `docker compose run --rm -e DJANGO_DEBUG=0 backend python manage.py check`
-   **Esperado**: falha com erro de configuração citando `DJANGO_SECRET_KEY`.
+   - `docker compose run --rm -e DJANGO_DEBUG=0 backend python manage.py check`
+   - `docker compose run --rm -e DJANGO_DEBUG=0 backend` (tenta subir a API com o comando padrão
+     do serviço)
+
+   **Esperado**: os dois falham com erro de configuração citando `DJANGO_SECRET_KEY`, e a API
+   não chega a aceitar requisições.
 5. **Sem segredos versionados**:
    `git grep -nIiE "(password|secret|token|api[_-]?key)\s*[:=]"`.
    **Esperado**: só aparecem valores de exemplo claramente de desenvolvimento (`dev`/`insecure`) e

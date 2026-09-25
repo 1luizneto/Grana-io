@@ -63,7 +63,7 @@ esqueleto: 1 endpoint e 1 página.
 | V | Separação backend/frontend | Comunicação só por REST, com contrato em `contracts/`. URL da API configurável. Frontend sem regra de negócio. | ✅ Cliente de API central em `src/api/`, com `VITE_API_URL` opcional e proxy `/api` como padrão ([R-06](research.md)). |
 | VI | Simplicidade / incremental | Corresponde a RNF-01 e parte do RNF-02. Deps justificadas. Sem abstrações especulativas. | ✅ Sem framework de testes no frontend, sem TypeScript, sem middleware de hosts e sem override de compose ([R-14](research.md), [R-16](research.md), [R-07](research.md), [R-02](research.md)). |
 | — | Stack & constraints | Python 3.12+, Django 5.2, DRF, React/Vite, PostgreSQL em Docker, Compose, pytest. Localização pt-BR e fuso `America/Sao_Paulo`. | ✅ `LANGUAGE_CODE=pt-br`, `TIME_ZONE=America/Sao_Paulo`, `USE_TZ=True`. JWT fica para a US-02 (fora do escopo). |
-| — | `docs/arquitetura.md` | App `core` para itens transversais, views finas e service para a checagem do banco. Frontend com `api/`, `hooks/`, `pages/`. | ✅ `core/services/saude.py` + `HealthView` fina. `useSaudeApi()` → `api/saude.js` → `api/client.js`. Página em `pages/Inicio/`. |
+| — | `docs/arquitetura.md` | App `core` para itens transversais, views finas e service para a checagem do banco. Frontend com `api/`, `hooks/`, `pages/`. | ✅ `core/services/saude.py` + `SaudeView` fina (nomenclatura conforme §4). `useSaudeApi()` → `api/saude.js` → `api/client.js`. Página em `pages/Inicio/`. |
 | — | Workflow | Branch `001-infra-docker` = diretório da spec. Commits manuais sem trailer de IA. | ✅ |
 
 **Resultado**: nenhuma violação e nada a registrar em Complexity Tracking. O gate passou antes da
@@ -121,19 +121,25 @@ backend/
 │   ├── __init__.py
 │   ├── apps.py
 │   ├── urls.py              # health/
-│   ├── views.py             # HealthView (APIView, AllowAny, só GET)
+│   ├── views.py             # SaudeView (APIView, AllowAny, só GET)
 │   └── services/
 │       ├── __init__.py
 │       └── saude.py         # verificar_banco() -> bool
 └── tests/
+    ├── __init__.py
     ├── conftest.py
+    ├── test_migrations.py   # guarda: nenhuma migration pendente (DoD)
     ├── config/
+    │   ├── __init__.py
     │   └── test_env.py      # helpers de env + bloqueio da chave secreta (FR-012)
     └── core/
-        └── test_health.py   # 200, 503 sem detalhes, anônimo permitido, 405 em POST (FR-007)
+        ├── __init__.py
+        ├── test_saude_service.py  # verificar_banco(): True / False com OperationalError
+        ├── test_health.py         # 200, 503 sem detalhes, anônimo permitido, 405 em POST (FR-007)
+        └── test_cors.py           # sem Allow-Origin por padrão; origem configurada liberada (FR-013)
 
 frontend/
-├── Dockerfile               # node:24-alpine; npm ci; vite --host
+├── Dockerfile               # node:24-alpine; npm ci; CMD npm run dev (host definido no vite.config.js)
 ├── .dockerignore
 ├── package.json
 ├── package-lock.json        # gerado dentro do container

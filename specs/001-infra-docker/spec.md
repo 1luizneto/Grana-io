@@ -66,7 +66,7 @@ e confirmar que o banco volta vazio.
 ### User Story 3 - Configuração por ambiente sem segredos no repositório (Priority: P2)
 
 O desenvolvedor consegue subir o sistema sem criar nenhum arquivo de configuração, usando
-valores padrão seguros para desenvolvimento local. Quando quer personalizar (senha do banco,
+valores padrão de desenvolvimento local. Quando quer personalizar (senha do banco,
 chave secreta, portas, origem permitida), copia o arquivo de exemplo versionado para um arquivo
 local que nunca é versionado. O sistema recusa rodar fora do modo de desenvolvimento com a
 chave secreta padrão.
