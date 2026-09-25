@@ -1,0 +1,18 @@
+# Configuração local (nunca versionar segredos — FR-011)
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+
+# Node / frontend
+node_modules/
+frontend/dist/
+
+# Diversos
+*.log
+.DS_Store
