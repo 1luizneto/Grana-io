@@ -17,13 +17,13 @@
 | Sprint | Período | Tema | Itens | Pts |
 |---|---|---|---|---|
 | S1 | 01/10 – 15/10 | Fundação: Docker + esqueleto + login | RNF-01, RNF-02, US-01, US-02, US-03, US-26 | 28 |
-| S2 | 16/10 – 30/10 | Categorias e cadastro do mês | US-05, US-06, US-07, US-07b, US-08, RNF-03, US-27 | 29 |
+| S2 | 16/10 – 30/10 | Categorias e cadastro do mês + modo de uso | US-05, US-06, US-07, US-07b, US-08, RNF-03, RNF-09, US-27 | 34 |
 | S3 | 31/10 – 14/11 | Cenários de ganho + cálculo CLT | US-11, US-12, US-13, US-14, US-15, US-16, US-28 | 31 |
 | S4 | 15/11 – 29/11 | Motor de cálculo + PJ + comparação | US-13b, US-16b, US-17, US-18, US-19, US-21, US-29 | 37 |
 | S5 | 30/11 – 14/12 | Recursos avançados + dashboard | US-09, US-10, US-10b, US-20, US-22, US-23, US-24, US-30 | 42 |
 | S6 | 15/12 – 29/12 | Refinamento e qualidade final | US-04, US-25, RNF-04, RNF-05, RNF-06, RNF-07 | 24 |
 
-**Total planejado:** 191 pts (RNF-08 fica fora das sprints — backlog futuro).
+**Total planejado:** 196 pts (RNF-08 fica fora das sprints — backlog futuro).
 
 ---
 
@@ -87,6 +87,7 @@
 | EP-07 / RNF-06 | Backup e restauração dos dados locais |
 | EP-07 / RNF-07 | Observabilidade e logging |
 | EP-07 / RNF-08 | Preparação para deploy em nuvem |
+| EP-07 / RNF-09 | Modo de uso local |
 
 ---
 
@@ -178,6 +179,7 @@
 | RNF-06 | **Como** usuário, **quero** fazer backup e restaurar meus dados, **para** não perder o histórico, já que o banco é local. | ☐ Um script/comando gera um dump do banco com data no nome do arquivo.<br>☐ Um script/comando restaura um dump.<br>☐ O procedimento está documentado no README. | 3 | Média |
 | RNF-07 | **Como** desenvolvedor, **quero** logging estruturado, **para** depurar problemas. | ☐ Eventos-chave (login, erros, criação de mês, falhas de cálculo) são logados com timestamp.<br>☐ Os logs não contêm senhas nem tokens.<br>☐ Os logs podem ser consultados via `docker compose logs`. | 3 | Baixa |
 | RNF-08 | **Como** desenvolvedor, **quero** que a arquitetura esteja pronta para ir para a nuvem, **para** hospedar o sistema no futuro sem retrabalho. | ☐ As configurações dependem só de variáveis de ambiente (12-factor).<br>☐ O frontend consome a API por uma URL configurável.<br>☐ (Backlog futuro — pós-entrega: frontend no Vercel, backend em Render/Railway, Postgres gerenciado como Neon/Supabase.) | 5 | Baixa |
+| RNF-09 | **Como** usuário, **quero** um modo de uso separado do modo de desenvolvimento, **para** usar o sistema no dia a dia com meus dados reais de forma leve e sem expor detalhes técnicos na rede local. | ☐ Um comando documentado sobe o sistema no modo de uso, e outro no modo de desenvolvimento.<br>☐ No modo de uso, a interface é servida como build otimizado e a API roda em servidor de aplicação, sem recarga automática.<br>☐ No modo de uso, erros não exibem detalhes técnicos (stack traces, configurações) para nenhum dispositivo da rede.<br>☐ O modo de uso exige chave secreta própria e se recusa a subir com a chave padrão.<br>☐ Os dois modos usam o mesmo banco local, e trocar de modo não perde dados.<br>☐ Deve estar concluído antes de lançar dados financeiros reais (origem: clarificação da spec 001-infra-docker). | 5 | Alta |
 
 ---
 
