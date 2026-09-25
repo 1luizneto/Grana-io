@@ -8,6 +8,13 @@
 
 **Input**: User description: "RNF-01: Execução local com um comando (Docker) — Como desenvolvedor, quero subir o sistema inteiro com um comando, para rodar localmente sem configuração manual. Critérios do backlog: `docker compose up` sobe banco (PostgreSQL), backend (Django) e frontend (React); os dados do banco persistem em volume entre reinicializações; as migrations rodam automaticamente na subida; variáveis sensíveis ficam num `.env` (com `.env.example` versionado); o README documenta como subir, parar e acessar o sistema. Inclui a parte de infraestrutura do RNF-02: nenhum segredo versionado e configuração sensível vinda do ambiente."
 
+## Clarifications
+
+### Session 2026-09-25
+
+- Q: O Grana.io deve ser acessível só no computador onde roda, ou também por outros dispositivos da rede local (ex.: celular no mesmo Wi-Fi)? → A: Rede local liberada — outros dispositivos da mesma rede acessam pelo IP da máquina.
+- Q: Nesta fase o sistema deve ter só o modo de desenvolvimento (usado também no dia a dia) ou já um modo de uso separado? → A: Só o modo de desenvolvimento por enquanto; o modo de uso é pré-requisito antes de lançar dados financeiros reais.
+
 ## User Scenarios & Testing *(mandatory)*
 
 ### User Story 1 - Subir o sistema inteiro com um comando (Priority: P1)
@@ -31,6 +38,7 @@ que a API e o banco estão operacionais.
 3. **Given** o sistema acabou de subir, **When** o desenvolvedor abre o endereço da interface no navegador, **Then** a página inicial carrega e exibe se a API está acessível.
 4. **Given** o banco ainda está inicializando, **When** a API começa a subir, **Then** a API aguarda o banco ficar pronto em vez de falhar, e o comando de subida termina com todos os componentes no ar.
 5. **Given** o sistema está no ar, **When** o desenvolvedor executa o comando de parada, **Then** todos os componentes são encerrados.
+6. **Given** o sistema está no ar e outro dispositivo (ex.: celular) está na mesma rede local, **When** esse dispositivo abre a interface pelo IP da máquina, **Then** a página inicial carrega e exibe que a API está acessível, sem nenhuma configuração no dispositivo.
 
 ---
 
@@ -142,6 +150,19 @@ operações listadas.
   acessível, em vez de quebrar ou ficar em branco.
 - **Verificação de saúde com o banco fora do ar**: a resposta indica falha na conexão com o
   banco, com status de erro, sem expor detalhes internos (credenciais, endereços, stack traces).
+- **Acesso por outro dispositivo da rede**: a interface é aberta pelo IP da máquina; as chamadas
+  à API precisam chegar à máquina que roda o sistema, e não ao próprio dispositivo (o endereço
+  "localhost" no celular aponta para o celular).
+- **IP da máquina muda** (ex.: roteador atribui outro endereço): o acesso pela rede continua
+  funcionando pelo novo IP sem reconstruir imagens nem editar configuração.
+- **Firewall do sistema operacional bloqueia as portas**: outros dispositivos não conseguem
+  acessar; o README orienta a liberar as portas da interface e da API na rede privada.
+- **Rede local antes do login existir**: até a spec 003 (login), qualquer dispositivo da rede
+  alcança a API; nesta spec a API só expõe a verificação de saúde, sem dados de usuários.
+- **Banco de dados**: nunca acessível por outros dispositivos, mesmo com a rede local liberada.
+- **Erros detalhados visíveis na rede local**: no modo de desenvolvimento, uma falha pode exibir
+  detalhes técnicos a qualquer dispositivo da rede. Risco aceito enquanto não há dados reais;
+  mitigado pelo futuro modo de uso (ver Assumptions).
 
 ## Requirements *(mandatory)*
 
@@ -154,16 +175,18 @@ operações listadas.
 - **FR-005**: Os dados do banco MUST persistir entre paradas, reinicializações da máquina e reconstrução das imagens da API e da interface.
 - **FR-006**: MUST existir um comando documentado para remover explicitamente os dados persistidos; nenhuma outra operação rotineira pode apagá-los.
 - **FR-007**: A API MUST expor uma verificação de saúde pública (sem autenticação) que informe se a API está operacional e se a conexão com o banco funciona, sem expor dados sensíveis ou detalhes internos.
-- **FR-008**: A interface web MUST ter uma página inicial provisória que exiba o nome do sistema e se a API está acessível, usando o endereço da API definido por configuração.
+- **FR-008**: A interface web MUST ter uma página inicial provisória que exiba o nome do sistema e se a API está acessível. Por padrão, a interface MUST localizar a API a partir do mesmo endereço pelo qual ela própria foi aberta (local ou IP da rede), sem endereço de máquina fixo; um endereço explícito da API pode ser definido por configuração para cenários futuros (RNF-08).
 - **FR-009**: Toda configuração que varia por ambiente (credenciais do banco, chave secreta, modo de desenvolvimento, hosts e origens permitidas, endereço da API, portas expostas) MUST vir de variáveis de ambiente.
 - **FR-010**: O sistema MUST funcionar sem arquivo de configuração local, usando valores padrão de desenvolvimento; quando o arquivo local existir, seus valores MUST prevalecer.
 - **FR-011**: O repositório MUST versionar um arquivo de exemplo de configuração com todas as variáveis documentadas, e MUST ignorar o arquivo de configuração local.
 - **FR-012**: A API MUST se recusar a iniciar fora do modo de desenvolvimento se a chave secreta for o valor padrão, com mensagem indicando a variável a definir.
-- **FR-013**: A API MUST aceitar requisições do navegador apenas a partir das origens configuradas (por padrão, o endereço local da interface).
+- **FR-013**: A API MUST aceitar requisições do navegador apenas a partir da própria interface do Grana.io, seja ela acessada pelo endereço local ou pelo IP da máquina na rede local; origens adicionais só por configuração.
 - **FR-014**: A suíte de testes automatizados MUST rodar com um único comando dentro do ambiente Docker, isolada dos dados reais.
 - **FR-015**: No modo de desenvolvimento, alterações no código da API e da interface MUST ser refletidas sem reconstruir as imagens.
 - **FR-016**: O repositório MUST garantir final de linha LF em scripts e arquivos de build, para funcionar em Windows e Linux.
-- **FR-017**: O README MUST documentar: pré-requisitos, como subir, parar, acessar (URLs da interface, da API e da verificação de saúde), rodar os testes, personalizar a configuração e remover os dados locais.
+- **FR-017**: O README MUST documentar: pré-requisitos, como subir, parar, acessar (URLs da interface, da API e da verificação de saúde), acessar por outro dispositivo da rede local (como descobrir o IP e liberar o firewall), rodar os testes, personalizar a configuração e remover os dados locais.
+- **FR-018**: A interface e a API MUST ser acessíveis por outros dispositivos da mesma rede local, pelo IP da máquina, sem configuração nos dispositivos clientes e sem precisar reconfigurar quando o IP da máquina mudar.
+- **FR-019**: O banco de dados MUST NOT ficar acessível fora do ambiente Docker, nem pela máquina nem pela rede local.
 
 ### Key Entities
 
@@ -187,6 +210,7 @@ operações listadas.
 - **SC-005**: A suíte de testes completa roda com 1 comando e não altera nenhum dado real.
 - **SC-006**: Uma pessoa que nunca viu o projeto completa, só com o README, as operações de subir, acessar, parar, testar e remover dados na primeira tentativa.
 - **SC-007**: O ambiente sobe com sucesso tanto em Windows quanto em Linux.
+- **SC-008**: Um celular na mesma rede Wi-Fi abre a interface pelo IP da máquina e vê a API acessível, sem nenhuma configuração no celular.
 
 ## Assumptions
 
@@ -194,8 +218,10 @@ operações listadas.
   é exigida na máquina.
 - Esta feature entrega apenas o **esqueleto** da API e da interface (verificação de saúde e
   página inicial provisória). Usuários, login e telas reais chegam nas specs 002 a 005.
-- Há um único modo de execução nesta fase, voltado a desenvolvimento/uso local. Um modo de
-  produção (build otimizado, servidor de aplicação dedicado) fica para o RNF-08 (backlog futuro).
+- Há um único modo de execução nesta fase: o modo de desenvolvimento (recarga automática,
+  mensagens de erro detalhadas). Um modo de uso separado (versão otimizada, sem páginas de erro
+  detalhadas na rede local) está fora do escopo desta spec, mas é **pré-requisito antes de
+  lançar dados financeiros reais** no sistema; deve virar item próprio no backlog.
 - A verificação de saúde é a única rota pública além das futuras rotas de cadastro e login
   (RNF-02); ela não retorna dados de usuários nem detalhes internos.
 - Os valores padrão de desenvolvimento (inclusive a chave secreta padrão) são aceitáveis
@@ -203,5 +229,7 @@ operações listadas.
   desenvolvimento.
 - Backup e restauração dos dados (RNF-06) e logging estruturado (RNF-07) ficam fora do escopo
   desta spec (Sprint 6).
-- Portas padrão: interface em 5173 e API em 8000; o banco não precisa ser exposto fora do
-  ambiente Docker.
+- Portas padrão: interface em 5173 e API em 8000, acessíveis também pela rede local; o banco
+  não é exposto fora do ambiente Docker (FR-019).
+- A rede local é uma rede doméstica confiável. Expor o sistema à internet (redirecionamento de
+  portas no roteador, túneis) está fora de escopo e não é suportado.
