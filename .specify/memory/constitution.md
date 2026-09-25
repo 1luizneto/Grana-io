@@ -35,6 +35,29 @@ Constituição inicial do projeto Grana.io, criada a partir do constitution-temp
 
 ### TODOs Adiados
 - Nenhum.
+
+---
+
+Version change: 1.0.0 → 1.1.0
+Adiciona referência obrigatória ao documento de arquitetura e padrões de projeto
+(`docs/arquitetura.md`). Os padrões ficam no documento, não na constituição, para que ajustes de
+arquitetura não exijam emenda; a constituição só torna o documento vinculante.
+
+### Princípios Modificados
+- Nenhum.
+
+### Seções Modificadas
+- Stack & Technology Constraints — novo item "Arquitetura e padrões de projeto".
+- Governance → Revisão de conformidade — o gate "Constitution Check" passa a verificar também a
+  aderência a `docs/arquitetura.md`.
+
+### Templates Verificados
+- ✅ .specify/templates/plan-template.md — o gate "Constitution Check" já é genérico. Sem alteração.
+- ✅ .specify/templates/spec-template.md — sem alteração necessária.
+- ✅ .specify/templates/tasks-template.md — sem alteração necessária.
+
+### TODOs Adiados
+- Nenhum.
 -->
 
 # Grana.io Constitution
@@ -127,6 +150,9 @@ consome o tempo que deveria ir para as funcionalidades do backlog.
 - **Localização**: interface em pt-BR; valores em `R$ 1.234,56`; datas em `dd/mm/aaaa`;
   fuso `America/Sao_Paulo`.
 - **Dependências novas** MUST ser justificadas no plan.md (Princípio VI).
+- **Arquitetura e padrões de projeto**: MUST seguir `docs/arquitetura.md` (camadas, Service
+  Layer, Strategy para cálculo por tipo de cenário, padrões de frontend e padrões deliberadamente
+  não adotados). Desvios MUST ser registrados em "Complexity Tracking" no plan.md.
 
 ## Development Workflow & Delivery Standards
 
@@ -169,8 +195,9 @@ novo princípio ou seção, ou expansão material de orientação; PATCH para cl
 correções de redação sem impacto semântico.
 
 **Revisão de conformidade**: todo `plan.md` MUST passar pelo gate "Constitution Check" antes
-da pesquisa (Phase 0) e novamente após o design (Phase 1). Violações só são aceitas se
+da pesquisa (Phase 0) e novamente após o design (Phase 1), verificando os princípios desta
+constituição e a aderência a `docs/arquitetura.md`. Violações só são aceitas se
 registradas em "Complexity Tracking" com justificativa. No início de cada sprint, as features
 planejadas MUST ser conferidas contra esta constituição antes da especificação.
 
-**Version**: 1.0.0 | **Ratified**: 2026-09-25 | **Last Amended**: 2026-09-25
+**Version**: 1.1.0 | **Ratified**: 2026-09-25 | **Last Amended**: 2026-09-25
