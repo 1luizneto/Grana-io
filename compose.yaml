@@ -1,0 +1,36 @@
+name: grana
+
+# Valores padrão de desenvolvimento: o sistema sobe sem .env (FR-010).
+# Um .env na raiz (copiado de .env.example) sobrescreve qualquer um deles.
+x-postgres-env: &postgres-env
+  POSTGRES_DB: ${POSTGRES_DB:-grana}
+  POSTGRES_USER: ${POSTGRES_USER:-grana}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-grana-dev-senha}
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment: *postgres-env
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # Sem "ports": o banco só é acessível pela rede interna do Compose (FR-019).
+
+  backend:
+    build: ./backend
+    environment:
+      <<: *postgres-env
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-}
+      DJANGO_DEBUG: ${DJANGO_DEBUG:-1}
+      DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-*}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy

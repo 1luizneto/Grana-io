@@ -60,16 +60,16 @@ trailers de IA.
 
 **⚠️ CRITICAL**: nenhuma user story começa antes desta fase terminar.
 
-- [ ] T011 Criar `compose.yaml` na raiz. Usar `name: grana` e uma âncora `x-postgres-env: &postgres-env` com `POSTGRES_DB: ${POSTGRES_DB:-grana}`, `POSTGRES_USER: ${POSTGRES_USER:-grana}` e `POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-grana-dev-senha}`. O serviço `db` usa `image: postgres:17-alpine`, `environment: *postgres-env`, healthcheck `["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]` (interval 5s, timeout 5s, retries 10) e **sem `ports:`** (FR-019). O serviço `backend` usa `build: ./backend`; `environment` com `<<: *postgres-env`, `POSTGRES_HOST: db`, `POSTGRES_PORT: "5432"`, `DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-}`, `DJANGO_DEBUG: ${DJANGO_DEBUG:-1}` e `DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-*}`; `ports: ["${BACKEND_PORT:-8000}:8000"]`; `volumes: ["./backend:/app"]`; `depends_on: { db: { condition: service_healthy } }` (FR-003, FR-009, FR-010, research R-02, R-03, R-04, R-08)
-- [ ] T012 Criar `backend/pytest.ini` com `DJANGO_SETTINGS_MODULE = config.settings`, `testpaths = tests`, `python_files = test_*.py` e `addopts = -ra`. Criar os pacotes de teste `backend/tests/__init__.py`, `backend/tests/conftest.py` (vazio por enquanto), `backend/tests/config/__init__.py` e `backend/tests/core/__init__.py`
-- [ ] T013 Escrever **primeiro** os testes dos helpers de ambiente em `backend/tests/config/test_env.py`, usando `monkeypatch`. Casos:
+- [X] T011 Criar `compose.yaml` na raiz. Usar `name: grana` e uma âncora `x-postgres-env: &postgres-env` com `POSTGRES_DB: ${POSTGRES_DB:-grana}`, `POSTGRES_USER: ${POSTGRES_USER:-grana}` e `POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-grana-dev-senha}`. O serviço `db` usa `image: postgres:17-alpine`, `environment: *postgres-env`, healthcheck `["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]` (interval 5s, timeout 5s, retries 10) e **sem `ports:`** (FR-019). O serviço `backend` usa `build: ./backend`; `environment` com `<<: *postgres-env`, `POSTGRES_HOST: db`, `POSTGRES_PORT: "5432"`, `DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-}`, `DJANGO_DEBUG: ${DJANGO_DEBUG:-1}` e `DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-*}`; `ports: ["${BACKEND_PORT:-8000}:8000"]`; `volumes: ["./backend:/app"]`; `depends_on: { db: { condition: service_healthy } }` (FR-003, FR-009, FR-010, research R-02, R-03, R-04, R-08)
+- [X] T012 Criar `backend/pytest.ini` com `DJANGO_SETTINGS_MODULE = config.settings`, `testpaths = tests`, `python_files = test_*.py` e `addopts = -ra`. Criar os pacotes de teste `backend/tests/__init__.py`, `backend/tests/conftest.py` (vazio por enquanto), `backend/tests/config/__init__.py` e `backend/tests/core/__init__.py`
+- [X] T013 Escrever **primeiro** os testes dos helpers de ambiente em `backend/tests/config/test_env.py`, usando `monkeypatch`. Casos:
   - `env_str(nome, padrao="")` retorna o valor definido, ou o padrão se a variável estiver ausente;
   - `env_bool(nome, padrao=False)` retorna verdadeiro para `1/true/yes/on` (sem diferenciar maiúsculas), falso para qualquer outro valor, e o padrão se ausente;
   - `env_list(nome)` separa por vírgula, remove espaços e ignora itens vazios (`"a, ,b,"` → `["a", "b"]`), e retorna `[]` se ausente ou vazio.
 
   Rodar `docker compose run --rm backend pytest` e confirmar a **falha**: `config.env` e `config.settings` ainda não existem (data-model §2)
-- [ ] T014 Implementar `backend/config/env.py` com `env_str`, `env_bool`, `env_list` e a constante `CHAVE_DEV_PADRAO = "django-insecure-grana-dev-troque-me"` (research R-03, R-12)
-- [ ] T015 Implementar `backend/config/settings.py` 12-factor usando `config.env`:
+- [X] T014 Implementar `backend/config/env.py` com `env_str`, `env_bool`, `env_list` e a constante `CHAVE_DEV_PADRAO = "django-insecure-grana-dev-troque-me"` (research R-03, R-12)
+- [X] T015 Implementar `backend/config/settings.py` 12-factor usando `config.env`:
   - `SECRET_KEY = env_str("DJANGO_SECRET_KEY") or CHAVE_DEV_PADRAO`
   - `DEBUG = env_bool("DJANGO_DEBUG", False)`
   - `ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS")`
@@ -82,8 +82,8 @@ trailers de IA.
   - `REST_FRAMEWORK = {"DEFAULT_AUTHENTICATION_CLASSES": [], "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"], "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"]}`. Comentar que a autenticação JWT entra na US-02.
 
   (research R-11; constituição, Stack & Technology Constraints)
-- [ ] T016 Implementar `backend/config/urls.py` com `urlpatterns = [path("api/", include("core.urls"))]`
-- [ ] T017 Rodar `docker compose build backend` e `docker compose run --rm backend pytest` e confirmar os testes de T013 **verdes**. Rodar `docker compose up -d --wait db backend` e confirmar em `docker compose logs backend` que o servidor iniciou após o `db` ficar `healthy`. Encerrar com `docker compose down`
+- [X] T016 Implementar `backend/config/urls.py` com `urlpatterns = [path("api/", include("core.urls"))]`
+- [X] T017 Rodar `docker compose build backend` e `docker compose run --rm backend pytest` e confirmar os testes de T013 **verdes**. Rodar `docker compose up -d --wait db backend` e confirmar em `docker compose logs backend` que o servidor iniciou após o `db` ficar `healthy`. Encerrar com `docker compose down`
 
 **Checkpoint**: `docker compose run --rm backend pytest` verde; backend sobe conectado ao banco. A partir daqui as user stories podem começar.
 
