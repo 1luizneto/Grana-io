@@ -36,3 +36,14 @@ def test_cadastrar_usuario_e_atomico(monkeypatch):
 def test_cadastro_aberto_segue_a_configuracao(aberto):
     with override_settings(CADASTRO_ABERTO=aberto):
         assert cadastro_aberto() is aberto
+
+
+def test_email_ja_gravado_no_banco_lanca_email_ja_cadastrado():
+    from accounts.services.cadastro import EmailJaCadastrado
+
+    Usuario.objects.create_user(email="ana@exemplo.com", nome="Ana", password=SENHA)
+
+    with pytest.raises(EmailJaCadastrado):
+        cadastrar_usuario(nome="Outra", email="ANA@exemplo.com", senha=SENHA)
+
+    assert Usuario.objects.filter(email="ana@exemplo.com").count() == 1

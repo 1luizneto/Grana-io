@@ -156,16 +156,20 @@ de IA.
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T017 [P] [US2] Adicionar a `backend/tests/accounts/test_cadastro_api.py`:
+- [X] T017 [P] [US2] Adicionar a `backend/tests/accounts/test_cadastro_api.py`:
   - com `ana@exemplo.com` já cadastrado, os cadastros com `"ana@exemplo.com"`, `"ANA@Exemplo.com"` e `"  ana@exemplo.com  "` retornam 400 com `{"email": ["Já existe uma conta com este e-mail."]}`;
   - `Usuario.objects.filter(email="ana@exemplo.com").count() == 1`.
-- [ ] T018 [P] [US2] Adicionar a `backend/tests/accounts/test_cadastro_service.py` a **corrida simulada**: com o e-mail já gravado diretamente no banco (sem passar pelo serializer), `cadastrar_usuario` com o mesmo e-mail lança `EmailJaCadastrado`, e continua existindo 1 conta. Adicionar a `test_cadastro_api.py` o caso em que `accounts.serializers` não detecta o duplicado (`monkeypatch` na checagem) e a view mesmo assim responde 400 com a mensagem de duplicado, e não 500. Rodar a suíte e confirmar a **falha** de T017 e T018
+- [X] T018 [P] [US2] Adicionar a `backend/tests/accounts/test_cadastro_service.py` a **corrida simulada**: com o e-mail já gravado diretamente no banco (sem passar pelo serializer), `cadastrar_usuario` com o mesmo e-mail lança `EmailJaCadastrado`, e continua existindo 1 conta. Adicionar a `test_cadastro_api.py` o caso em que `accounts.serializers` não detecta o duplicado (`monkeypatch` na checagem) e a view mesmo assim responde 400 com a mensagem de duplicado, e não 500. Rodar a suíte e confirmar a **falha** de T017 e T018
 
 ### Implementation for User Story 2
 
-- [ ] T019 [US2] Em `backend/accounts/serializers.py`, fazer o `validate_email` levantar `ValidationError("Já existe uma conta com este e-mail.")` quando `Usuario.objects.filter(email=normalizado).exists()` ([research R-03](research.md))
-- [ ] T020 [US2] Em `backend/accounts/services/cadastro.py`, definir `class EmailJaCadastrado(Exception)` e, em `cadastrar_usuario`, capturar `IntegrityError` e relançar como `EmailJaCadastrado`. Em `backend/accounts/views.py`, converter `EmailJaCadastrado` em 400 `{"email": ["Já existe uma conta com este e-mail."]}`. Rodar a suíte e confirmar T017 e T018 **verdes**
-- [ ] T021 [US2] Validar o cenário Q3 do [quickstart.md](quickstart.md)
+- [X] T019 [US2] Em `backend/accounts/serializers.py`, fazer o `validate_email` levantar `ValidationError("Já existe uma conta com este e-mail.")` quando `Usuario.objects.filter(email=normalizado).exists()` ([research R-03](research.md))
+- [X] T020 [US2] Em `backend/accounts/services/cadastro.py`, definir `class EmailJaCadastrado(Exception)` e, em `cadastrar_usuario`, capturar `IntegrityError` e relançar como `EmailJaCadastrado`. Em `backend/accounts/views.py`, converter `EmailJaCadastrado` em 400 `{"email": ["Já existe uma conta com este e-mail."]}`. Rodar a suíte e confirmar T017 e T018 **verdes**
+- [X] T021 [US2] Validar o cenário Q3 do [quickstart.md](quickstart.md)
+
+  > **Resultado (2026-09-30)**: ✅ 58 testes verdes. Q3: `ANA@exemplo.com` e `"  ana@exemplo.com  "`
+  > retornam 400 com a mensagem de duplicado. Teste extra no ambiente real: 5 `POST` simultâneos
+  > com um e-mail novo deram 1 × 201 e 4 × 400, nenhum 500, e restou uma única conta.
 
 **Checkpoint**: unicidade do e-mail garantida, inclusive sob concorrência; suíte verde.
 

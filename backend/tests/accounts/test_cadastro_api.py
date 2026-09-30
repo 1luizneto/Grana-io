@@ -71,3 +71,33 @@ def test_senha_mascarada_na_pagina_de_erro():
     assert parametros["senha"] == "********************"
     assert parametros["confirmacao_senha"] == "********************"
     assert parametros["nome"] == "Ana Souza"
+
+
+MENSAGEM_DUPLICADO = {"email": ["Já existe uma conta com este e-mail."]}
+
+
+@pytest.mark.parametrize("email", ["ana@exemplo.com", "ANA@Exemplo.com", "  ana@exemplo.com  "])
+def test_email_ja_cadastrado_e_recusado(cliente, email):
+    Usuario.objects.create_user(email="ana@exemplo.com", nome="Ana", password=SENHA)
+
+    resposta = cliente.post(URL, dados(email=email), format="json")
+
+    assert resposta.status_code == 400
+    assert resposta.json() == MENSAGEM_DUPLICADO
+    assert Usuario.objects.filter(email="ana@exemplo.com").count() == 1
+
+
+def test_corrida_de_email_duplicado_responde_400_e_nao_500(cliente, monkeypatch):
+    # Simula dois cadastros simultâneos: a checagem do serializer passa, mas a restrição do banco
+    # recusa o segundo.
+    Usuario.objects.create_user(email="ana@exemplo.com", nome="Ana", password=SENHA)
+    monkeypatch.setattr(
+        "accounts.serializers.CadastroSerializer.validate_email",
+        lambda self, valor: Usuario.normalizar_email(valor),
+    )
+
+    resposta = cliente.post(URL, dados(), format="json")
+
+    assert resposta.status_code == 400
+    assert resposta.json() == MENSAGEM_DUPLICADO
+    assert Usuario.objects.filter(email="ana@exemplo.com").count() == 1
