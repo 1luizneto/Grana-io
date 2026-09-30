@@ -1,0 +1,14 @@
+# Força final de linha LF em todos os arquivos de texto (FR-016).
+# Scripts e arquivos lidos dentro dos containers Linux quebram com CRLF.
+* text=auto eol=lf
+
+# Binários
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.webp  binary
+*.woff  binary
+*.woff2 binary
+*.pdf   binary

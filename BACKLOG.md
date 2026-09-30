@@ -17,13 +17,13 @@
 | Sprint | Período | Tema | Itens | Pts |
 |---|---|---|---|---|
 | S1 | 01/10 – 15/10 | Fundação: Docker + esqueleto + login | RNF-01, RNF-02, US-01, US-02, US-03, US-26 | 28 |
-| S2 | 16/10 – 30/10 | Categorias e cadastro do mês | US-05, US-06, US-07, US-07b, US-08, RNF-03, US-27 | 29 |
+| S2 | 16/10 – 30/10 | Categorias e cadastro do mês + modo de uso | US-05, US-06, US-07, US-07b, US-08, RNF-03, RNF-09, US-27 | 34 |
 | S3 | 31/10 – 14/11 | Cenários de ganho + cálculo CLT | US-11, US-12, US-13, US-14, US-15, US-16, US-28 | 31 |
 | S4 | 15/11 – 29/11 | Motor de cálculo + PJ + comparação | US-13b, US-16b, US-17, US-18, US-19, US-21, US-29 | 37 |
 | S5 | 30/11 – 14/12 | Recursos avançados + dashboard | US-09, US-10, US-10b, US-20, US-22, US-23, US-24, US-30 | 42 |
 | S6 | 15/12 – 29/12 | Refinamento e qualidade final | US-04, US-25, RNF-04, RNF-05, RNF-06, RNF-07 | 24 |
 
-**Total planejado:** 191 pts (RNF-08 fica fora das sprints — backlog futuro).
+**Total planejado:** 196 pts (RNF-08 fica fora das sprints — backlog futuro).
 
 ---
 
@@ -87,6 +87,7 @@
 | EP-07 / RNF-06 | Backup e restauração dos dados locais |
 | EP-07 / RNF-07 | Observabilidade e logging |
 | EP-07 / RNF-08 | Preparação para deploy em nuvem |
+| EP-07 / RNF-09 | Modo de uso local |
 
 ---
 
@@ -170,14 +171,15 @@
 
 | ID | User Story | Critérios de Aceitação | Pts | Prioridade |
 |---|---|---|---|---|
-| RNF-01 | **Como** desenvolvedor, **quero** subir o sistema inteiro com um comando, **para** rodar localmente sem configuração manual. | ☐ `docker compose up` sobe `db` (PostgreSQL), `backend` (Django) e `frontend` (React).<br>☐ Os dados do banco persistem em um volume Docker entre reinicializações.<br>☐ As migrations rodam automaticamente na subida.<br>☐ Variáveis sensíveis ficam num `.env` (com `.env.example` versionado).<br>☐ O README documenta como subir, parar e acessar o sistema. | 5 | Alta |
-| RNF-02 | **Como** usuário, **quero** que o sistema seja seguro, **para** proteger meus dados financeiros. | ☐ Senhas são armazenadas com hash (padrão do Django).<br>☐ A API exige autenticação em todas as rotas, exceto login e cadastro.<br>☐ O CORS é restrito à origem do frontend.<br>☐ Nenhum segredo fica versionado no repositório.<br>☐ Nenhum dado é enviado a serviços externos. | 5 | Alta |
+| RNF-01 | **Como** desenvolvedor, **quero** subir o sistema inteiro com um comando, **para** rodar localmente sem configuração manual. | ☑ `docker compose up` sobe `db` (PostgreSQL), `backend` (Django) e `frontend` (React).<br>☑ Os dados do banco persistem em um volume Docker entre reinicializações.<br>☑ As migrations rodam automaticamente na subida.<br>☑ Variáveis sensíveis ficam num `.env` (com `.env.example` versionado).<br>☑ O README documenta como subir, parar e acessar o sistema. | 5 | Alta |
+| RNF-02 | **Como** usuário, **quero** que o sistema seja seguro, **para** proteger meus dados financeiros. | ☐ Senhas são armazenadas com hash (padrão do Django).<br>☐ A API exige autenticação em todas as rotas, exceto login e cadastro.<br>☑ O CORS é restrito à origem do frontend.<br>☑ Nenhum segredo fica versionado no repositório.<br>☐ Nenhum dado é enviado a serviços externos. | 5 | Alta |
 | RNF-03 | **Como** usuário, **quero** que os valores sejam calculados com precisão, **para** não ter diferenças de centavos. | ☐ Valores monetários usam `DecimalField` no banco e `Decimal` no Python (nunca `float`).<br>☐ A regra de arredondamento é definida e documentada (ex.: ROUND_HALF_UP, 2 casas).<br>☐ O frontend não refaz cálculos financeiros: exibe os valores da API. | 3 | Alta |
 | RNF-04 | **Como** usuário, **quero** uma interface clara e em português, **para** usar o sistema sem precisar de manual. | ☐ Valores em R$ (`R$ 1.234,56`) e datas em `dd/mm/aaaa`.<br>☐ O fluxo principal (cadastrar → criar mês → lançar gastos → criar cenário → comparar) é navegável sem instrução externa.<br>☐ As mensagens de erro são compreensíveis e dizem o que fazer.<br>☐ O layout funciona em desktop e celular. | 5 | Média |
 | RNF-05 | **Como** desenvolvedor, **quero** testes automatizados, **para** evitar regressões, principalmente nos cálculos. | ☐ Os cálculos de INSS, IRRF, PJ, saldo e projeção têm testes unitários com casos conferidos manualmente.<br>☐ Os endpoints da API têm testes de integração, incluindo o isolamento entre usuários (US-03).<br>☐ É possível rodar toda a suíte com um comando (ex.: `docker compose run backend pytest`). | 8 | Alta |
 | RNF-06 | **Como** usuário, **quero** fazer backup e restaurar meus dados, **para** não perder o histórico, já que o banco é local. | ☐ Um script/comando gera um dump do banco com data no nome do arquivo.<br>☐ Um script/comando restaura um dump.<br>☐ O procedimento está documentado no README. | 3 | Média |
 | RNF-07 | **Como** desenvolvedor, **quero** logging estruturado, **para** depurar problemas. | ☐ Eventos-chave (login, erros, criação de mês, falhas de cálculo) são logados com timestamp.<br>☐ Os logs não contêm senhas nem tokens.<br>☐ Os logs podem ser consultados via `docker compose logs`. | 3 | Baixa |
 | RNF-08 | **Como** desenvolvedor, **quero** que a arquitetura esteja pronta para ir para a nuvem, **para** hospedar o sistema no futuro sem retrabalho. | ☐ As configurações dependem só de variáveis de ambiente (12-factor).<br>☐ O frontend consome a API por uma URL configurável.<br>☐ (Backlog futuro — pós-entrega: frontend no Vercel, backend em Render/Railway, Postgres gerenciado como Neon/Supabase.) | 5 | Baixa |
+| RNF-09 | **Como** usuário, **quero** um modo de uso separado do modo de desenvolvimento, **para** usar o sistema no dia a dia com meus dados reais de forma leve e sem expor detalhes técnicos na rede local. | ☐ Um comando documentado sobe o sistema no modo de uso, e outro no modo de desenvolvimento.<br>☐ No modo de uso, a interface é servida como build otimizado e a API roda em servidor de aplicação, sem recarga automática.<br>☐ No modo de uso, erros não exibem detalhes técnicos (stack traces, configurações) para nenhum dispositivo da rede.<br>☐ O modo de uso exige chave secreta própria e se recusa a subir com a chave padrão.<br>☐ Os dois modos usam o mesmo banco local, e trocar de modo não perde dados.<br>☐ Deve estar concluído antes de lançar dados financeiros reais (origem: clarificação da spec 001-infra-docker). | 5 | Alta |
 
 ---
 
@@ -185,6 +187,7 @@
 
 | Item | Descrição |
 |---|---|
+| Pendências da spec 001 (RNF-01) | Validar o acesso pelo celular na rede local (SC-008: hoje fica carregando, suspeita de firewall ou isolamento no roteador), rodar o quickstart num host Linux (SC-007; hoje validado só no Windows, com containers Linux do Docker Desktop) e ter o README seguido por uma pessoa que não conhece o projeto (SC-006, na demo da Sprint 1). |
 | Deploy em nuvem | Executar o RNF-08: frontend no Vercel, backend em serviço com container e Postgres gerenciado. |
 | Importar extrato | Importar arquivos CSV/OFX do banco com sugestão automática de categoria. |
 | Metas de economia | Definir metas (ex.: reserva de emergência) e acompanhar o progresso por cenário. |
