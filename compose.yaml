@@ -11,6 +11,10 @@ services:
   db:
     image: postgres:17-alpine
     environment: *postgres-env
+    volumes:
+      # Volume nomeado (grana_pgdata): sobrevive a down, restart, reboot e rebuild.
+      # Só "docker compose down -v" remove os dados (FR-005, FR-006).
+      - pgdata:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 5s
@@ -50,8 +54,12 @@ services:
     ports:
       - "${FRONTEND_PORT:-5173}:5173"
     volumes:
-      - ./frontend:/app
-      # node_modules da imagem, sem ser escondido pelo bind mount.
-      - /app/node_modules
+      # Só o código-fonte é montado (recarga sem rebuild, FR-015). O node_modules fica na
+      # imagem: sem volume anônimo, nada vaza a cada down/up e "up --build" basta após mudar
+      # dependências. Mudanças em index.html, vite.config.js ou package.json pedem rebuild.
+      - ./frontend/src:/app/src
     depends_on:
       - backend
+
+volumes:
+  pgdata:

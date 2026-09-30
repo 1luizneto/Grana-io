@@ -143,7 +143,7 @@ trailers de IA.
   Atualizar `frontend/src/App.jsx` para renderizar `<Inicio />` (FR-008) (depende de T025).
 - [X] T027 [US1] Atualizar `compose.yaml`:
   - no `backend`, healthcheck `["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health/', timeout=3)"]` (interval 10s, timeout 5s, retries 5, start_period 30s);
-  - novo serviço `frontend` com `build: ./frontend`, `environment: { API_PROXY_TARGET: http://backend:8000, VITE_API_URL: ${VITE_API_URL:-} }`, `ports: ["${FRONTEND_PORT:-5173}:5173"]`, `volumes: ["./frontend:/app", "/app/node_modules"]` e `depends_on: [backend]`.
+  - novo serviço `frontend` com `build: ./frontend`, `environment: { API_PROXY_TARGET: http://backend:8000, VITE_API_URL: ${VITE_API_URL:-} }`, `ports: ["${FRONTEND_PORT:-5173}:5173"]`, `volumes: ["./frontend:/app", "/app/node_modules"]` e `depends_on: [backend]`. *(Revisado na US2: o volume passou a ser só `./frontend/src:/app/src`, sem volume de `node_modules`. Ver research R-09.)*
 
   (FR-001, FR-015, FR-018; research R-06, R-08, R-09)
 - [X] T028 [US1] Validar pelo [quickstart.md](quickstart.md):
@@ -172,8 +172,14 @@ trailers de IA.
 
 ### Implementation for User Story 2
 
-- [ ] T029 [US2] Em `compose.yaml`, declarar o volume nomeado de topo `volumes: { pgdata: {} }` e montá-lo no `db` em `pgdata:/var/lib/postgresql/data`. Confirmar que `name: grana` resolve o volume como `grana_pgdata` (`docker volume ls`) (FR-005, FR-006, data-model §1, research R-05)
-- [ ] T030 [US2] Validar o cenário V5 do [quickstart.md](quickstart.md): 5 ciclos `down`/`up`, `up --build` e depois `down -v`. Resultado esperado: `1` após os ciclos e o rebuild, e `0` após o `down -v` (SC-003)
+- [X] T029 [US2] Em `compose.yaml`, declarar o volume nomeado de topo `volumes: { pgdata: {} }` e montá-lo no `db` em `pgdata:/var/lib/postgresql/data`. Confirmar que `name: grana` resolve o volume como `grana_pgdata` (`docker volume ls`) (FR-005, FR-006, data-model §1, research R-05)
+- [X] T030 [US2] Validar o cenário V5 do [quickstart.md](quickstart.md): 5 ciclos `down`/`up`, `up --build` e depois `down -v`. Resultado esperado: `1` após os ciclos e o rebuild, e `0` após o `down -v` (SC-003)
+
+  > **Resultado (2026-09-30)**: ✅ `1` nos 5 ciclos e após o rebuild, e `0` após o `down -v`. Como as
+  > migrations automáticas só chegam na US4, o `migrate` foi rodado à mão para o teste. Durante a
+  > validação apareceu um vazamento de volumes anônimos de `node_modules` (~44 MB por `down`/`up`).
+  > A correção foi montar só `frontend/src` (research R-09), e 2 novos ciclos deixaram 0 órfãos. Os
+  > 13 volumes órfãos antigos do Grana foram removidos pelo ID, com autorização do responsável.
 
 **Checkpoint**: persistência comprovada; remoção só por comando explícito. Suíte verde.
 
@@ -251,7 +257,7 @@ trailers de IA.
 - [ ] T042 [US5] Reescrever `README.md` em pt-BR, com as seções:
   1. O que é o Grana.io.
   2. Pré-requisitos (só Docker com Compose v2, em execução).
-  3. Subir: `docker compose up` e `docker compose up -d --wait`. Reconstruir após mudar dependências: `docker compose up --build -V`, explicando que o `-V` descarta o `node_modules` antigo do frontend sem tocar nos dados do banco ([contracts/commands.md](contracts/commands.md)).
+  3. Subir: `docker compose up` e `docker compose up -d --wait`. Reconstruir com `docker compose up --build` após mudar dependências ou `index.html`/`vite.config.js`. O rebuild não toca nos dados do banco ([contracts/commands.md](contracts/commands.md)).
   4. Acessar: tabela de URLs da interface, da API e da saúde, segundo [contracts/commands.md](contracts/commands.md).
   5. Acessar pela rede local:
      - descobrir o IP (`ipconfig` / `ip addr`);
@@ -262,7 +268,7 @@ trailers de IA.
   7. Rodar os testes: `docker compose run --rm backend pytest`.
   8. Personalizar a configuração: `.env.example` → `.env`. Incluir o aviso sobre `POSTGRES_PASSWORD` e o volume já inicializado, e o aviso de que um `DJANGO_ALLOWED_HOSTS` personalizado precisa incluir `localhost` e `backend`.
   9. Remover os dados locais: `docker compose down -v`, com aviso de **irreversível**.
-  10. Solução de problemas: Docker parado, porta ocupada (`FRONTEND_PORT`/`BACKEND_PORT`), "API inacessível" (incluindo a causa `DJANGO_ALLOWED_HOSTS` sem `localhost`/`backend`), "banco indisponível", "Blocked request" ao acessar por nome de host, e dependências desatualizadas após rebuild (usar `-V`).
+  10. Solução de problemas: Docker parado, porta ocupada (`FRONTEND_PORT`/`BACKEND_PORT`), "API inacessível" (incluindo a causa `DJANGO_ALLOWED_HOSTS` sem `localhost`/`backend`), "banco indisponível", "Blocked request" ao acessar por nome de host, e mudança em `index.html`/`vite.config.js`/`package.json` que não aparece (rodar `docker compose up --build`). Avisar também para **não** usar `docker volume prune`, porque ele apaga volumes de outros projetos que estejam parados.
   11. Link para `docs/arquitetura.md` e `BACKLOG.md`.
 
   (FR-017)

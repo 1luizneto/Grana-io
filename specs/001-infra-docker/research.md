@@ -128,8 +128,13 @@ Este documento resolve as decisões técnicas do Technical Context. Não restou 
 ## R-09 — Recarga automática sem rebuild (FR-015) e compatibilidade com Windows
 
 - **Decision**:
-  - `./backend:/app` e `./frontend:/app` como bind mounts. O `node_modules` fica num volume anônimo
-    (`/app/node_modules`), para que a pasta do host não esconda as dependências da imagem.
+  - `./backend:/app` e `./frontend/src:/app/src` como bind mounts. No frontend, só o código-fonte é
+    montado, e o `node_modules` continua o da imagem, sem nenhum volume.
+  - *Revisado na implementação (US2, 2026-09-30)*: o desenho original montava `./frontend:/app`
+    com um volume anônimo em `/app/node_modules`. Isso vazava um volume órfão de ~44 MB a cada
+    `down`/`up` e exigia `up --build -V` para não subir com dependências antigas. Montar só `src/`
+    elimina os dois problemas. A contrapartida é que mudanças em `index.html`, `vite.config.js` ou
+    `package.json` pedem `docker compose up --build`.
   - Django: `runserver` com o `StatReloader` padrão (polling), que funciona com bind mounts no Windows.
   - Vite: `server.watch.usePolling: true`, porque os eventos de arquivo do Windows não chegam ao
     container de forma confiável.

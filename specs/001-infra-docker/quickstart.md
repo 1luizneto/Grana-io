@@ -62,11 +62,11 @@ Execute na raiz do repositório, na ordem. Cada cenário indica o requisito que 
 ### V5 — Persistência e remoção explícita (US2; FR-005, FR-006; SC-003)
 
 1. Grave um registro:
-   `docker compose exec backend python manage.py shell -c "from django.contrib.auth.models import Group; Group.objects.get_or_create(name='persistencia-teste')"`
+   `docker compose exec backend python manage.py shell -v 0 -c "from django.contrib.auth.models import Group; Group.objects.get_or_create(name='persistencia-teste')"`
 2. Repita 5 vezes: `docker compose down` seguido de `docker compose up -d --wait`.
 3. Rode `docker compose up -d --build --wait` (reconstrói as imagens da API e da interface).
 4. Consulte:
-   `docker compose exec backend python manage.py shell -c "from django.contrib.auth.models import Group; print(Group.objects.filter(name='persistencia-teste').count())"`
+   `docker compose exec backend python manage.py shell -v 0 -c "from django.contrib.auth.models import Group; print(Group.objects.filter(name='persistencia-teste').count())"`
    **Esperado**: `1`.
 5. Rode `docker compose down -v` e depois `docker compose up -d --wait`, e repita a consulta.
    **Esperado**: `0` (banco recriado vazio).
