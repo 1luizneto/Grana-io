@@ -31,9 +31,9 @@ de IA.
 
 **Purpose**: esqueleto do app `accounts`
 
-- [ ] T001 [P] Criar o app `accounts`: `backend/accounts/__init__.py`, `backend/accounts/apps.py` (`AccountsConfig`, `name = "accounts"`, `default_auto_field = "django.db.models.BigAutoField"`), `backend/accounts/migrations/__init__.py`, `backend/accounts/services/__init__.py` e `backend/accounts/urls.py` com `urlpatterns = []`
-- [ ] T002 [P] Criar o pacote de testes `backend/tests/accounts/__init__.py`
-- [ ] T003 Em `backend/config/settings.py`, adicionar `"accounts"` a `INSTALLED_APPS` (depois de `"corsheaders"`, antes de `"core"`). Em `backend/config/urls.py`, adicionar `path("api/", include("accounts.urls"))` ao lado da rota do `core`. Rodar a suíte e confirmar que continua verde (34) (depende de T001)
+- [X] T001 [P] Criar o app `accounts`: `backend/accounts/__init__.py`, `backend/accounts/apps.py` (`AccountsConfig`, `name = "accounts"`, `default_auto_field = "django.db.models.BigAutoField"`), `backend/accounts/migrations/__init__.py`, `backend/accounts/services/__init__.py` e `backend/accounts/urls.py` com `urlpatterns = []`
+- [X] T002 [P] Criar o pacote de testes `backend/tests/accounts/__init__.py`
+- [X] T003 Em `backend/config/settings.py`, adicionar `"accounts"` a `INSTALLED_APPS` (depois de `"corsheaders"`, antes de `"core"`). Em `backend/config/urls.py`, adicionar `path("api/", include("accounts.urls"))` ao lado da rota do `core`. Rodar a suíte e confirmar que continua verde (34) (depende de T001)
 
 **Checkpoint**: app registrado, suíte verde.
 
