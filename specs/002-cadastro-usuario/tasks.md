@@ -90,11 +90,11 @@ de IA.
 
 > Escreva estes testes primeiro e confirme que falham antes de implementar.
 
-- [ ] T009 [P] [US1] Escrever `backend/tests/accounts/test_cadastro_service.py` (`@pytest.mark.django_db`). Casos:
+- [X] T009 [P] [US1] Escrever `backend/tests/accounts/test_cadastro_service.py` (`@pytest.mark.django_db`). Casos:
   - `cadastrar_usuario(nome="Ana", email="Ana@Exemplo.com", senha="uma-senha-boa-2026")` devolve um `Usuario` persistido, com e-mail normalizado e senha verificável por `check_password`;
   - **atomicidade**: fazer `monkeypatch` em `Usuario.objects.create_user` com um wrapper que chama o original (gravando o usuário) e **depois** lança `RuntimeError`. `cadastrar_usuario` propaga o erro, e ao final `Usuario.objects.count() == 0`, o que prova o `transaction.atomic()` sem criar código especulativo no service;
   - `cadastro_aberto()` segue `settings.CADASTRO_ABERTO` (com `override_settings`).
-- [ ] T010 [P] [US1] Escrever `backend/tests/accounts/test_cadastro_api.py`, usando `APIClient` sem autenticação, conforme [contracts/api-cadastro.md](contracts/api-cadastro.md). Casos:
+- [X] T010 [P] [US1] Escrever `backend/tests/accounts/test_cadastro_api.py`, usando `APIClient` sem autenticação, conforme [contracts/api-cadastro.md](contracts/api-cadastro.md). Casos:
   - `POST /api/usuarios/` válido, com e-mail `" Ana@Exemplo.com "` e nome `"  Ana Souza "`, retorna 201 e o corpo **exatamente** `{"nome": "Ana Souza", "email": "ana@exemplo.com"}`, sem `id`, `senha`, `token`, `access` ou `refresh`;
   - o usuário existe com `is_active=True`, `is_staff=False` e `is_superuser=False`;
   - o texto da senha não aparece no corpo da resposta;
@@ -106,14 +106,14 @@ de IA.
 
 ### Implementation for User Story 1
 
-- [ ] T011 [US1] Implementar `backend/accounts/services/cadastro.py`:
+- [X] T011 [US1] Implementar `backend/accounts/services/cadastro.py`:
   - `cadastro_aberto() -> bool` lê `settings.CADASTRO_ABERTO`;
   - `cadastrar_usuario(nome, email, senha) -> Usuario` roda em `transaction.atomic()` e chama `Usuario.objects.create_user(email=email, nome=nome, password=senha)`.
 
   Deixar um comentário no ponto onde a US-05 acrescentará as categorias padrão, com chamada explícita e sem signals ([research R-09](research.md)).
 
   Na mesma tarefa, adicionar em `backend/config/settings.py` a configuração `CADASTRO_ABERTO = env_bool("GRANA_CADASTRO_ABERTO", True)`. Sem ela, `cadastro_aberto()` dá `AttributeError` e a T014 não consegue ficar verde.
-- [ ] T012 [US1] Implementar em `backend/accounts/serializers.py`:
+- [X] T012 [US1] Implementar em `backend/accounts/serializers.py`:
   - `CadastroSerializer(serializers.Serializer)` com os campos:
     - `nome = CharField(max_length=150)`;
     - `email = EmailField(max_length=254)`, com `validate_email` que devolve `Usuario.normalizar_email(valor)`;
@@ -122,7 +122,7 @@ de IA.
   - `UsuarioCadastradoSerializer(serializers.ModelSerializer)`, só com `fields = ["nome", "email"]`.
 
   As regras completas de senha, confirmação e duplicidade entram na US2 e na US3.
-- [ ] T013 [US1] Implementar `CadastroView(APIView)` em `backend/accounts/views.py`:
+- [X] T013 [US1] Implementar `CadastroView(APIView)` em `backend/accounts/views.py`:
   - `permission_classes = [AllowAny]`, `authentication_classes = []`, `http_method_names = ["post", "options"]`;
   - `@method_decorator(sensitive_post_parameters("senha", "confirmacao_senha"), name="dispatch")`;
   - `post()` faz, em ordem:
@@ -130,9 +130,19 @@ de IA.
     2. valida com `CadastroSerializer` (`raise_exception=True`);
     3. chama `cadastrar_usuario(**dados sem confirmacao_senha)`;
     4. devolve 201 com `UsuarioCadastradoSerializer(usuario).data`.
-- [ ] T014 [US1] Registrar `path("usuarios/", CadastroView.as_view(), name="cadastro")` em `backend/accounts/urls.py`. Rodar a suíte e confirmar T009 e T010 **verdes**
-- [ ] T015 [US1] Expor a configuração já criada na T011 (`CADASTRO_ABERTO` no settings). Adicionar `GRANA_CADASTRO_ABERTO: ${GRANA_CADASTRO_ABERTO:-1}` ao `environment` do `backend` em `compose.yaml`. Acrescentar ao `.env.example` a variável `GRANA_CADASTRO_ABERTO=1`, com o comentário "1 = qualquer pessoa na rede pode criar conta; 0 = cadastro desativado (403), contas existentes continuam funcionando" (FR-012, [research R-07](research.md))
-- [ ] T016 [US1] Validar pelo [quickstart.md](quickstart.md) os cenários Q1, Q2, Q5, Q6 e Q7. Registrar o resultado no checkpoint
+- [X] T014 [US1] Registrar `path("usuarios/", CadastroView.as_view(), name="cadastro")` em `backend/accounts/urls.py`. Rodar a suíte e confirmar T009 e T010 **verdes**
+- [X] T015 [US1] Expor a configuração já criada na T011 (`CADASTRO_ABERTO` no settings). Adicionar `GRANA_CADASTRO_ABERTO: ${GRANA_CADASTRO_ABERTO:-1}` ao `environment` do `backend` em `compose.yaml`. Acrescentar ao `.env.example` a variável `GRANA_CADASTRO_ABERTO=1`, com o comentário "1 = qualquer pessoa na rede pode criar conta; 0 = cadastro desativado (403), contas existentes continuam funcionando" (FR-012, [research R-07](research.md))
+- [X] T016 [US1] Validar pelo [quickstart.md](quickstart.md) os cenários Q1, Q2, Q5, Q6 e Q7. Registrar o resultado no checkpoint
+
+  > **Resultado (2026-09-30)**: ✅ 53 testes verdes.
+  > - Q1: 201 `{"nome":"Ana Souza","email":"ana@exemplo.com"}`, também pelo proxy da interface
+  >   (5173).
+  > - Q2: senha `pbkdf2_sha256$1000000$…`, e a conta fica ativa, sem staff e sem superuser.
+  > - Q5: com `GRANA_CADASTRO_ABERTO=0`, 403 com a mensagem do contrato e nenhuma conta criada;
+  >   reaberto, volta a 201.
+  > - Q6: `GET` 405.
+  > - Q7: 0 ocorrências da senha nos logs.
+  > - Ficaram 3 contas de teste no banco local (ana, bia e caio @exemplo.com).
 
 **Checkpoint**: cadastro funcional e demonstrável; suíte verde.
 

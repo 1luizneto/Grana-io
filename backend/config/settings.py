@@ -79,6 +79,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Usuário próprio, identificado pelo e-mail (specs/002-cadastro-usuario, research R-01).
 AUTH_USER_MODEL = "accounts.Usuario"
 
+# Cadastro público de novas contas; 0 fecha o cadastro sem alterar código (FR-012).
+CADASTRO_ABERTO = env_bool("GRANA_CADASTRO_ABERTO", True)
+
 REST_FRAMEWORK = {
     # A autenticação JWT entra na US-02; até lá nenhuma rota autentica.
     "DEFAULT_AUTHENTICATION_CLASSES": [],
