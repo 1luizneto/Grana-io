@@ -14,6 +14,9 @@
 
 - Q: Quanto tempo duram a credencial de acesso e a de renovação? → A: Acesso de 30 minutos e
   renovação de 7 dias por padrão, ajustáveis por configuração de ambiente.
+- Q: O sistema deve limitar tentativas de login em pouco tempo? → A: Sim, limite por dispositivo.
+  Depois de 10 tentativas em 1 minuto, o login daquele dispositivo recebe "Muitas tentativas. Tente
+  novamente em instantes." até a janela passar. A conta não é bloqueada.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -131,8 +134,11 @@ funciona mais; verificar que uma sessão aberta em outro dispositivo continua fu
   seguindo a normalização do cadastro (spec 002).
 - **Conta desativada com sessão aberta**: novas requisições com a credencial de acesso dela são
   recusadas, e a renovação também (US4, cenário 4).
-- **Várias tentativas de senha errada**: não há bloqueio nem limite de tentativas nesta spec.
-  O sistema roda só na rede local (spec 001).
+- **Várias tentativas de login em pouco tempo**: a partir da 11ª tentativa no mesmo minuto, o
+  mesmo dispositivo recebe "Muitas tentativas. Tente novamente em instantes.", inclusive se a
+  senha estiver certa, até a janela de 1 minuto passar (FR-015). Outros dispositivos e a própria
+  conta não são afetados; a conta nunca é bloqueada, para que ninguém consiga trancar a conta de
+  outra pessoa errando a senha de propósito.
 - **Senha nunca devolvida nem registrada**: nem respostas, nem erros, nem logs contêm a senha
   (constituição, Princípio I). As credenciais de sessão também não são registradas em logs.
 - **Relógio**: os vencimentos usam o horário do servidor, e não dependem do relógio do
@@ -158,6 +164,7 @@ funciona mais; verificar que uma sessão aberta em outro dispositivo continua fu
 - **FR-012**: Com uma sessão válida, a pessoa MUST poder consultar a própria conta (nome e e-mail), e somente a própria.
 - **FR-013**: Senhas e credenciais de sessão MUST NOT aparecer em logs nem em mensagens de erro; a senha MUST NOT aparecer em respostas.
 - **FR-014**: Uma conta desativada MUST perder o acesso: suas credenciais de acesso e de renovação passam a ser recusadas, mesmo que ainda não tenham vencido.
+- **FR-015**: O login MUST aceitar no máximo 10 tentativas por minuto de um mesmo dispositivo (endereço de rede), certas ou erradas; acima disso MUST responder "Muitas tentativas. Tente novamente em instantes." até a janela passar, sem bloquear a conta nem afetar outros dispositivos. O limite MUST poder ser ajustado por configuração de ambiente.
 
 ### Key Entities
 
@@ -178,6 +185,7 @@ funciona mais; verificar que uma sessão aberta em outro dispositivo continua fu
 - **SC-004**: Depois da saída, 100% das tentativas de renovar a sessão encerrada são recusadas, e as sessões de outros dispositivos seguem funcionando.
 - **SC-005**: Com os prazos padrão, uma pessoa que usa o sistema ao menos uma vez a cada 7 dias no mesmo dispositivo não precisa digitar a senha de novo nesse período; uma credencial de acesso copiada deixa de funcionar em até 30 minutos.
 - **SC-006**: Nenhuma senha ou credencial de sessão aparece nos logs do sistema.
+- **SC-007**: Um mesmo dispositivo consegue fazer no máximo 10 tentativas de login por minuto; adivinhar uma senha por tentativa e erro fica limitado a 600 tentativas por hora por dispositivo.
 
 ## Assumptions
 
@@ -197,5 +205,7 @@ funciona mais; verificar que uma sessão aberta em outro dispositivo continua fu
 - Trocar a senha e invalidar as sessões antigas é a US-04.
 - Sem "lembrar de mim" separado: a duração da renovação define por quanto tempo a pessoa fica
   conectada sem digitar a senha.
-- Sem limite de tentativas nem bloqueio de conta: sistema local numa rede doméstica confiável
-  (spec 001, Assumptions). Pode virar item próprio no backlog junto com o modo de uso (RNF-09).
+- O limite de tentativas vale só para o login (Clarifications). Cadastro e renovação não têm
+  limite nesta spec. O dispositivo é identificado pelo endereço de rede de onde vem a requisição;
+  dispositivos atrás do mesmo endereço compartilham o limite, o que é aceitável numa rede doméstica.
+- Não há bloqueio de conta por senha errada (Clarifications).
