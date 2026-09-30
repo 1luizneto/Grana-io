@@ -305,14 +305,34 @@ trailers de IA.
 
 **Purpose**: verificações transversais e encerramento da Definition of Done
 
-- [ ] T044 Rodar `git add --renormalize .` e conferir com `git ls-files --eol` que `*.sh`, `Dockerfile`, `compose.yaml`, `.env.example` e os demais textos estão como `i/lf` (quickstart V9, passo 1; FR-016)
-- [ ] T045 [P] Rodar a busca de segredos do cenário V6, passo 5 (`git grep -nIiE "(password|secret|token|api[_-]?key)\s*[:=]"`) e confirmar que só aparecem valores de desenvolvimento claramente identificados e leituras de ambiente (SC-004)
-- [ ] T046 Executar o [quickstart.md](quickstart.md) completo (V1 a V10) no Windows, num clone limpo, cronometrando a primeira subida (≤ 10 min, SC-001) e uma subida seguinte (≤ 1 min, SC-002)
-- [ ] T047 Executar V1, V2 e V7 num host Linux ou no WSL2 com Docker Engine e confirmar resultado idêntico ao do Windows (SC-007)
-- [ ] T048 Fechar a Definition of Done:
+- [X] T044 Rodar `git add --renormalize .` e conferir com `git ls-files --eol` que `*.sh`, `Dockerfile`, `compose.yaml`, `.env.example` e os demais textos estão como `i/lf` (quickstart V9, passo 1; FR-016)
+- [X] T045 [P] Rodar a busca de segredos do cenário V6, passo 5 (`git grep -nIiE "(password|secret|token|api[_-]?key)\s*[:=]"`) e confirmar que só aparecem valores de desenvolvimento claramente identificados e leituras de ambiente (SC-004)
+- [X] T046 Executar o [quickstart.md](quickstart.md) completo (V1 a V10) no Windows, num clone limpo, cronometrando a primeira subida (≤ 10 min, SC-001) e uma subida seguinte (≤ 1 min, SC-002)
+
+  > **Resultado parcial (2026-09-30)**, num clone limpo:
+  > - SC-001: 31 s com `build --no-cache`, mas sem baixar de novo as imagens base, que foram
+  >   preservadas por serem compartilhadas com outros projetos. SC-002: 13 s.
+  > - V2, V4, V5 (5 ciclos + rebuild + `down -v`), V6.4, V7 e V9 ✅.
+  > - V3 a partir do PC, pelo IP 192.168.11.214, ✅.
+  > - **Pendente (humano)**: V3 pelo celular (SC-008) e V10, leitura do README por uma pessoa
+  >   (SC-006).
+  > - **Decisão do responsável (2026-09-30)**: o SC-008 fica registrado como limitação conhecida
+  >   (README §4) e o SC-006 fica para a demo da Sprint 1. Os dois estão no BACKLOG, em
+  >   "Pendências da spec 001".
+- [X] T047 Executar V1, V2 e V7 num host Linux ou no WSL2 com Docker Engine e confirmar resultado idêntico ao do Windows (SC-007)
+
+  > **Aceito como parcial (2026-09-30, decisão do responsável)**: não há host Linux nem distro
+  > WSL de uso geral disponível, só a `docker-desktop`. Os containers já rodam em Linux (VM do
+  > Docker Desktop), e os finais de linha são LF em todo o repositório, que era o principal risco
+  > entre plataformas. O teste num host Linux fica no BACKLOG, em "Pendências da spec 001".
+- [X] T048 Fechar a Definition of Done:
   - `docker compose run --rm backend pytest` verde;
   - todas as tarefas deste arquivo marcadas;
   - em `BACKLOG.md`, marcar como atendidos os critérios do RNF-01 e os critérios de infraestrutura do RNF-02 ("O CORS é restrito à origem do frontend" e "Nenhum segredo fica versionado no repositório").
+
+  > **Resultado (2026-09-30)**: ✅ suíte verde (34), 48 tarefas marcadas e critérios do BACKLOG
+  > marcados com ☑. As pendências de SC-006, SC-007 e SC-008 foram registradas no BACKLOG como item
+  > de acompanhamento.
 
 **Checkpoint**: feature pronta para PR na `main`.
 

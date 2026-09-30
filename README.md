@@ -97,6 +97,10 @@ rede local**:
      New-NetFirewallRule -DisplayName "Grana.io (5173, 8000)" -Direction Inbound -Protocol TCP -LocalPort 5173,8000 -Action Allow -Profile Private
      ```
 
+> **Limitação conhecida.** O acesso por outro computador da rede, pelo IP, foi validado. Já o
+> acesso pelo **celular** ainda não conectou no ambiente de desenvolvimento: a página fica
+> carregando. A investigação está no [BACKLOG](BACKLOG.md), em "Pendências da spec 001".
+
 > **Somente rede local.** Não exponha o Grana.io à internet (redirecionamento de portas no
 > roteador, túneis): o sistema roda em modo de desenvolvimento e não foi preparado para isso.
 
