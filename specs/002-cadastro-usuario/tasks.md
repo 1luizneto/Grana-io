@@ -247,13 +247,20 @@ de IA.
 
 ## Phase 6: Polish & Cross-Cutting Concerns
 
-- [ ] T028 [P] Atualizar `README.md`:
+- [X] T028 [P] Atualizar `README.md`:
   - na seção 3 (Acessar), acrescentar a rota `POST /api/usuarios/` com um exemplo de requisição e link para [contracts/api-cadastro.md](contracts/api-cadastro.md);
   - na seção 7 (Configuração), explicar `GRANA_CADASTRO_ABERTO`;
   - acrescentar uma subseção "Criar administrador" com `docker compose exec backend python manage.py createsuperuser`.
-- [ ] T029 [P] Atualizar `specs/001-infra-docker/contracts/environment.md`: acrescentar `GRANA_CADASTRO_ABERTO` à tabela "Configuráveis" (padrão `1`), com referência a esta spec
-- [ ] T030 Executar o [quickstart.md](quickstart.md) completo (Q1 a Q9). Conferir que `makemigrations --check` não acusa nada pendente e que `docker compose logs backend` não contém nenhuma senha usada nos testes manuais (SC-003)
-- [ ] T031 Fechar a Definition of Done:
+- [X] T029 [P] Atualizar `specs/001-infra-docker/contracts/environment.md`: acrescentar `GRANA_CADASTRO_ABERTO` à tabela "Configuráveis" (padrão `1`), com referência a esta spec
+- [X] T030 Executar o [quickstart.md](quickstart.md) completo (Q1 a Q9). Conferir que `makemigrations --check` não acusa nada pendente e que `docker compose logs backend` não contém nenhuma senha usada nos testes manuais (SC-003)
+
+  > **Resultado (2026-09-30)**: ✅ Q1 a Q9. 80 testes verdes, `makemigrations --check` sem
+  > pendências, 0 senhas nos logs e todas as contas com `pbkdf2_sha256$`, sem staff e sem
+  > superuser.
+  > **Achado**: nome acentuado ("Fábio") enviado pelo `curl` no terminal do Windows chegou fora do
+  > UTF-8, e a API respondeu 400 "JSON parse error" (não 500). Enviado por arquivo UTF-8, deu 201.
+  > É um problema do cliente, não da API, e foi documentado na solução de problemas do README.
+- [X] T031 Fechar a Definition of Done:
   - suíte verde;
   - todas as tarefas marcadas;
   - em `BACKLOG.md`, marcar ☑ os 4 critérios da US-01 atendidos (o 5º, das categorias, está anotado como movido para a US-05) e o critério do RNF-02 "Senhas são armazenadas com hash (padrão do Django)".
