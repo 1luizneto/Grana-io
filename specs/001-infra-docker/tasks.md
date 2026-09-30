@@ -241,16 +241,21 @@ trailers de IA.
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T038 [P] [US4] **Teste de guarda. Não há implementação associada, então o ciclo Red-Green do Princípio IV não se aplica.** Escrever `backend/tests/test_migrations.py`, que chama `call_command("makemigrations", "--check", "--dry-run")` dentro de `@pytest.mark.django_db` e espera que **não** haja `SystemExit` (sem migrations pendentes, Definition of Done da constituição). Rodar a suíte: esperado **verde** já neste ponto. O teste protege as specs futuras contra models alterados sem migration
+- [X] T038 [P] [US4] **Teste de guarda. Não há implementação associada, então o ciclo Red-Green do Princípio IV não se aplica.** Escrever `backend/tests/test_migrations.py`, que chama `call_command("makemigrations", "--check", "--dry-run")` dentro de `@pytest.mark.django_db` e espera que **não** haja `SystemExit` (sem migrations pendentes, Definition of Done da constituição). Rodar a suíte: esperado **verde** já neste ponto. O teste protege as specs futuras contra models alterados sem migration
 
 ### Implementation for User Story 4
 
-- [ ] T039 [US4] Criar `backend/scripts/start-dev.sh` (LF, `#!/bin/sh`, `set -e`), que roda `python manage.py migrate --noinput` e depois `exec python manage.py runserver 0.0.0.0:8000` (FR-004, research R-04)
-- [ ] T040 [US4] Trocar o comando do backend para `["sh", "scripts/start-dev.sh"]` em `compose.yaml` (`command:` do serviço `backend`) e no `CMD` de `backend/Dockerfile`. Assim o `docker compose run --rm backend pytest` continua **sem** migrar o banco real (depende de T039)
-- [ ] T041 [US4] Validar:
+- [X] T039 [US4] Criar `backend/scripts/start-dev.sh` (LF, `#!/bin/sh`, `set -e`), que roda `python manage.py migrate --noinput` e depois `exec python manage.py runserver 0.0.0.0:8000` (FR-004, research R-04)
+- [X] T040 [US4] Trocar o comando do backend para `["sh", "scripts/start-dev.sh"]` em `compose.yaml` (`command:` do serviço `backend`) e no `CMD` de `backend/Dockerfile`. Assim o `docker compose run --rm backend pytest` continua **sem** migrar o banco real (depende de T039)
+- [X] T041 [US4] Validar:
   - `docker compose down -v` e depois `docker compose up -d --wait`: em `docker compose logs backend`, as migrations `auth`/`contenttypes` aparecem antes de "Starting development server" (quickstart V1, passo 4);
   - `docker compose restart backend` sobe sem erro e sem alterar dados (US4, cenário 2);
   - o cenário V7 do [quickstart.md](quickstart.md): suíte verde e registro real intocado.
+
+  > **Resultado (2026-09-30)**: ✅ 34 testes verdes. Com banco zerado, as migrations de
+  > `contenttypes` e `auth` aparecem antes de "Starting development server". O `restart` mostra
+  > "No migrations to apply" e o container fica `healthy`. O registro real ficou intocado depois do
+  > `pytest`: `1` alvo e `1` no total, antes e depois.
 
 **Checkpoint**: estrutura do banco e testes totalmente automáticos. Suíte verde.
 

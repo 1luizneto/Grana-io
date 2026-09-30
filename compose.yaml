@@ -24,6 +24,9 @@ services:
 
   backend:
     build: ./backend
+    # Migra e sobe o servidor. "docker compose run --rm backend pytest" substitui este comando
+    # e por isso não migra o banco real.
+    command: ["sh", "scripts/start-dev.sh"]
     environment:
       <<: *postgres-env
       POSTGRES_HOST: db
