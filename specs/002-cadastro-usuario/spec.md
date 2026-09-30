@@ -15,6 +15,12 @@
 - Q: As categorias padrão entram nesta spec ou ficam para a US-05? → A: Ficam para a US-05
   (Sprint 2). A US-05 passa a gerar as 7 categorias padrão no cadastro e também para os usuários
   criados antes dela. Esta spec entrega só a conta.
+- Q: O cadastro fica sempre aberto a qualquer pessoa da rede local ou pode ser fechado? → A:
+  Aberto por padrão, com uma configuração de ambiente para fechar. Com o cadastro fechado, novas
+  tentativas são recusadas com mensagem clara.
+- Q: Depois de criar a conta, a pessoa entra automaticamente ou faz login em seguida? → A: Não
+  entra automaticamente. O cadastro só cria a conta e confirma, e a pessoa faz login em seguida
+  (US-02). A tela da US-26 pode levar ao login com o e-mail preenchido.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -37,6 +43,7 @@ e-mail; (c) a senha não aparece em lugar nenhum de forma legível.
 2. **Given** uma conta recém-criada, **When** se consulta o que ficou armazenado, **Then** a senha não está legível: só existe uma forma protegida (irreversível) dela.
 3. **Given** uma conta criada com `Maria@Exemplo.com`, **When** se consulta a conta, **Then** o e-mail está armazenado como `maria@exemplo.com`.
 4. **Given** o cadastro foi concluído, **When** a pessoa tenta usar o sistema, **Then** a conta está ativa, sem etapa de confirmação por e-mail.
+5. **Given** o cadastro foi concluído, **When** se verifica a resposta, **Then** ela não contém credencial de acesso: a pessoa ainda não está autenticada e entra pelo login (US-02).
 
 ---
 
@@ -100,14 +107,17 @@ cada um, a recusa com a mensagem no campo certo e que nenhuma conta foi criada.
   na rede local; o login (US-02) usa mensagem genérica.
 - **Pessoa já autenticada tentando se cadastrar**: tratado com o login (US-02); nesta spec o
   cadastro é sempre público.
-- **Quem pode se cadastrar**: qualquer pessoa com acesso ao sistema na rede local. Não há convite
-  nem aprovação.
+- **Quem pode se cadastrar**: com o cadastro aberto (padrão), qualquer pessoa com acesso ao
+  sistema na rede local; não há convite nem aprovação. Quem administra pode fechar o cadastro por
+  configuração depois de criar as contas da casa (FR-012).
+- **Cadastro fechado**: a tentativa é recusada com "O cadastro de novas contas está desativado
+  neste sistema.", mesmo que os dados sejam válidos, e nenhuma conta é criada.
 
 ## Requirements *(mandatory)*
 
 ### Functional Requirements
 
-- **FR-001**: O sistema MUST permitir que qualquer pessoa, sem estar autenticada, crie uma conta informando nome, e-mail, senha e confirmação da senha.
+- **FR-001**: Enquanto o cadastro estiver aberto, o sistema MUST permitir que qualquer pessoa, sem estar autenticada, crie uma conta informando nome, e-mail, senha e confirmação da senha.
 - **FR-002**: Nome, e-mail, senha e confirmação MUST ser obrigatórios; o nome MUST ter ao menos um caractere além de espaços e no máximo 150 caracteres.
 - **FR-003**: O e-mail MUST ter formato válido, até 254 caracteres, e MUST ser normalizado (sem espaços nas pontas, em minúsculas) antes de ser comparado e armazenado.
 - **FR-004**: O e-mail MUST ser único entre todas as contas, sem diferenciar maiúsculas de minúsculas, inclusive sob cadastros simultâneos. Um e-mail já cadastrado MUST ser recusado com a mensagem "Já existe uma conta com este e-mail." associada ao campo e-mail.
@@ -115,10 +125,11 @@ cada um, a recusa com a mensagem no campo certo e que nenhuma conta foi criada.
 - **FR-006**: A confirmação MUST ser idêntica à senha; caso contrário o cadastro MUST ser recusado com "As senhas não conferem." no campo de confirmação.
 - **FR-007**: A senha MUST ser armazenada somente em forma protegida irreversível (hash com sal), nunca em texto legível, e MUST NOT aparecer em respostas, mensagens de erro ou logs.
 - **FR-008**: Um cadastro recusado MUST NOT criar conta nem qualquer dado associado, e MUST devolver todas as mensagens de validação de uma vez, cada uma associada ao seu campo, em português e dizendo como corrigir.
-- **FR-009**: Um cadastro aceito MUST responder confirmando a criação com o nome e o e-mail cadastrados e MUST NOT devolver a senha nem dados internos.
+- **FR-009**: Um cadastro aceito MUST responder confirmando a criação com o nome e o e-mail cadastrados e MUST NOT devolver a senha, dados internos nem qualquer credencial de acesso: o cadastro não autentica a pessoa, que entra depois pelo login (US-02).
 - **FR-010**: A conta criada MUST ficar ativa imediatamente, identificada pelo e-mail, sem etapa de confirmação por e-mail (o sistema não envia e-mails).
 - **FR-011**: A conta criada MUST NOT ter privilégios administrativos.
-- **FR-012**: O cadastro MUST ser a única forma pública de criar contas; nenhuma outra operação sem autenticação pode criar ou alterar usuários.
+- **FR-012**: O cadastro MUST estar aberto por padrão e MUST poder ser fechado por configuração de ambiente, sem alterar código. Com o cadastro fechado, toda tentativa MUST ser recusada, sem criar conta, com a mensagem "O cadastro de novas contas está desativado neste sistema."; as contas existentes não são afetadas.
+- **FR-013**: O cadastro MUST ser a única forma pública de criar contas; nenhuma outra operação sem autenticação pode criar ou alterar usuários.
 
 ### Key Entities
 
