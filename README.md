@@ -13,8 +13,8 @@ O sistema tem três partes, todas em containers Docker:
 | Banco de dados | PostgreSQL 17 | não fica acessível fora do Docker |
 
 > Estado atual: fundação do projeto (Sprint 1). A interface mostra só uma página inicial
-> provisória, e a API expõe só a verificação de saúde. O restante chega nas próximas entregas
-> (ver [BACKLOG.md](BACKLOG.md)).
+> provisória. A API expõe a verificação de saúde e o cadastro de usuários; o login e as telas
+> chegam nas próximas entregas (ver [BACKLOG.md](BACKLOG.md)).
 
 ---
 
@@ -65,9 +65,21 @@ Isso não afeta os dados do banco. Alterações no código Python (`backend/`) e
 |---|---|
 | Interface | http://localhost:5173 |
 | Verificação de saúde da API | http://localhost:8000/api/health/ |
+| Cadastro de usuário (API) | `POST` http://localhost:8000/api/usuarios/ |
 
 Todas as rotas da API ficam sob `http://localhost:8000/api/`. O endereço base sozinho responde
-404, porque não é uma rota. Por enquanto a única rota é a verificação de saúde.
+404, porque não é uma rota.
+
+**Criar uma conta.** Enquanto a tela de cadastro não existe (US-26), crie pela API:
+
+```bash
+curl -H "Content-Type: application/json" -d '{"nome":"Ana Souza","email":"ana@exemplo.com","senha":"uma-senha-boa-2026","confirmacao_senha":"uma-senha-boa-2026"}' http://localhost:8000/api/usuarios/
+```
+
+No PowerShell, use `curl.exe` no lugar de `curl`. A resposta 201 traz só o nome e o e-mail. A
+senha precisa de ao menos 8 caracteres e não pode ser só números, muito comum ou parecida com
+o nome ou o e-mail. Os erros voltam em português, campo a campo. Detalhes em
+[specs/002-cadastro-usuario/contracts/api-cadastro.md](specs/002-cadastro-usuario/contracts/api-cadastro.md).
 
 A verificação de saúde responde `{"status": "ok", "database": "ok"}` quando tudo está no ar,
 ou HTTP 503 com `{"status": "error", "database": "unavailable"}` quando o banco não responde. A
@@ -143,6 +155,21 @@ O `.env` **nunca é versionado** (está no `.gitignore`). Todas as variáveis es
 - **`DJANGO_DEBUG=0`** exige uma `DJANGO_SECRET_KEY` própria: com a chave padrão, a API se
   recusa a subir e informa qual variável definir.
 - **Porta ocupada**: troque `FRONTEND_PORT` ou `BACKEND_PORT`.
+- **`GRANA_CADASTRO_ABERTO`**: com `1` (padrão), qualquer pessoa na rede local pode criar uma
+  conta. Depois de criar as contas da casa, defina `0` para fechar o cadastro: novas tentativas
+  recebem "O cadastro de novas contas está desativado neste sistema." e as contas existentes
+  continuam funcionando.
+
+### Criar um administrador
+
+Contas criadas pelo cadastro nunca têm privilégios. Um administrador é criado por comando, com o
+sistema no ar:
+
+```bash
+docker compose exec backend python manage.py createsuperuser
+```
+
+O comando pede **e-mail**, **nome** e senha.
 
 ## 8. Remover os dados locais
 
@@ -170,6 +197,7 @@ projetos que estiverem parados no momento, não só os do Grana.io.
 | "Blocked request. This host is not allowed" | Acesso por nome de host em vez de IP | Acesse por `http://<IP>:5173` (seção 4). |
 | Outro dispositivo fica carregando sem abrir | IP mudou, rede como "Pública", firewall ou roteador isolando dispositivos | Confira o IP, o perfil e o firewall (seção 4). Algumas redes (corporativas, de visitantes) bloqueiam a comunicação entre dispositivos. |
 | Mudança em `index.html`, `vite.config.js` ou dependências não aparece | Esses arquivos ficam dentro da imagem | `docker compose up --build` |
+| Cadastro pelo terminal responde "JSON parse error … can't decode byte" | O terminal do Windows enviou letras acentuadas (ex.: "Fábio") fora do UTF-8 | Salve o JSON num arquivo em UTF-8 e envie com `curl --data-binary @arquivo.json …`. A tela de cadastro (US-26) não terá esse problema. |
 
 Para ver os logs: `docker compose logs -f` (ou `docker compose logs -f backend`).
 

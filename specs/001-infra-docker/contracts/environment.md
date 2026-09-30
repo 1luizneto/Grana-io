@@ -19,6 +19,7 @@ padrão e um comentário explicativo.
 | `DJANGO_CORS_ALLOWED_ORIGINS` | backend | *(vazia)* | Origens extras autorizadas a chamar a API pelo navegador, separadas por vírgula (ex.: `http://localhost:3000`). A própria interface não precisa estar aqui ([research R-06](../research.md)). |
 | `BACKEND_PORT` | compose | `8000` | Porta do host para a API. |
 | `FRONTEND_PORT` | compose | `5173` | Porta do host para a interface. |
+| `GRANA_CADASTRO_ABERTO` | backend | `1` | `0` fecha o cadastro de novas contas (403); as contas existentes não são afetadas. Adicionada pela spec [002-cadastro-usuario](../../002-cadastro-usuario/contracts/api-cadastro.md). |
 | `VITE_API_URL` | frontend | *(vazia → `/api`, no mesmo endereço da interface, via proxy)* | URL base absoluta da API, **incluindo** o `/api` (ex.: `http://localhost:8000/api`), para cenários futuros (RNF-08). |
 
 ## Fixas no `compose.yaml` (internas, fora do `.env.example`)

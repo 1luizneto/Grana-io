@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "corsheaders",
+    "accounts",
     "core",
 ]
 
@@ -74,6 +75,27 @@ USE_TZ = True
 STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Usuário próprio, identificado pelo e-mail (specs/002-cadastro-usuario, research R-01).
+AUTH_USER_MODEL = "accounts.Usuario"
+
+# Regras de senha do cadastro (FR-005; specs/002-cadastro-usuario, research R-04).
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+        "OPTIONS": {"user_attributes": ("nome", "email")},
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {"min_length": 8},
+    },
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+    {"NAME": "accounts.validators.SenhaComumPtBrValidator"},
+]
+
+# Cadastro público de novas contas; 0 fecha o cadastro sem alterar código (FR-012).
+CADASTRO_ABERTO = env_bool("GRANA_CADASTRO_ABERTO", True)
 
 REST_FRAMEWORK = {
     # A autenticação JWT entra na US-02; até lá nenhuma rota autentica.
