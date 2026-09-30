@@ -183,12 +183,12 @@ de IA.
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T022 [P] [US3] Escrever `backend/tests/accounts/test_validators.py` para o `SenhaComumPtBrValidator`:
+- [X] T022 [P] [US3] Escrever `backend/tests/accounts/test_validators.py` para o `SenhaComumPtBrValidator`:
   - recusa `mudar123`, `brasil123` e `corinthians` com a mensagem "Esta senha é muito comum.";
   - a comparação ignora maiúsculas (`Brasil123` também é recusada);
   - aceita `uma-senha-boa-2026`;
   - `get_help_text()` devolve um texto em pt-BR.
-- [ ] T023 [P] [US3] Adicionar a `backend/tests/accounts/test_cadastro_api.py` um teste parametrizado, com 400 e **nenhum usuário criado** em cada caso:
+- [X] T023 [P] [US3] Adicionar a `backend/tests/accounts/test_cadastro_api.py` um teste parametrizado, com 400 e **nenhum usuário criado** em cada caso:
   - `{}` → os 4 campos com "Este campo é obrigatório.";
   - `nome` = `"   "` → `nome`: "Este campo é obrigatório.";
   - nome com 151 caracteres → erro em `nome`;
@@ -210,19 +210,19 @@ de IA.
 
 ### Implementation for User Story 3
 
-- [ ] T024 [US3] Implementar `SenhaComumPtBrValidator` em `backend/accounts/validators.py`:
+- [X] T024 [US3] Implementar `SenhaComumPtBrValidator` em `backend/accounts/validators.py`:
   - conjunto `SENHAS_COMUNS_PTBR`, em minúsculas, com ao menos: `mudar123`, `brasil123`, `corinthians`, `palmeiras`, `saopaulo`, `vasco123`, `gremio123`, `cruzeiro`, `amor1234`, `familia123`, `jesus123`, `deus1234`, `senhasenha`, `abcd1234`, `qwerty123`;
   - `validate(password, user=None)` compara `password.lower()` e levanta `ValidationError("Esta senha é muito comum.", code="password_too_common")`;
   - `get_help_text()` devolve "Sua senha não pode ser uma senha comumente utilizada.".
 
   ([research R-04](research.md))
-- [ ] T025 [US3] Em `backend/config/settings.py`, definir `AUTH_PASSWORD_VALIDATORS` com:
+- [X] T025 [US3] Em `backend/config/settings.py`, definir `AUTH_PASSWORD_VALIDATORS` com:
   - `UserAttributeSimilarityValidator` (`OPTIONS: {"user_attributes": ("nome", "email")}`);
   - `MinimumLengthValidator` (`OPTIONS: {"min_length": 8}`);
   - `CommonPasswordValidator`;
   - `NumericPasswordValidator`;
   - `accounts.validators.SenhaComumPtBrValidator`.
-- [ ] T026 [US3] Completar o `CadastroSerializer` em `backend/accounts/serializers.py`:
+- [X] T026 [US3] Completar o `CadastroSerializer` em `backend/accounts/serializers.py`:
   - `nome` com `error_messages={"blank": "Este campo é obrigatório."}`;
   - **todas as regras no nível de campo, nenhuma no `validate()`**. Verificado no DRF 3.18.1: o
     `validate()` não roda quando algum campo tem erro, e as mensagens de senha sumiriam, violando o
@@ -231,7 +231,15 @@ de IA.
     - `validate_confirmacao_senha(valor)`: se `valor != self.initial_data.get("senha")`, gera "As senhas não conferem.".
 
   Rodar a suíte e confirmar T022 e T023 **verdes**, incluindo o caso "vários problemas juntos" com nome vazio **e** senha fraca **e** confirmação diferente na mesma resposta.
-- [ ] T027 [US3] Validar o cenário Q4 do [quickstart.md](quickstart.md)
+- [X] T027 [US3] Validar o cenário Q4 do [quickstart.md](quickstart.md)
+
+  > **Resultado (2026-09-30)**: ✅ 80 testes verdes.
+  > - No ambiente real, `{}` recebe "obrigatório" nos 4 campos.
+  > - Nome vazio + e-mail inválido + senha `"123"` + confirmação `"456"` devolve os 4 campos
+  >   juntos. A senha vem com "muito curta", "muito comum" e "inteiramente numérica".
+  > - `mudar123` recebe "Esta senha é muito comum.", e `carlosmendes` recebe "A senha é muito
+  >   parecida com nome" (texto nativo do Django).
+  > - Nenhuma conta foi criada: 4 antes e 4 depois.
 
 **Checkpoint**: todas as validações da US3 com mensagens pt-BR; suíte verde.
 
