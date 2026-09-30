@@ -21,7 +21,7 @@ apenas Docker com Compose v2.
 | Recurso | Na própria máquina | Por outro dispositivo da rede |
 |---|---|---|
 | Interface | `http://localhost:5173` | `http://<IP-da-máquina>:5173` |
-| API | `http://localhost:8000/api/` | `http://<IP-da-máquina>:8000/api/` |
+| API (base das rotas; a raiz sozinha responde 404) | `http://localhost:8000/api/...` | `http://<IP-da-máquina>:8000/api/...` |
 | Verificação de saúde | `http://localhost:8000/api/health/` | `http://<IP-da-máquina>:8000/api/health/` |
 | Banco de dados | não exposto | não exposto |
 

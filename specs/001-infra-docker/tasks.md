@@ -269,7 +269,7 @@ trailers de IA.
 
 ### Implementation for User Story 5
 
-- [ ] T042 [US5] Reescrever `README.md` em pt-BR, com as seções:
+- [X] T042 [US5] Reescrever `README.md` em pt-BR, com as seções:
   1. O que é o Grana.io.
   2. Pré-requisitos (só Docker com Compose v2, em execução).
   3. Subir: `docker compose up` e `docker compose up -d --wait`. Reconstruir com `docker compose up --build` após mudar dependências ou `index.html`/`vite.config.js`. O rebuild não toca nos dados do banco ([contracts/commands.md](contracts/commands.md)).
@@ -287,7 +287,15 @@ trailers de IA.
   11. Link para `docs/arquitetura.md` e `BACKLOG.md`.
 
   (FR-017)
-- [ ] T043 [US5] Validar o cenário V10 do [quickstart.md](quickstart.md): percorrer o README do zero, num clone limpo, executando só o que está escrito, e corrigir qualquer lacuna encontrada (SC-006)
+- [X] T043 [US5] Validar o cenário V10 do [quickstart.md](quickstart.md): percorrer o README do zero, num clone limpo, executando só o que está escrito, e corrigir qualquer lacuna encontrada (SC-006)
+
+  > **Resultado (2026-09-30)**: percorri o README num clone limpo e executei as seções de subir,
+  > acessar, testar, personalizar (`BACKEND_PORT=8001`), parar e remover dados, todas ✅.
+  > **Lacuna corrigida**: o README e o `contracts/commands.md` listavam `/api/` como endereço da
+  > API, mas ele responde 404, porque a raiz não é uma rota. Agora a tabela aponta para
+  > `/api/health/` e explica a base. **Pendente para a T046**: o SC-006 pede uma *pessoa* que não
+  > conhece o projeto. A leitura humana, feita pelo responsável ou por um terceiro, fica para a
+  > validação final.
 
 **Checkpoint**: README autossuficiente.
 
