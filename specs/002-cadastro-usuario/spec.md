@@ -106,7 +106,7 @@ cada um, a recusa com a mensagem no campo certo e que nenhuma conta foi criada.
   e-mail tem conta. Isso é aceito por ser critério explícito do backlog e por o sistema rodar só
   na rede local; o login (US-02) usa mensagem genérica.
 - **Pessoa já autenticada tentando se cadastrar**: tratado com o login (US-02); nesta spec o
-  cadastro é sempre público.
+  cadastro não exige autenticação.
 - **Quem pode se cadastrar**: com o cadastro aberto (padrão), qualquer pessoa com acesso ao
   sistema na rede local; não há convite nem aprovação. Quem administra pode fechar o cadastro por
   configuração depois de criar as contas da casa (FR-012).

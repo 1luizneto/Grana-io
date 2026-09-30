@@ -42,7 +42,10 @@ Modelo de usuário do sistema (`AUTH_USER_MODEL = "accounts.Usuario"`). Base:
 | E-mail duplicado (qualquer caixa/espaços) | serializer + service (`IntegrityError`) | "Já existe uma conta com este e-mail." |
 | Senha < 8, só números, comum, parecida com nome/e-mail | `AUTH_PASSWORD_VALIDATORS` + `SenhaComumPtBrValidator` | nativas em pt-BR / "Esta senha é muito comum." |
 | Senha > 128 | serializer | nativa do DRF (limite de 128) |
-| Confirmação diferente | serializer (`validate`) | "As senhas não conferem." |
+| Confirmação diferente | serializer (`validate_confirmacao_senha`) | "As senhas não conferem." |
+
+Todas as regras ficam no nível de campo, e nenhuma no `validate()` do serializer. Assim todos os
+erros voltam juntos (FR-008; [research R-10](research.md)).
 
 **Ciclo de vida nesta spec**: `(inexistente) → ativo`. Não há outras transições. Desativar, alterar
 e excluir a conta ficam para specs futuras (US-04).

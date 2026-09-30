@@ -92,7 +92,7 @@ de IA.
 
 - [ ] T009 [P] [US1] Escrever `backend/tests/accounts/test_cadastro_service.py` (`@pytest.mark.django_db`). Casos:
   - `cadastrar_usuario(nome="Ana", email="Ana@Exemplo.com", senha="uma-senha-boa-2026")` devolve um `Usuario` persistido, com e-mail normalizado e senha verificável por `check_password`;
-  - se algo falhar depois de criar o usuário, dentro de `cadastrar_usuario` (simulado com `monkeypatch` numa função interna chamada após a criação), nenhum usuário fica gravado, ou seja, a operação é atômica;
+  - **atomicidade**: fazer `monkeypatch` em `Usuario.objects.create_user` com um wrapper que chama o original (gravando o usuário) e **depois** lança `RuntimeError`. `cadastrar_usuario` propaga o erro, e ao final `Usuario.objects.count() == 0`, o que prova o `transaction.atomic()` sem criar código especulativo no service;
   - `cadastro_aberto()` segue `settings.CADASTRO_ABERTO` (com `override_settings`).
 - [ ] T010 [P] [US1] Escrever `backend/tests/accounts/test_cadastro_api.py`, usando `APIClient` sem autenticação, conforme [contracts/api-cadastro.md](contracts/api-cadastro.md). Casos:
   - `POST /api/usuarios/` válido, com e-mail `" Ana@Exemplo.com "` e nome `"  Ana Souza "`, retorna 201 e o corpo **exatamente** `{"nome": "Ana Souza", "email": "ana@exemplo.com"}`, sem `id`, `senha`, `token`, `access` ou `refresh`;
@@ -100,7 +100,7 @@ de IA.
   - o texto da senha não aparece no corpo da resposta;
   - `GET`, `PUT`, `PATCH` e `DELETE` retornam 405;
   - com `override_settings(CADASTRO_ABERTO=False)`, um cadastro **válido** retorna 403 com `{"detail": "O cadastro de novas contas está desativado neste sistema."}` e nenhum usuário é criado;
-  - a view de cadastro marca `senha` e `confirmacao_senha` como parâmetros sensíveis: fazer o `POST` com `RequestFactory` e verificar `request.sensitive_post_parameters == ("senha", "confirmacao_senha")`, ou testar com `SafeExceptionReporterFilter().get_post_parameters(request)`, que deve devolver os dois campos mascarados.
+  - a view de cadastro marca `senha` e `confirmacao_senha` como parâmetros sensíveis. Montar o `POST` com `RequestFactory().post("/api/usuarios/", data=..., content_type=...)`, com dados de formulário para preencher `request.POST`, e chamar `CadastroView.as_view()(request)`. Depois verificar que `SafeExceptionReporterFilter().get_post_parameters(request)` devolve `senha` e `confirmacao_senha` como `"********************"` e mantém `nome` legível. É o mesmo filtro que o Django usa na página de erro.
 
   Rodar a suíte e confirmar a **falha**.
 
@@ -111,6 +111,8 @@ de IA.
   - `cadastrar_usuario(nome, email, senha) -> Usuario` roda em `transaction.atomic()` e chama `Usuario.objects.create_user(email=email, nome=nome, password=senha)`.
 
   Deixar um comentário no ponto onde a US-05 acrescentará as categorias padrão, com chamada explícita e sem signals ([research R-09](research.md)).
+
+  Na mesma tarefa, adicionar em `backend/config/settings.py` a configuração `CADASTRO_ABERTO = env_bool("GRANA_CADASTRO_ABERTO", True)`. Sem ela, `cadastro_aberto()` dá `AttributeError` e a T014 não consegue ficar verde.
 - [ ] T012 [US1] Implementar em `backend/accounts/serializers.py`:
   - `CadastroSerializer(serializers.Serializer)` com os campos:
     - `nome = CharField(max_length=150)`;
@@ -129,7 +131,7 @@ de IA.
     3. chama `cadastrar_usuario(**dados sem confirmacao_senha)`;
     4. devolve 201 com `UsuarioCadastradoSerializer(usuario).data`.
 - [ ] T014 [US1] Registrar `path("usuarios/", CadastroView.as_view(), name="cadastro")` em `backend/accounts/urls.py`. Rodar a suíte e confirmar T009 e T010 **verdes**
-- [ ] T015 [US1] Adicionar em `backend/config/settings.py` a configuração `CADASTRO_ABERTO = env_bool("GRANA_CADASTRO_ABERTO", True)`. Adicionar `GRANA_CADASTRO_ABERTO: ${GRANA_CADASTRO_ABERTO:-1}` ao `environment` do `backend` em `compose.yaml`. Acrescentar ao `.env.example` a variável `GRANA_CADASTRO_ABERTO=1`, com o comentário "1 = qualquer pessoa na rede pode criar conta; 0 = cadastro desativado (403), contas existentes continuam funcionando" (FR-012, [research R-07](research.md))
+- [ ] T015 [US1] Expor a configuração já criada na T011 (`CADASTRO_ABERTO` no settings). Adicionar `GRANA_CADASTRO_ABERTO: ${GRANA_CADASTRO_ABERTO:-1}` ao `environment` do `backend` em `compose.yaml`. Acrescentar ao `.env.example` a variável `GRANA_CADASTRO_ABERTO=1`, com o comentário "1 = qualquer pessoa na rede pode criar conta; 0 = cadastro desativado (403), contas existentes continuam funcionando" (FR-012, [research R-07](research.md))
 - [ ] T016 [US1] Validar pelo [quickstart.md](quickstart.md) os cenários Q1, Q2, Q5, Q6 e Q7. Registrar o resultado no checkpoint
 
 **Checkpoint**: cadastro funcional e demonstrável; suíte verde.
@@ -184,7 +186,7 @@ de IA.
   - senhas `"senha123"` e `"mudar123"` → `senha` contém "Esta senha é muito comum.";
   - nome `"Carlos Mendes"`, e-mail `"carlos.mendes@exemplo.com"`, senha `"carlosmendes"` → erro de semelhança em `senha`;
   - senha com 129 caracteres → erro em `senha`;
-  - vários problemas juntos → todas as chaves presentes na mesma resposta.
+  - vários problemas juntos: nome `"   "`, e-mail `"ana@"`, senha `"123"` e confirmação `"456"` → a mesma resposta traz `nome`, `email`, `senha` (curta e numérica) e `confirmacao_senha`.
 
   Casos de sucesso adicionais:
   - a senha `"  espaços contam  "`, com confirmação igual, é aceita e fica gravada sem corte (`check_password` com os espaços);
@@ -208,12 +210,13 @@ de IA.
   - `accounts.validators.SenhaComumPtBrValidator`.
 - [ ] T026 [US3] Completar o `CadastroSerializer` em `backend/accounts/serializers.py`:
   - `nome` com `error_messages={"blank": "Este campo é obrigatório."}`;
-  - `validate()`:
-    1. se `senha != confirmacao_senha`, gera erro em `confirmacao_senha`: "As senhas não conferem.";
-    2. chama `django.contrib.auth.password_validation.validate_password(senha, user=Usuario(nome=..., email=...))`, com um usuário não salvo para o validador de semelhança, e converte a `ValidationError` do Django para `{"senha": [...]}`;
-    3. junta os erros dos dois passos antes de levantar, para devolver todos de uma vez (FR-008).
+  - **todas as regras no nível de campo, nenhuma no `validate()`**. Verificado no DRF 3.18.1: o
+    `validate()` não roda quando algum campo tem erro, e as mensagens de senha sumiriam, violando o
+    FR-008 ([research R-10](research.md)):
+    - `validate_senha(valor)` chama `django.contrib.auth.password_validation.validate_password(valor, user=Usuario(nome=..., email=...))`, com nome e e-mail vindos de `self.initial_data` (strings, com `strip`, e o e-mail normalizado; vazio se ausente), num usuário não salvo para o validador de semelhança. Converte a `ValidationError` do Django em `serializers.ValidationError(list(e.messages))`;
+    - `validate_confirmacao_senha(valor)`: se `valor != self.initial_data.get("senha")`, gera "As senhas não conferem.".
 
-  Rodar a suíte e confirmar T022 e T023 **verdes**.
+  Rodar a suíte e confirmar T022 e T023 **verdes**, incluindo o caso "vários problemas juntos" com nome vazio **e** senha fraca **e** confirmação diferente na mesma resposta.
 - [ ] T027 [US3] Validar o cenário Q4 do [quickstart.md](quickstart.md)
 
 **Checkpoint**: todas as validações da US3 com mensagens pt-BR; suíte verde.

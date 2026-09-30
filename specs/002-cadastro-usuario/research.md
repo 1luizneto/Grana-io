@@ -64,7 +64,8 @@ Decisões técnicas do Technical Context. Não restou nenhum "NEEDS CLARIFICATIO
   Somar a eles um validador próprio, `accounts.validators.SenhaComumPtBrValidator`, com uma lista
   curta de senhas comuns em português que a lista do Django não cobre (ex.: `mudar123`,
   `brasil123`, `corinthians`). O máximo de 128 caracteres fica no serializer. A confirmação é
-  comparada no `validate()` do serializer.
+  comparada em `validate_confirmacao_senha`, e as regras de força em `validate_senha` (R-10: nada
+  fica no `validate()`).
 - **Rationale**: os validadores nativos cobrem mínimo, só números, senha comum e semelhança com
   dados pessoais, e já têm mensagens em pt-BR. **Verificado em 2026-09-30 no Django 5.2.17**: a lista
   do Django recusa `senha123`, `12345678` e `flamengo` com "Esta senha é muito comum.", mas
@@ -145,9 +146,19 @@ Decisões técnicas do Technical Context. Não restou nenhum "NEEDS CLARIFICATIO
     diferentes ("As senhas não conferem."), senha comum pt-BR e cadastro fechado.
   - O nome só com espaços usa `error_messages["blank"] = "Este campo é obrigatório."`.
   - A senha não sofre `trim` (`trim_whitespace=False`), para que espaços façam parte dela.
-- **Rationale**: o DRF, por padrão, diz "Este campo não pode ser em branco." para nome só com
-  espaços, e a spec pede tratá-lo como obrigatório (US3, cenário 2). Cortar espaços da senha
-  mudaria silenciosamente a credencial.
+  - **Todas as validações ficam no nível de campo** (`validate_email`, `validate_senha`,
+    `validate_confirmacao_senha`), e nenhuma no `validate()`:
+    - `validate_senha` aplica `validate_password` com um `Usuario` não salvo, montado a partir de
+      `self.initial_data` (nome e e-mail), para o validador de semelhança;
+    - `validate_confirmacao_senha` compara com `self.initial_data.get("senha")`.
+- **Rationale**:
+  - O DRF, por padrão, diz "Este campo pode não estar em branco." para nome só com espaços, e a
+    spec pede tratá-lo como obrigatório (US3, cenário 2).
+  - Cortar espaços da senha mudaria silenciosamente a credencial.
+  - **Verificado no DRF 3.18.1 (2026-09-30)**: quando algum campo já tem erro, o `validate()` do
+    serializer **não é executado**. Regras de senha ou de confirmação colocadas ali sumiriam da
+    resposta sempre que houvesse outro erro, o que violaria o FR-008 ("todas as mensagens de uma
+    vez"). No nível de campo, o DRF roda todos os `validate_<campo>` e junta os erros.
 - **Textos nativos verificados (Django 5.2.17 / DRF 3.18.1)**: "Este campo é obrigatório.",
   "Insira um endereço de email válido.", "Certifique-se de que este campo não tenha mais de 150
   caracteres.", "Esta senha é muito curta. Ela precisa conter pelo menos 8 caracteres.", "Esta
