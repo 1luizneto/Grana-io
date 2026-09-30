@@ -8,25 +8,32 @@ Os valores padrão de desenvolvimento ficam no compose.yaml; aqui os padrões s�
 
 from pathlib import Path
 
-from config.env import CHAVE_DEV_PADRAO, env_bool, env_list, env_str
+from config.env import CHAVE_DEV_PADRAO, env_bool, env_list, env_str, validar_secret_key
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = env_str("DJANGO_SECRET_KEY") or CHAVE_DEV_PADRAO
 DEBUG = env_bool("DJANGO_DEBUG", False)
+validar_secret_key(SECRET_KEY, DEBUG)
 
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS")
+
+# A própria interface chama a API pelo proxy do Vite (mesma origem), então nenhuma origem é
+# liberada por padrão. Origens extras só por configuração (FR-013).
+CORS_ALLOWED_ORIGINS = env_list("DJANGO_CORS_ALLOWED_ORIGINS")
 
 INSTALLED_APPS = [
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.staticfiles",
     "rest_framework",
+    "corsheaders",
     "core",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]

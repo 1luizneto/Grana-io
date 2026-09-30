@@ -193,14 +193,14 @@ trailers de IA.
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T031 [P] [US3] Adicionar em `backend/tests/config/test_env.py` os testes de `validar_secret_key(secret_key, debug)`:
+- [X] T031 [P] [US3] Adicionar em `backend/tests/config/test_env.py` os testes de `validar_secret_key(secret_key, debug)`:
   - com `debug=False` e `CHAVE_DEV_PADRAO`, lança `ImproperlyConfigured` cuja mensagem contém `DJANGO_SECRET_KEY`;
   - com `debug=False` e chave `""`, lança;
   - com `debug=False` e chave personalizada, não lança;
   - com `debug=True` e `CHAVE_DEV_PADRAO`, não lança.
 
   (FR-012, data-model §2)
-- [ ] T032 [P] [US3] Escrever `backend/tests/core/test_cors.py`:
+- [X] T032 [P] [US3] Escrever `backend/tests/core/test_cors.py`:
   - `GET /api/health/` com `HTTP_ORIGIN="http://site-externo.example"` retorna **sem** o cabeçalho `Access-Control-Allow-Origin`;
   - com `override_settings(CORS_ALLOWED_ORIGINS=["http://localhost:3000"])` e `HTTP_ORIGIN="http://localhost:3000"`, o cabeçalho é `http://localhost:3000`.
 
@@ -208,16 +208,26 @@ trailers de IA.
 
 ### Implementation for User Story 3
 
-- [ ] T033 [US3] Implementar `validar_secret_key(secret_key, debug)` em `backend/config/env.py`. A função lança `ImproperlyConfigured("Defina a variável DJANGO_SECRET_KEY com uma chave própria: a chave padrão de desenvolvimento só é aceita com DJANGO_DEBUG=1.")` quando `not debug` e a chave está vazia ou é igual a `CHAVE_DEV_PADRAO` (research R-12)
-- [ ] T034 [US3] Atualizar `backend/config/settings.py`:
+- [X] T033 [US3] Implementar `validar_secret_key(secret_key, debug)` em `backend/config/env.py`. A função lança `ImproperlyConfigured("Defina a variável DJANGO_SECRET_KEY com uma chave própria: a chave padrão de desenvolvimento só é aceita com DJANGO_DEBUG=1.")` quando `not debug` e a chave está vazia ou é igual a `CHAVE_DEV_PADRAO` (research R-12)
+- [X] T034 [US3] Atualizar `backend/config/settings.py`:
   - chamar `validar_secret_key(SECRET_KEY, DEBUG)` logo após definir as duas variáveis;
   - adicionar `"corsheaders"` a `INSTALLED_APPS` e `"corsheaders.middleware.CorsMiddleware"` **antes** de `CommonMiddleware`;
   - definir `CORS_ALLOWED_ORIGINS = env_list("DJANGO_CORS_ALLOWED_ORIGINS")`.
 
   Rodar a suíte e confirmar T031 e T032 **verdes** (depende de T033).
-- [ ] T035 [US3] Em `compose.yaml`, adicionar ao `backend` a variável `DJANGO_CORS_ALLOWED_ORIGINS: ${DJANGO_CORS_ALLOWED_ORIGINS:-}`. Conferir que todas as variáveis da tabela "Configuráveis" de [contracts/environment.md](contracts/environment.md) chegam ao compose com os padrões documentados (FR-009, FR-010)
-- [ ] T036 [P] [US3] Criar `.env.example` na raiz com **todas** as 10 variáveis da tabela "Configuráveis" de [contracts/environment.md](contracts/environment.md): mesmos padrões e um comentário em pt-BR por variável. `DJANGO_SECRET_KEY` fica vazia, com o comentário "obrigatória se DJANGO_DEBUG=0". O comentário de `POSTGRES_PASSWORD` avisa que ela só vale ao inicializar um volume vazio. O comentário de `DJANGO_ALLOWED_HOSTS` avisa que um valor personalizado MUST incluir `localhost` e `backend` (ex.: `localhost,backend,192.168.0.10`) (FR-011, research R-05, R-07)
-- [ ] T037 [US3] Rodar `docker compose run --rm backend pytest` (verde) e validar o cenário V6 do [quickstart.md](quickstart.md), passos 1 a 4 e 6: sobe sem `.env`, `.env` sobrescreve padrões, `.env` ignorado pelo Git e `DJANGO_DEBUG=0` com a chave padrão falha citando `DJANGO_SECRET_KEY`. No passo 4, validar tanto `manage.py check` quanto a subida real da API (`docker compose run --rm -e DJANGO_DEBUG=0 backend`), que usa o comando padrão do serviço (US3, cenário 4)
+- [X] T035 [US3] Em `compose.yaml`, adicionar ao `backend` a variável `DJANGO_CORS_ALLOWED_ORIGINS: ${DJANGO_CORS_ALLOWED_ORIGINS:-}`. Conferir que todas as variáveis da tabela "Configuráveis" de [contracts/environment.md](contracts/environment.md) chegam ao compose com os padrões documentados (FR-009, FR-010)
+- [X] T036 [P] [US3] Criar `.env.example` na raiz com **todas** as 10 variáveis da tabela "Configuráveis" de [contracts/environment.md](contracts/environment.md): mesmos padrões e um comentário em pt-BR por variável. `DJANGO_SECRET_KEY` fica vazia, com o comentário "obrigatória se DJANGO_DEBUG=0". O comentário de `POSTGRES_PASSWORD` avisa que ela só vale ao inicializar um volume vazio. O comentário de `DJANGO_ALLOWED_HOSTS` avisa que um valor personalizado MUST incluir `localhost` e `backend` (ex.: `localhost,backend,192.168.0.10`) (FR-011, research R-05, R-07)
+- [X] T037 [US3] Rodar `docker compose run --rm backend pytest` (verde) e validar o cenário V6 do [quickstart.md](quickstart.md), passos 1 a 4 e 6: sobe sem `.env`, `.env` sobrescreve padrões, `.env` ignorado pelo Git e `DJANGO_DEBUG=0` com a chave padrão falha citando `DJANGO_SECRET_KEY`. No passo 4, validar tanto `manage.py check` quanto a subida real da API (`docker compose run --rm -e DJANGO_DEBUG=0 backend`), que usa o comando padrão do serviço (US3, cenário 4)
+
+  > **Resultado (2026-09-30)**: ✅ 33 testes verdes.
+  > - Passo 1: sobe sem `.env`.
+  > - Passo 2: com `.env`, `POSTGRES_PASSWORD` personalizada chega ao `db` e ao `backend`, e a
+  >   interface responde em 5174.
+  > - Passo 3: `.env` ignorado pelo Git.
+  > - Passo 4: `DJANGO_DEBUG=0` com a chave padrão faz o `check` e a subida real falharem com
+  >   `ImproperlyConfigured` citando `DJANGO_SECRET_KEY`. Com chave própria, as settings carregam.
+  >   Os avisos de `check --deploy` ficam para o RNF-09.
+  > - Passo 6: estado padrão restaurado.
 
 **Checkpoint**: configuração por ambiente segura; CORS fechado por padrão. Suíte verde.
 

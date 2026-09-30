@@ -1,6 +1,7 @@
 import pytest
+from django.core.exceptions import ImproperlyConfigured
 
-from config.env import env_bool, env_list, env_str
+from config.env import CHAVE_DEV_PADRAO, env_bool, env_list, env_str, validar_secret_key
 
 VAR = "GRANA_TESTE_VAR"
 
@@ -53,3 +54,21 @@ class TestEnvList:
 
     def test_ausente_retorna_lista_vazia(self):
         assert env_list(VAR) == []
+
+
+class TestValidarSecretKey:
+    """FR-012: fora do modo de desenvolvimento a chave padrão é recusada."""
+
+    def test_recusa_chave_padrao_fora_do_modo_dev(self):
+        with pytest.raises(ImproperlyConfigured, match="DJANGO_SECRET_KEY"):
+            validar_secret_key(CHAVE_DEV_PADRAO, debug=False)
+
+    def test_recusa_chave_vazia_fora_do_modo_dev(self):
+        with pytest.raises(ImproperlyConfigured, match="DJANGO_SECRET_KEY"):
+            validar_secret_key("", debug=False)
+
+    def test_aceita_chave_propria_fora_do_modo_dev(self):
+        validar_secret_key("uma-chave-propria-e-longa", debug=False)
+
+    def test_aceita_chave_padrao_no_modo_dev(self):
+        validar_secret_key(CHAVE_DEV_PADRAO, debug=True)

@@ -2,6 +2,8 @@
 
 import os
 
+from django.core.exceptions import ImproperlyConfigured
+
 # Chave usada só no modo de desenvolvimento, quando DJANGO_SECRET_KEY não é definida.
 CHAVE_DEV_PADRAO = "django-insecure-grana-dev-troque-me"
 
@@ -22,3 +24,12 @@ def env_bool(nome, padrao=False):
 def env_list(nome):
     valor = os.environ.get(nome, "")
     return [item.strip() for item in valor.split(",") if item.strip()]
+
+
+def validar_secret_key(secret_key, debug):
+    """Impede subir fora do modo de desenvolvimento com a chave padrão ou vazia (FR-012)."""
+    if not debug and secret_key in ("", CHAVE_DEV_PADRAO):
+        raise ImproperlyConfigured(
+            "Defina a variável DJANGO_SECRET_KEY com uma chave própria: a chave padrão de "
+            "desenvolvimento só é aceita com DJANGO_DEBUG=1."
+        )
