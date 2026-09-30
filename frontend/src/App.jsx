@@ -1,3 +1,5 @@
+import Inicio from './pages/Inicio/Inicio.jsx'
+
 export default function App() {
-  return <h1>Grana.io</h1>
+  return <Inicio />
 }

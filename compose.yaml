@@ -34,3 +34,24 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health/', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  frontend:
+    build: ./frontend
+    environment:
+      # Destino do proxy /api na rede interna (sem prefixo VITE_: não vai para o navegador).
+      API_PROXY_TARGET: http://backend:8000
+      VITE_API_URL: ${VITE_API_URL:-}
+    ports:
+      - "${FRONTEND_PORT:-5173}:5173"
+    volumes:
+      - ./frontend:/app
+      # node_modules da imagem, sem ser escondido pelo bind mount.
+      - /app/node_modules
+    depends_on:
+      - backend

@@ -99,10 +99,10 @@ trailers de IA.
 
 > Escreva estes testes primeiro e confirme que falham antes de implementar.
 
-- [ ] T018 [P] [US1] Escrever os testes do service em `backend/tests/core/test_saude_service.py`:
+- [X] T018 [P] [US1] Escrever os testes do service em `backend/tests/core/test_saude_service.py`:
   - `verificar_banco()` retorna `True` com o banco acessível (`@pytest.mark.django_db`);
   - retorna `False` quando `connection.cursor` lança `django.db.OperationalError` (via `monkeypatch`).
-- [ ] T019 [P] [US1] Escrever os testes do endpoint em `backend/tests/core/test_health.py`, conforme [contracts/api-health.md](contracts/api-health.md) e usando `rest_framework.test.APIClient` sem autenticação:
+- [X] T019 [P] [US1] Escrever os testes do endpoint em `backend/tests/core/test_health.py`, conforme [contracts/api-health.md](contracts/api-health.md) e usando `rest_framework.test.APIClient` sem autenticação:
   - `GET /api/health/` retorna 200 e o corpo é **exatamente** `{"status": "ok", "database": "ok"}`;
   - com `core.views.verificar_banco` substituído para retornar `False`, retorna 503 e o corpo é **exatamente** `{"status": "error", "database": "unavailable"}` (sem chaves extras, mensagens de exceção, host ou credenciais);
   - `POST /api/health/` retorna 405.
@@ -111,41 +111,54 @@ trailers de IA.
 
 ### Implementation for User Story 1
 
-- [ ] T020 [US1] Implementar `backend/core/services/saude.py` com `verificar_banco() -> bool`. A função executa `SELECT 1` via `connection.cursor()`, captura **somente** `django.db.Error` e retorna `False` nesse caso, sem logar nem propagar detalhes (research R-11)
-- [ ] T021 [US1] Implementar `SaudeView(APIView)` em `backend/core/views.py`, que importa `verificar_banco` de `core.services.saude`, com:
+- [X] T020 [US1] Implementar `backend/core/services/saude.py` com `verificar_banco() -> bool`. A função executa `SELECT 1` via `connection.cursor()`, captura **somente** `django.db.Error` e retorna `False` nesse caso, sem logar nem propagar detalhes (research R-11)
+- [X] T021 [US1] Implementar `SaudeView(APIView)` em `backend/core/views.py`, que importa `verificar_banco` de `core.services.saude`, com:
   - `permission_classes = [AllowAny]`, `authentication_classes = []`, `http_method_names = ["get", "head", "options"]`;
   - `get()` devolve 200 `{"status": "ok", "database": "ok"}` ou 503 `{"status": "error", "database": "unavailable"}`.
 
   A view é fina, sem regra (`docs/arquitetura.md` §2.1). Nome em pt-BR com sufixo técnico, e rota
   `/api/health/` mantida em inglês por convenção de infraestrutura (`docs/arquitetura.md` §4,
   "Nomenclatura").
-- [ ] T022 [US1] Registrar `path("health/", SaudeView.as_view(), name="saude")` em `backend/core/urls.py`. Rodar `docker compose run --rm backend pytest` e confirmar T018 e T019 **verdes**
-- [ ] T023 [P] [US1] Implementar o cliente de API centralizado em `frontend/src/api/client.js`:
+- [X] T022 [US1] Registrar `path("health/", SaudeView.as_view(), name="saude")` em `backend/core/urls.py`. Rodar `docker compose run --rm backend pytest` e confirmar T018 e T019 **verdes**
+- [X] T023 [P] [US1] Implementar o cliente de API centralizado em `frontend/src/api/client.js`:
   - `const API_BASE = (import.meta.env.VITE_API_URL || '/api').replace(/\/$/, '')`;
   - `export async function requisitar(caminho, opcoes = {})` faz `fetch(`${API_BASE}${caminho}`, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(5000), ...opcoes })` e devolve a `Response`.
 
   Os componentes nunca chamam `fetch` diretamente (research R-06; `docs/arquitetura.md` §3).
-- [ ] T024 [US1] Implementar `obterSaude()` em `frontend/src/api/saude.js`. A função chama `requisitar('/health/')` e retorna `'ok'` (200 com `database === 'ok'`), `'banco-indisponivel'` (503) ou `'inacessivel'` (outro status, erro de rede ou timeout), sem lançar exceção (contrato "Consumo pelo frontend") (depende de T023)
-- [ ] T025 [US1] Implementar o hook `useSaudeApi()` em `frontend/src/hooks/useSaudeApi.js`. O estado inicial é `'carregando'`; o hook chama `obterSaude()` ao montar, atualiza o estado e ignora o resultado se o componente já tiver desmontado (depende de T024)
-- [ ] T026 [US1] Implementar a página `frontend/src/pages/Inicio/Inicio.jsx`, com título `Grana.io` e as mensagens pt-BR por estado:
+
+  > **Ajuste na implementação**: o cliente passou a usar `cache: 'no-store'` e timeout de 10 s,
+  > em vez de 5 s. Com o banco parado, a API leva ~4 s para responder 503, porque o DNS do
+  > Docker demora a desistir do host `db`. Além disso, o Chromium enfileira GETs idênticos
+  > simultâneos por causa do cache lock, e o `StrictMode` dispara o efeito duas vezes em dev.
+  > Com isso a segunda chamada estourava os 5 s e a página mostrava "API inacessível" em vez de
+  > "banco indisponível".
+- [X] T024 [US1] Implementar `obterSaude()` em `frontend/src/api/saude.js`. A função chama `requisitar('/health/')` e retorna `'ok'` (200 com `database === 'ok'`), `'banco-indisponivel'` (503) ou `'inacessivel'` (outro status, erro de rede ou timeout), sem lançar exceção (contrato "Consumo pelo frontend") (depende de T023)
+- [X] T025 [US1] Implementar o hook `useSaudeApi()` em `frontend/src/hooks/useSaudeApi.js`. O estado inicial é `'carregando'`; o hook chama `obterSaude()` ao montar, atualiza o estado e ignora o resultado se o componente já tiver desmontado (depende de T024)
+- [X] T026 [US1] Implementar a página `frontend/src/pages/Inicio/Inicio.jsx`, com título `Grana.io` e as mensagens pt-BR por estado:
   - `carregando` → "Verificando a API…"
   - `ok` → "API acessível (banco operacional)"
   - `banco-indisponivel` → "API acessível, banco indisponível"
   - `inacessivel` → "API inacessível"
 
   Atualizar `frontend/src/App.jsx` para renderizar `<Inicio />` (FR-008) (depende de T025).
-- [ ] T027 [US1] Atualizar `compose.yaml`:
+- [X] T027 [US1] Atualizar `compose.yaml`:
   - no `backend`, healthcheck `["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health/', timeout=3)"]` (interval 10s, timeout 5s, retries 5, start_period 30s);
   - novo serviço `frontend` com `build: ./frontend`, `environment: { API_PROXY_TARGET: http://backend:8000, VITE_API_URL: ${VITE_API_URL:-} }`, `ports: ["${FRONTEND_PORT:-5173}:5173"]`, `volumes: ["./frontend:/app", "/app/node_modules"]` e `depends_on: [backend]`.
 
   (FR-001, FR-015, FR-018; research R-06, R-08, R-09)
-- [ ] T028 [US1] Validar pelo [quickstart.md](quickstart.md):
+- [X] T028 [US1] Validar pelo [quickstart.md](quickstart.md):
   - V1 (exceto o passo 4, sobre migrations, que é validado na US4), V2, V3 e V4;
   - V8 (recarga sem rebuild no backend e no frontend; FR-015), para detectar cedo qualquer
     problema de polling nos bind mounts do Windows;
   - `docker compose down` encerra todos os serviços (US1, cenário 5).
 
   Registrar o resultado no resumo do checkpoint.
+
+  > **Resultado (2026-09-30)**: V1, V2, V4 e V8 ✅. V3 passou **a partir do PC** pelo IP da rede
+  > (10.1.133.105 e, depois de trocar de rede, 192.168.11.214). A troca de IP funcionou sem
+  > rebuild (passo 5), e a porta 5432 fica fechada. **Pendente**: o acesso pelo celular (SC-008)
+  > fica carregando, mesmo com a rede do PC em perfil "Privada". A investigação foi adiada e deve
+  > ser retomada até a T046. Suspeitas: firewall do Windows e isolamento de clientes no roteador.
 
 **Checkpoint**: US1 funcional e demonstrável sozinha: sistema sobe com um comando, saúde 200/503 conforme o banco, página inicial mostra o estado da API no PC e no celular. Suíte verde.
 
