@@ -76,6 +76,9 @@ STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+# Usuário próprio, identificado pelo e-mail (specs/002-cadastro-usuario, research R-01).
+AUTH_USER_MODEL = "accounts.Usuario"
+
 REST_FRAMEWORK = {
     # A autenticação JWT entra na US-02; até lá nenhuma rota autentica.
     "DEFAULT_AUTHENTICATION_CLASSES": [],

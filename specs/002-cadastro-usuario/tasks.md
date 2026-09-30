@@ -45,7 +45,7 @@ de IA.
 
 **⚠️ CRITICAL**: nenhuma história começa antes desta fase. O `AUTH_USER_MODEL` precisa estar definido **antes** de gerar a migration ([research R-01, R-02](research.md)).
 
-- [ ] T004 Escrever **primeiro** os testes do model e do manager em `backend/tests/accounts/test_models.py` (`@pytest.mark.django_db`). Casos:
+- [X] T004 Escrever **primeiro** os testes do model e do manager em `backend/tests/accounts/test_models.py` (`@pytest.mark.django_db`). Casos:
   - `get_user_model()` é `accounts.Usuario`, e `USERNAME_FIELD == "email"`;
   - `Usuario.objects.create_user(email=" Ana@Exemplo.COM ", nome="  Ana  ", password="uma-senha-boa-2026")` grava `email == "ana@exemplo.com"` e `nome == "Ana"`;
   - `password` começa com `"pbkdf2_sha256$"`, `check_password("uma-senha-boa-2026")` é `True` e o texto da senha não aparece em `password`;
@@ -56,7 +56,7 @@ de IA.
   - `save()` de um `Usuario` com e-mail `"X@Y.com"` grava `"x@y.com"`.
 
   Rodar a suíte e confirmar a **falha** (data-model, "Usuario").
-- [ ] T005 Implementar `Usuario(AbstractBaseUser, PermissionsMixin)` e `UsuarioManager(BaseUserManager)` em `backend/accounts/models.py`, conforme [data-model.md](data-model.md):
+- [X] T005 Implementar `Usuario(AbstractBaseUser, PermissionsMixin)` e `UsuarioManager(BaseUserManager)` em `backend/accounts/models.py`, conforme [data-model.md](data-model.md):
   - Campos:
     - `email = EmailField(max_length=254, unique=True)`;
     - `nome = CharField(max_length=150)`;
@@ -72,9 +72,9 @@ de IA.
     - `create_user(email, nome, password=None, **extra)` força `is_staff=False` e `is_superuser=False` e chama `set_password`;
     - `create_superuser` usa `is_staff=True` e `is_superuser=True`;
     - `get_by_natural_key` normaliza o e-mail recebido.
-- [ ] T006 Definir `AUTH_USER_MODEL = "accounts.Usuario"` em `backend/config/settings.py`. Gerar a migration dentro do container com `docker compose run --rm backend python manage.py makemigrations accounts` e conferir que `backend/accounts/migrations/0001_initial.py` foi criado com LF (depende de T005)
-- [ ] T007 **Recriar o banco de desenvolvimento** ([research R-02](research.md)). É uma ação destrutiva, então **pedir confirmação ao responsável antes**. Rodar `docker compose down -v` e depois `docker compose up -d --wait`, e conferir nos logs do backend que `accounts.0001_initial` foi aplicada e que a tabela `auth_user` não existe (`docker compose exec -T db psql -U grana -d grana -c "\dt"`)
-- [ ] T008 Rodar a suíte e confirmar T004 **verde** e a guarda `tests/test_migrations.py` verde. Validar o quickstart Q9: `createsuperuser` pede e-mail e nome
+- [X] T006 Definir `AUTH_USER_MODEL = "accounts.Usuario"` em `backend/config/settings.py`. Gerar a migration dentro do container com `docker compose run --rm backend python manage.py makemigrations accounts` e conferir que `backend/accounts/migrations/0001_initial.py` foi criado com LF (depende de T005)
+- [X] T007 **Recriar o banco de desenvolvimento** ([research R-02](research.md)). É uma ação destrutiva, então **pedir confirmação ao responsável antes**. Rodar `docker compose down -v` e depois `docker compose up -d --wait`, e conferir nos logs do backend que `accounts.0001_initial` foi aplicada e que a tabela `auth_user` não existe (`docker compose exec -T db psql -U grana -d grana -c "\dt"`)
+- [X] T008 Rodar a suíte e confirmar T004 **verde** e a guarda `tests/test_migrations.py` verde. Validar o quickstart Q9: `createsuperuser` pede e-mail e nome
 
 **Checkpoint**: `Usuario` é o modelo de usuário do projeto, com banco recriado limpo e suíte verde.
 
