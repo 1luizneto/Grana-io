@@ -210,7 +210,7 @@ apresente o resumo e sugira o commit. O commit é manual, sem trailers de IA.
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T023 [P] [US3] Escrever `backend/tests/accounts/test_protecao_api.py`:
+- [X] T023 [P] [US3] Escrever `backend/tests/accounts/test_protecao_api.py`:
   - `GET /api/usuarios/eu/`:
     - sem credencial → 401, `detail == "As credenciais de autenticação não foram fornecidas."` e cabeçalho `WWW-Authenticate` começando com `Bearer`;
     - com `Bearer abc.def.ghi` → 401 e `code == "token_not_valid"`;
@@ -224,8 +224,22 @@ apresente o resumo e sugira o commit. O commit é manual, sem trailers de IA.
 
 ### Implementation for User Story 3
 
-- [ ] T024 [US3] Confirmar a T023 **verde** **sem mudar código de produção**: a autenticação padrão (T005) e a `EuView` (T013) já devem atender. A rota `auth/renovar/` ainda não existe e só está na lista de públicas da guarda, sem efeito até a US4. Se algum teste exigir mudança de código, ela precisa ser registrada nesta tarefa, com o motivo, antes do checkpoint
-- [ ] T025 [US3] Validar S2 (linhas 2 e 3), S6 e S8 do [quickstart.md](quickstart.md)
+- [X] T024 [US3] Confirmar a T023 **verde** **sem mudar código de produção**: a autenticação padrão (T005) e a `EuView` (T013) já devem atender. A rota `auth/renovar/` ainda não existe e só está na lista de públicas da guarda, sem efeito até a US4. Se algum teste exigir mudança de código, ela precisa ser registrada nesta tarefa, com o motivo, antes do checkpoint
+- [X] T025 [US3] Validar S2 (linhas 2 e 3), S6 e S8 do [quickstart.md](quickstart.md)
+
+  > **Resultado (2026-10-04)**: ✅ 110 testes verdes.
+  > - Os 9 testes da T023 **passaram de primeira**, como previsto: a US3 só comprova o que a
+  >   autenticação padrão (T005) e a `EuView` (T013) já fazem. Nenhum código de produção mudou
+  >   (T024).
+  > - Para garantir que a guarda funciona de verdade, listei a classificação: as 3 públicas
+  >   aparecem como desprotegidas e passam só por estarem na lista, e `usuarios/eu/` aparece como
+  >   protegida.
+  > - No ambiente real:
+  >   - S2: sem credencial, 401 "As credenciais de autenticação não foram fornecidas."; adulterada,
+  >     401 `token_not_valid`;
+  >   - S6: conta desativada, 401 `user_inactive` em `/eu/` e login com a mensagem genérica;
+  >     reativada, 200. A parte de renovar fica para a T030;
+  >   - S8: health 200 e cadastro 400 sem credencial.
 
 **Checkpoint**: proteção comprovada e guarda contra rotas novas desprotegidas; suíte verde.
 
