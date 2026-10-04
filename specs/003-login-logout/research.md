@@ -137,6 +137,15 @@ Não restou nenhum "NEEDS CLARIFICATION".
   deixaria quem acessa a porta 8000 direto trocar de "dispositivo" só mudando o cabeçalho, e
   burlar o limite. Resolver o IP pelo nome do serviço funciona mesmo que o Docker troque o IP do
   container.
+- **Limitação verificada (2026-10-04, `/speckit-analyze`)**: no **Docker Desktop**, as portas
+  publicadas passam pelo proxy do próprio Docker, e todo cliente chega ao container com o IP do
+  gateway. Um container de teste respondeu `172.17.0.1` tanto para `localhost` quanto para o IP da
+  rede (`192.168.11.214`). O Vite e o backend veem o mesmo endereço para o PC, o celular e o acesso
+  direto à porta 8000, e o limite vira **global**. No **Docker Engine do Linux** o IP real é
+  preservado, e o desenho funciona por dispositivo. O desenho é mantido, porque é o correto para
+  Linux e para o futuro modo de uso (RNF-09), e a limitação fica documentada na spec (Edge Cases,
+  FR-015) e no README. Não há solução simples no Docker Desktop: `network_mode: host` não expõe a
+  rede local do Windows.
 - **Verificar na implementação**: que o proxy do Vite 8 aceita `xfwd`. Se não aceitar, usar
   `configure: (proxy) => proxy.on("proxyReq", …)` para definir o cabeçalho.
 

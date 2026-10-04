@@ -136,9 +136,15 @@ funciona mais; verificar que uma sessão aberta em outro dispositivo continua fu
   recusadas, e a renovação também (US4, cenário 4).
 - **Várias tentativas de login em pouco tempo**: a partir da 11ª tentativa no mesmo minuto, o
   mesmo dispositivo recebe "Muitas tentativas. Tente novamente em instantes.", inclusive se a
-  senha estiver certa, até a janela de 1 minuto passar (FR-015). Outros dispositivos e a própria
-  conta não são afetados; a conta nunca é bloqueada, para que ninguém consiga trancar a conta de
-  outra pessoa errando a senha de propósito.
+  senha estiver certa, até a janela de 1 minuto passar (FR-015). Dispositivos com outro endereço
+  de origem e a própria conta não são afetados; a conta nunca é bloqueada, para que ninguém consiga
+  trancar a conta de outra pessoa errando a senha de propósito.
+- **Docker Desktop (Windows/macOS) esconde o endereço do dispositivo**: verificado em 2026-10-04,
+  todo cliente, inclusive o próprio PC e o celular, chega ao sistema com o mesmo endereço de rede
+  (o gateway do Docker). Nesse ambiente, o limite passa a valer **para todos os dispositivos
+  juntos**: 10 tentativas por minuto somadas, e quem errar muito pode fazer os outros esperarem até
+  1 minuto. No Docker Engine do Linux, o endereço real chega, e o limite é por dispositivo. Esse
+  comportamento é aceito por ser uma casa com poucas pessoas, e o limite é ajustável (FR-015).
 - **Senha nunca devolvida nem registrada**: nem respostas, nem erros, nem logs contêm a senha
   (constituição, Princípio I). As credenciais de sessão também não são registradas em logs.
 - **Relógio**: os vencimentos usam o horário do servidor, e não dependem do relógio do
@@ -164,7 +170,7 @@ funciona mais; verificar que uma sessão aberta em outro dispositivo continua fu
 - **FR-012**: Com uma sessão válida, a pessoa MUST poder consultar a própria conta (nome e e-mail), e somente a própria.
 - **FR-013**: Senhas e credenciais de sessão MUST NOT aparecer em logs nem em mensagens de erro; a senha MUST NOT aparecer em respostas.
 - **FR-014**: Uma conta desativada MUST perder o acesso: suas credenciais de acesso e de renovação passam a ser recusadas, mesmo que ainda não tenham vencido.
-- **FR-015**: O login MUST aceitar no máximo 10 tentativas por minuto de um mesmo dispositivo (endereço de rede), certas ou erradas; acima disso MUST responder "Muitas tentativas. Tente novamente em instantes." até a janela passar, sem bloquear a conta nem afetar outros dispositivos. O limite MUST poder ser ajustado por configuração de ambiente.
+- **FR-015**: O login MUST aceitar no máximo 10 tentativas por minuto de um mesmo endereço de rede de origem, certas ou erradas (no Docker Desktop todos os dispositivos chegam com o mesmo endereço e compartilham o limite; ver Edge Cases); acima disso MUST responder "Muitas tentativas. Tente novamente em instantes." até a janela passar, sem bloquear a conta nem afetar outros dispositivos. O limite MUST poder ser ajustado por configuração de ambiente.
 
 ### Key Entities
 
@@ -185,7 +191,7 @@ funciona mais; verificar que uma sessão aberta em outro dispositivo continua fu
 - **SC-004**: Depois da saída, 100% das tentativas de renovar a sessão encerrada são recusadas, e as sessões de outros dispositivos seguem funcionando.
 - **SC-005**: Com os prazos padrão, uma pessoa que usa o sistema ao menos uma vez a cada 7 dias no mesmo dispositivo não precisa digitar a senha de novo nesse período; uma credencial de acesso copiada deixa de funcionar em até 30 minutos.
 - **SC-006**: Nenhuma senha ou credencial de sessão aparece nos logs do sistema.
-- **SC-007**: Um mesmo dispositivo consegue fazer no máximo 10 tentativas de login por minuto; adivinhar uma senha por tentativa e erro fica limitado a 600 tentativas por hora por dispositivo.
+- **SC-007**: Um mesmo endereço de origem consegue fazer no máximo 10 tentativas de login por minuto; adivinhar uma senha por tentativa e erro fica limitado a 600 tentativas por hora por endereço (no Docker Desktop, 600 por hora no total).
 
 ## Assumptions
 
@@ -208,4 +214,5 @@ funciona mais; verificar que uma sessão aberta em outro dispositivo continua fu
 - O limite de tentativas vale só para o login (Clarifications). Cadastro e renovação não têm
   limite nesta spec. O dispositivo é identificado pelo endereço de rede de onde vem a requisição;
   dispositivos atrás do mesmo endereço compartilham o limite, o que é aceitável numa rede doméstica.
+  No Docker Desktop, isso significa um limite único para todos (ver Edge Cases).
 - Não há bloqueio de conta por senha errada (Clarifications).

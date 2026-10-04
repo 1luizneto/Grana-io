@@ -95,10 +95,16 @@ for i in $(seq 1 11); do post -d '{"email":"ana@exemplo.com","senha":"senha-erra
 ```
 
 **Esperado**: as 10 primeiras dão 401 e a 11ª dá `{"detail":"Muitas tentativas. Tente novamente
-em instantes."} [429]`, **pela interface** (porta 5173, via proxy). Em seguida, um login pela porta
-8000 (mesmo computador, sem o proxy) é contado à parte. Depois de 1 minuto, o login volta a ser
-aceito. Os testes automatizados cobrem a garantia de que um `X-Forwarded-For` falso na porta 8000
-não burla o limite.
+em instantes."} [429]`, pela interface (porta 5173, via proxy). Depois de 1 minuto, o login volta a
+ser aceito.
+
+- **No Docker Desktop (Windows/macOS)**: um login logo em seguida pela porta 8000, ou por outro
+  dispositivo, **também** recebe 429, porque todos chegam com o mesmo endereço e compartilham o
+  limite. É a limitação documentada na spec (Edge Cases).
+- **No Linux (Docker Engine)**: um login de outro dispositivo da rede é contado à parte.
+
+Em qualquer ambiente, os testes automatizados cobrem a contagem por endereço e a garantia de que
+um `X-Forwarded-For` falso na porta 8000 não burla o limite.
 
 ### S8 — Rotas públicas continuam públicas (FR-010; SC-003)
 
