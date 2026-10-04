@@ -21,6 +21,20 @@ def env_bool(nome, padrao=False):
     return valor.strip().lower() in _VERDADEIROS
 
 
+def env_int(nome, padrao):
+    """Inteiro ≥ 1 vindo do ambiente; ausente ou vazio usa o padrão."""
+    valor = os.environ.get(nome, "").strip()
+    if not valor:
+        return padrao
+    try:
+        numero = int(valor)
+    except ValueError:
+        numero = 0
+    if numero < 1:
+        raise ImproperlyConfigured(f"A variável {nome} deve ser um número inteiro maior que zero.")
+    return numero
+
+
 def env_list(nome):
     valor = os.environ.get(nome, "")
     return [item.strip() for item in valor.split(",") if item.strip()]

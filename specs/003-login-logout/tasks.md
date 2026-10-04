@@ -54,14 +54,14 @@ apresente o resumo e sugira o commit. O commit é manual, sem trailers de IA.
 
 **⚠️ CRITICAL**: nenhuma história começa antes desta fase.
 
-- [ ] T003 Escrever **primeiro** os testes de `env_int(nome, padrao)` em `backend/tests/config/test_env.py`:
+- [X] T003 Escrever **primeiro** os testes de `env_int(nome, padrao)` em `backend/tests/config/test_env.py`:
   - devolve o inteiro definido (`"45"` → `45`);
   - devolve o padrão se a variável estiver ausente ou vazia;
   - lança `ImproperlyConfigured` citando o nome da variável para `"abc"`, `"0"` e `"-5"` (o valor tem de ser inteiro ≥ 1).
 
   Confirmar a **falha** ([research R-10](research.md)).
-- [ ] T004 Implementar `env_int(nome, padrao)` em `backend/config/env.py` e confirmar T003 **verde**
-- [ ] T005 Em `backend/config/settings.py`:
+- [X] T004 Implementar `env_int(nome, padrao)` em `backend/config/env.py` e confirmar T003 **verde**
+- [X] T005 Em `backend/config/settings.py`:
   - `SIMPLE_JWT`:
     - `ACCESS_TOKEN_LIFETIME = timedelta(minutes=env_int("GRANA_SESSAO_ACESSO_MINUTOS", 30))`;
     - `REFRESH_TOKEN_LIFETIME = timedelta(days=env_int("GRANA_SESSAO_RENOVACAO_DIAS", 7))`;
@@ -71,13 +71,13 @@ apresente o resumo e sugira o commit. O commit é manual, sem trailers de IA.
   - Em `REST_FRAMEWORK`, trocar `DEFAULT_AUTHENTICATION_CLASSES` para `["rest_framework_simplejwt.authentication.JWTAuthentication"]` e remover o comentário "JWT entra na US-02".
 
   ([research R-04, R-06](research.md))
-- [ ] T006 [P] Em `backend/tests/conftest.py`, criar um fixture `autouse` que roda `django.core.cache.cache.clear()` antes de cada teste, para isolar o limite de tentativas entre testes ([research R-11](research.md)). Criar `backend/tests/accounts/conftest.py` com:
+- [X] T006 [P] Em `backend/tests/conftest.py`, criar um fixture `autouse` que roda `django.core.cache.cache.clear()` antes de cada teste, para isolar o limite de tentativas entre testes ([research R-11](research.md)). Criar `backend/tests/accounts/conftest.py` com:
   - `usuario`, uma conta ativa `ana@exemplo.com` / `"uma-senha-boa-2026"`, nome `"Ana Souza"`;
   - `outro_usuario`, a conta `bia@exemplo.com`;
   - `cliente`, um `APIClient` sem autenticação;
   - `cliente_autenticado`, um fixture que **recebe o fixture `usuario`** e devolve um `APIClient` já com `force_authenticate(user=usuario)`. Os testes que precisam de credencial real (JWT no cabeçalho) não usam esse fixture: fazem login ou geram o token com `AccessToken.for_user`.
-- [ ] T007 Adicionar ao `environment` do `backend` em `compose.yaml` as variáveis `GRANA_SESSAO_ACESSO_MINUTOS: ${GRANA_SESSAO_ACESSO_MINUTOS:-30}` e `GRANA_SESSAO_RENOVACAO_DIAS: ${GRANA_SESSAO_RENOVACAO_DIAS:-7}`. Acrescentar as duas ao `.env.example`, comentadas: "Duração da credencial de acesso, em minutos (inteiro ≥ 1)" e "Por quanto tempo a pessoa fica conectada sem digitar a senha, em dias (inteiro ≥ 1)"
-- [ ] T008 Rodar a suíte e confirmar que **todos os testes anteriores continuam verdes**, em especial saúde e cadastro, que são públicos e já declaram `authentication_classes = []`. Rodar `docker compose up -d --wait` e conferir `GET /api/health/` 200 e `POST /api/usuarios/` sem credencial respondendo 201 ou 400
+- [X] T007 Adicionar ao `environment` do `backend` em `compose.yaml` as variáveis `GRANA_SESSAO_ACESSO_MINUTOS: ${GRANA_SESSAO_ACESSO_MINUTOS:-30}` e `GRANA_SESSAO_RENOVACAO_DIAS: ${GRANA_SESSAO_RENOVACAO_DIAS:-7}`. Acrescentar as duas ao `.env.example`, comentadas: "Duração da credencial de acesso, em minutos (inteiro ≥ 1)" e "Por quanto tempo a pessoa fica conectada sem digitar a senha, em dias (inteiro ≥ 1)"
+- [X] T008 Rodar a suíte e confirmar que **todos os testes anteriores continuam verdes**, em especial saúde e cadastro, que são públicos e já declaram `authentication_classes = []`. Rodar `docker compose up -d --wait` e conferir `GET /api/health/` 200 e `POST /api/usuarios/` sem credencial respondendo 201 ou 400
 
 **Checkpoint**: autenticação JWT como padrão, prazos configuráveis e rotas públicas intactas.
 

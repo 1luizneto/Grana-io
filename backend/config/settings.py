@@ -6,9 +6,10 @@ Os valores padrão de desenvolvimento ficam no compose.yaml; aqui os padrões s�
 (DEBUG desligado). Variáveis documentadas em specs/001-infra-docker/contracts/environment.md.
 """
 
+from datetime import timedelta
 from pathlib import Path
 
-from config.env import CHAVE_DEV_PADRAO, env_bool, env_list, env_str, validar_secret_key
+from config.env import CHAVE_DEV_PADRAO, env_bool, env_int, env_list, env_str, validar_secret_key
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -99,9 +100,20 @@ AUTH_PASSWORD_VALIDATORS = [
 # Cadastro público de novas contas; 0 fecha o cadastro sem alterar código (FR-012).
 CADASTRO_ABERTO = env_bool("GRANA_CADASTRO_ABERTO", True)
 
+# Sessão (specs/003-login-logout, research R-04): acesso curto, renovação de uso único.
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=env_int("GRANA_SESSAO_ACESSO_MINUTOS", 30)),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=env_int("GRANA_SESSAO_RENOVACAO_DIAS", 7)),
+    "ROTATE_REFRESH_TOKENS": True,
+    "BLACKLIST_AFTER_ROTATION": True,
+    # O service de sessão atualiza o último acesso explicitamente.
+    "UPDATE_LAST_LOGIN": False,
+    "AUTH_HEADER_TYPES": ("Bearer",),
+}
+
 REST_FRAMEWORK = {
-    # A autenticação JWT entra na US-02; até lá nenhuma rota autentica.
-    "DEFAULT_AUTHENTICATION_CLASSES": [],
+    # Sessão por JWT (specs/003-login-logout). Rotas públicas declaram authentication_classes = [].
+    "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework_simplejwt.authentication.JWTAuthentication"],
     # Toda rota nasce protegida (RNF-02); rotas públicas declaram AllowAny explicitamente.
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
