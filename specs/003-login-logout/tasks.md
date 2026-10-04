@@ -91,13 +91,13 @@ apresente o resumo e sugira o commit. O commit é manual, sem trailers de IA.
 
 ### Tests for User Story 1 ⚠️
 
-- [ ] T009 [P] [US1] Escrever `backend/tests/accounts/test_sessao_service.py`:
+- [X] T009 [P] [US1] Escrever `backend/tests/accounts/test_sessao_service.py`:
   - `autenticar(email=" ANA@Exemplo.com ", senha=...)` devolve o `usuario`;
   - `emitir_sessao(usuario)` devolve um dicionário com `acesso` e `renovacao` (strings não vazias);
   - `AccessToken(acesso)["user_id"]` corresponde ao id do usuário;
   - o `last_login` do usuário fica preenchido;
   - existe um `OutstandingToken` para a renovação emitida.
-- [ ] T010 [P] [US1] Escrever `backend/tests/accounts/test_entrar_api.py`:
+- [X] T010 [P] [US1] Escrever `backend/tests/accounts/test_entrar_api.py`:
   - `POST /api/auth/entrar/` com `{"email": " ANA@Exemplo.com ", "senha": "uma-senha-boa-2026"}` retorna 200 com as chaves **exatamente** `{"acesso", "renovacao", "usuario"}`, e `usuario == {"nome": "Ana Souza", "email": "ana@exemplo.com"}`;
   - a senha não aparece no corpo;
   - `GET /api/usuarios/eu/` com `HTTP_AUTHORIZATION=f"Bearer {acesso}"` retorna 200 com `{"nome": "Ana Souza", "email": "ana@exemplo.com"}`;
@@ -107,25 +107,34 @@ apresente o resumo e sugira o commit. O commit é manual, sem trailers de IA.
 
 ### Implementation for User Story 1
 
-- [ ] T011 [US1] Implementar em `backend/accounts/services/sessao.py`:
+- [X] T011 [US1] Implementar em `backend/accounts/services/sessao.py`:
   - `autenticar(email, senha, request=None) -> Usuario | None`, que chama `django.contrib.auth.authenticate(request, email=email, password=senha)`;
   - `emitir_sessao(usuario) -> dict`, que usa `RefreshToken.for_user(usuario)`, chama `update_last_login(None, usuario)` e devolve `{"acesso": str(refresh.access_token), "renovacao": str(refresh)}`.
 
   ([research R-03, R-04](research.md))
-- [ ] T012 [US1] Adicionar a `backend/accounts/serializers.py`:
+- [X] T012 [US1] Adicionar a `backend/accounts/serializers.py`:
   - `EntrarSerializer`, com `email = CharField()` e `senha = CharField(trim_whitespace=False)`, os dois obrigatórios;
   - `UsuarioSerializer(ModelSerializer)`, com `fields = ["nome", "email"]`.
 
   Opcional: trocar o `UsuarioCadastradoSerializer` da spec 002 pelo `UsuarioSerializer`, mantendo o mesmo contrato.
-- [ ] T013 [US1] Implementar em `backend/accounts/views.py`:
+- [X] T013 [US1] Implementar em `backend/accounts/views.py`:
   - `EntrarView(APIView)`:
     - `AllowAny`, `authentication_classes = []`, só `post`/`options`;
     - `sensitive_post_parameters("senha")`;
     - valida com `EntrarSerializer`, chama `autenticar` e, se houver usuário, responde 200 com `{**emitir_sessao(usuario), "usuario": UsuarioSerializer(usuario).data}`;
     - o caminho de recusa é implementado na US2 (T018); até lá, pode responder 401 com a mensagem genérica.
   - `EuView(APIView)`: `IsAuthenticated` padrão, só `get`/`head`/`options`, devolve `UsuarioSerializer(request.user).data`.
-- [ ] T014 [US1] Registrar em `backend/accounts/urls.py` as rotas `path("auth/entrar/", EntrarView.as_view(), name="entrar")` e `path("usuarios/eu/", EuView.as_view(), name="eu")`. `usuarios/eu/` deve vir **antes** de `usuarios/`. Rodar a suíte e confirmar T009 e T010 **verdes**
-- [ ] T015 [US1] Validar o S1 e o S2 (primeira linha) do [quickstart.md](quickstart.md) no ambiente real, com uma conta criada pelo cadastro
+- [X] T014 [US1] Registrar em `backend/accounts/urls.py` as rotas `path("auth/entrar/", EntrarView.as_view(), name="entrar")` e `path("usuarios/eu/", EuView.as_view(), name="eu")`. `usuarios/eu/` deve vir **antes** de `usuarios/`. Rodar a suíte e confirmar T009 e T010 **verdes**
+- [X] T015 [US1] Validar o S1 e o S2 (primeira linha) do [quickstart.md](quickstart.md) no ambiente real, com uma conta criada pelo cadastro
+
+  > **Resultado (2026-10-04)**: ✅ 93 testes verdes.
+  > - S1: login com `" ANA@Exemplo.com "` devolve `acesso`, `renovacao` e `usuario`, e o
+  >   `last_login` fica preenchido.
+  > - S2: `/usuarios/eu/` responde 200 com a credencial, direto (8000) e pelo proxy (5173).
+  > - Na T013, a `EntrarView` já responde 401 com a mensagem genérica quando `autenticar` devolve
+  >   `None`. A T018 cobre esse caminho com testes.
+  > - O `UsuarioCadastradoSerializer` foi renomeado para `UsuarioSerializer` (opção da T012),
+  >   mantendo o contrato do cadastro.
 
 **Checkpoint**: login e consulta da própria conta funcionando; suíte verde.
 
