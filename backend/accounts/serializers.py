@@ -60,3 +60,9 @@ class EntrarSerializer(serializers.Serializer):
 
     email = serializers.CharField()
     senha = serializers.CharField(trim_whitespace=False)
+
+
+class RenovacaoSerializer(serializers.Serializer):
+    """Credencial de renovação enviada para renovar ou encerrar a sessão."""
+
+    renovacao = serializers.CharField()

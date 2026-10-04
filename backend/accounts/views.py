@@ -9,14 +9,16 @@ from accounts.serializers import (
     MENSAGEM_EMAIL_DUPLICADO,
     CadastroSerializer,
     EntrarSerializer,
+    RenovacaoSerializer,
     UsuarioSerializer,
 )
 from accounts.services.cadastro import EmailJaCadastrado, cadastrar_usuario, cadastro_aberto
-from accounts.services.sessao import autenticar, emitir_sessao
+from accounts.services.sessao import SessaoInvalida, autenticar, emitir_sessao, renovar_sessao
 from accounts.throttles import MuitasTentativas, TentativasLoginThrottle
 
 MENSAGEM_CADASTRO_FECHADO = "O cadastro de novas contas está desativado neste sistema."
 MENSAGEM_CREDENCIAIS_INVALIDAS = "E-mail ou senha incorretos."
+MENSAGEM_SESSAO_ENCERRADA = "Sessão expirada ou encerrada. Entre novamente."
 
 
 @method_decorator(sensitive_post_parameters("senha", "confirmacao_senha"), name="dispatch")
@@ -72,3 +74,21 @@ class EuView(APIView):
 
     def get(self, request):
         return Response(UsuarioSerializer(request.user).data)
+
+
+@method_decorator(sensitive_post_parameters("renovacao"), name="dispatch")
+class RenovarView(APIView):
+    """Renovação de uso único da sessão (specs/003-login-logout/contracts/api-sessao.md)."""
+
+    permission_classes = [AllowAny]
+    authentication_classes = []
+    http_method_names = ["post", "options"]
+
+    def post(self, request):
+        serializer = RenovacaoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            sessao = renovar_sessao(serializer.validated_data["renovacao"])
+        except SessaoInvalida:
+            return Response({"detail": MENSAGEM_SESSAO_ENCERRADA}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response(sessao)

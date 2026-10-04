@@ -253,12 +253,12 @@ apresente o resumo e sugira o commit. O commit é manual, sem trailers de IA.
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T026 [P] [US4] Adicionar a `backend/tests/accounts/test_sessao_service.py`:
+- [X] T026 [P] [US4] Adicionar a `backend/tests/accounts/test_sessao_service.py`:
   - `renovar_sessao(renovacao)` devolve um novo par `acesso`/`renovacao`, com a renovação diferente da anterior;
   - a renovação anterior fica em `BlacklistedToken`;
   - usar de novo a antiga lança `SessaoInvalida`;
   - renovação vencida (via `set_exp` com lifetime negativo), adulterada ou de conta desativada lança `SessaoInvalida`.
-- [ ] T027 [P] [US4] Escrever `backend/tests/accounts/test_renovar_sair_api.py`, parte "renovar":
+- [X] T027 [P] [US4] Escrever `backend/tests/accounts/test_renovar_sair_api.py`, parte "renovar":
   - `POST /api/auth/renovar/` com renovação válida → 200 com as chaves **exatamente** `{"acesso", "renovacao"}`, e o novo `acesso` funciona em `/usuarios/eu/`;
   - com a mesma renovação de novo → 401 `{"detail": "Sessão expirada ou encerrada. Entre novamente."}`;
   - `{}` → 400 com `renovacao: ["Este campo é obrigatório."]`;
@@ -269,18 +269,25 @@ apresente o resumo e sugira o commit. O commit é manual, sem trailers de IA.
 
 ### Implementation for User Story 4
 
-- [ ] T028 [US4] Implementar em `backend/accounts/services/sessao.py`:
+- [X] T028 [US4] Implementar em `backend/accounts/services/sessao.py`:
   - `class SessaoInvalida(Exception)`;
   - `renovar_sessao(renovacao) -> dict`, que usa `rest_framework_simplejwt.serializers.TokenRefreshSerializer(data={"refresh": renovacao})`. Com `is_valid(raise_exception=True)` dentro de `try`, captura `TokenError`, `InvalidToken`, `AuthenticationFailed` e `ValidationError` e relança como `SessaoInvalida`. Devolve `{"acesso": data["access"], "renovacao": data["refresh"]}`.
 
   ([research R-04](research.md))
-- [ ] T029 [US4] Adicionar `RenovacaoSerializer` (`renovacao = CharField()`) a `backend/accounts/serializers.py`. Em `backend/accounts/views.py`, criar a `RenovarView`:
+- [X] T029 [US4] Adicionar `RenovacaoSerializer` (`renovacao = CharField()`) a `backend/accounts/serializers.py`. Em `backend/accounts/views.py`, criar a `RenovarView`:
   - `AllowAny`, `authentication_classes = []`, só `post`;
   - `sensitive_post_parameters("renovacao")`;
   - converte `SessaoInvalida` em 401 com a mensagem do contrato.
 
   Registrar `path("auth/renovar/", ...)` em `backend/accounts/urls.py`. Rodar e confirmar T026, T027 e a guarda da T023 **verdes**.
-- [ ] T030 [US4] Validar o S4 do [quickstart.md](quickstart.md)
+- [X] T030 [US4] Validar o S4 do [quickstart.md](quickstart.md)
+
+  > **Resultado (2026-10-04)**: ✅ 118 testes verdes, incluindo a guarda da T023, que agora enxerga
+  > `auth/renovar/` como pública.
+  > - S4 (pela interface, 5173): o par novo funciona em `/eu/`; a renovação antiga, usada de novo,
+  >   recebe 401 "Sessão expirada ou encerrada. Entre novamente.".
+  > - S6 (pendente da T025): renovar com a conta desativada recebe 401.
+  > - Os imports dos testes de serviço foram levados para o topo do arquivo.
 
 **Checkpoint**: renovação de uso único; suíte verde.
 
