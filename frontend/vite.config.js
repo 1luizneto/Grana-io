@@ -16,6 +16,9 @@ export default defineConfig({
       '/api': {
         target: process.env.API_PROXY_TARGET ?? 'http://backend:8000',
         changeOrigin: true,
+        // Envia X-Forwarded-For com o endereço de quem abriu a interface, para o limite de
+        // tentativas de login contar por dispositivo (specs/003-login-logout, research R-08).
+        xfwd: true,
       },
     },
   },

@@ -13,6 +13,7 @@ from accounts.serializers import (
 )
 from accounts.services.cadastro import EmailJaCadastrado, cadastrar_usuario, cadastro_aberto
 from accounts.services.sessao import autenticar, emitir_sessao
+from accounts.throttles import MuitasTentativas, TentativasLoginThrottle
 
 MENSAGEM_CADASTRO_FECHADO = "O cadastro de novas contas está desativado neste sistema."
 MENSAGEM_CREDENCIAIS_INVALIDAS = "E-mail ou senha incorretos."
@@ -46,7 +47,11 @@ class EntrarView(APIView):
 
     permission_classes = [AllowAny]
     authentication_classes = []
+    throttle_classes = [TentativasLoginThrottle]
     http_method_names = ["post", "options"]
+
+    def throttled(self, request, wait):
+        raise MuitasTentativas(wait=wait)
 
     def post(self, request):
         serializer = EntrarSerializer(data=request.data)

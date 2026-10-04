@@ -111,6 +111,11 @@ SIMPLE_JWT = {
     "AUTH_HEADER_TYPES": ("Bearer",),
 }
 
+# Limite de tentativas de login por endereço de origem (FR-015) e proxy cujo X-Forwarded-For é
+# aceito (research R-07, R-08). No Docker Desktop todos os dispositivos chegam com o mesmo endereço.
+LOGIN_TENTATIVAS_POR_MINUTO = env_int("GRANA_LOGIN_TENTATIVAS_POR_MINUTO", 10)
+PROXY_CONFIAVEL = env_str("GRANA_PROXY_CONFIAVEL", "frontend")
+
 REST_FRAMEWORK = {
     # Sessão por JWT (specs/003-login-logout). Rotas públicas declaram authentication_classes = [].
     "DEFAULT_AUTHENTICATION_CLASSES": ["rest_framework_simplejwt.authentication.JWTAuthentication"],

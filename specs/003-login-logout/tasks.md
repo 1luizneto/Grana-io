@@ -148,10 +148,14 @@ apresente o resumo e sugira o commit. O commit é manual, sem trailers de IA.
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T016 [P] [US2] Adicionar a `backend/tests/accounts/test_entrar_api.py`:
+- [X] T016 [P] [US2] Adicionar a `backend/tests/accounts/test_entrar_api.py`:
   - para `ninguem@exemplo.com`, para `ana@exemplo.com` com senha errada e para `ana@exemplo.com` desativada (`is_active=False`) com a senha certa, as respostas têm **o mesmo** `status_code` (401) e **o mesmo** corpo, `{"detail": "E-mail ou senha incorretos."}`, e nenhum `OutstandingToken` é criado;
   - `{}` retorna 400 com `{"email": ["Este campo é obrigatório."], "senha": ["Este campo é obrigatório."]}`.
-- [ ] T017 [P] [US2] Escrever `backend/tests/accounts/test_throttles.py` (com `override_settings` para a taxa `"login": "3/min"`):
+
+  > **Nota (2026-10-04)**: estes testes **passaram de primeira**, sem fase vermelha, porque o
+  > caminho de recusa já tinha entrado na T013 (permitido pela própria T013). Eles ficam como
+  > cobertura do FR-003 e do FR-004.
+- [X] T017 [P] [US2] Escrever `backend/tests/accounts/test_throttles.py` (com `override_settings` para a taxa `"login": "3/min"`):
   - pelo cliente de teste, 3 tentativas de login passam (401 ou 200) e a 4ª retorna 429 com `{"detail": "Muitas tentativas. Tente novamente em instantes."}` e o cabeçalho `Retry-After`;
   - **também com a senha certa** na 4ª;
   - `TentativasLoginThrottle().get_ident(request)`:
@@ -163,20 +167,36 @@ apresente o resumo e sugira o commit. O commit é manual, sem trailers de IA.
 
 ### Implementation for User Story 2
 
-- [ ] T018 [US2] Na `EntrarView`, em `backend/accounts/views.py`, responder **401** `{"detail": "E-mail ou senha incorretos."}` sempre que `autenticar` devolver `None`. O `ModelBackend` já devolve `None` para e-mail inexistente, senha errada e conta inativa ([research R-03](research.md))
-- [ ] T019 [US2] Implementar `backend/accounts/throttles.py`:
+- [X] T018 [US2] Na `EntrarView`, em `backend/accounts/views.py`, responder **401** `{"detail": "E-mail ou senha incorretos."}` sempre que `autenticar` devolver `None`. O `ModelBackend` já devolve `None` para e-mail inexistente, senha errada e conta inativa ([research R-03](research.md))
+- [X] T019 [US2] Implementar `backend/accounts/throttles.py`:
   - `TentativasLoginThrottle(SimpleRateThrottle)`, com `scope = "login"` e `get_cache_key` usando `self.get_ident(request)`;
   - `get_ident` resolve `settings.PROXY_CONFIAVEL` com `socket.gethostbyname`, com cache de 60 s e tolerância a falha de resolução (nesse caso, usa `REMOTE_ADDR`). Se `REMOTE_ADDR` for esse IP e houver `X-Forwarded-For`, usa o **último** endereço do cabeçalho; senão, usa `REMOTE_ADDR`;
   - uma exceção `MuitasTentativas(Throttled)` com a mensagem fixa da spec, sem o sufixo de segundos, preservando o `wait` para o `Retry-After`.
 
   ([research R-07, R-08](research.md))
-- [ ] T020 [US2] Em `backend/config/settings.py`:
+- [X] T020 [US2] Em `backend/config/settings.py`:
   - `REST_FRAMEWORK["DEFAULT_THROTTLE_RATES"] = {"login": f"{env_int('GRANA_LOGIN_TENTATIVAS_POR_MINUTO', 10)}/min"}`;
   - `PROXY_CONFIAVEL = env_str("GRANA_PROXY_CONFIAVEL", "frontend")`.
 
   Na `EntrarView`, definir `throttle_classes = [TentativasLoginThrottle]` e sobrescrever `throttled(request, wait)` para lançar `MuitasTentativas(wait=wait)`. Rodar e confirmar T016 e T017 **verdes**.
-- [ ] T021 [US2] Em `frontend/vite.config.js`, adicionar `xfwd: true` ao proxy `/api`, com um comentário citando o limite de tentativas. Se o Vite 8 não aplicar o `xfwd`, trocar por `configure: (proxy) => proxy.on("proxyReq", (req, pedido) => req.setHeader("X-Forwarded-For", pedido.socket.remoteAddress))`. Rodar `docker compose up -d --build --wait`, porque o `vite.config.js` fica na imagem (spec 001 R-09)
-- [ ] T022 [US2] Adicionar ao `compose.yaml` (backend) as variáveis `GRANA_LOGIN_TENTATIVAS_POR_MINUTO: ${GRANA_LOGIN_TENTATIVAS_POR_MINUTO:-10}` e `GRANA_PROXY_CONFIAVEL: ${GRANA_PROXY_CONFIAVEL:-frontend}`, e comentá-las no `.env.example`. Validar o S3 e o S7 do [quickstart.md](quickstart.md): pela porta 5173, a 11ª tentativa dá 429. **No Docker Desktop, a porta 8000 e outros dispositivos compartilham a mesma contagem**, como documentado na spec (Edge Cases) e no research R-08; registrar o comportamento observado. Comentar no `.env.example`, junto de `GRANA_LOGIN_TENTATIVAS_POR_MINUTO`, que no Docker Desktop o limite vale para todos os dispositivos juntos
+
+  > **Desvio na implementação**: a taxa **não** fica em `DEFAULT_THROTTLE_RATES`. O DRF lê esse
+  > dicionário uma vez, ao carregar a classe, e o `override_settings` dos testes não teria efeito.
+  > A solução foi o setting `LOGIN_TENTATIVAS_POR_MINUTO`, lido por `TentativasLoginThrottle.get_rate()`
+  > a cada requisição.
+- [X] T021 [US2] Em `frontend/vite.config.js`, adicionar `xfwd: true` ao proxy `/api`, com um comentário citando o limite de tentativas. Se o Vite 8 não aplicar o `xfwd`, trocar por `configure: (proxy) => proxy.on("proxyReq", (req, pedido) => req.setHeader("X-Forwarded-For", pedido.socket.remoteAddress))`. Rodar `docker compose up -d --build --wait`, porque o `vite.config.js` fica na imagem (spec 001 R-09)
+- [X] T022 [US2] Adicionar ao `compose.yaml` (backend) as variáveis `GRANA_LOGIN_TENTATIVAS_POR_MINUTO: ${GRANA_LOGIN_TENTATIVAS_POR_MINUTO:-10}` e `GRANA_PROXY_CONFIAVEL: ${GRANA_PROXY_CONFIAVEL:-frontend}`, e comentá-las no `.env.example`. Validar o S3 e o S7 do [quickstart.md](quickstart.md): pela porta 5173, a 11ª tentativa dá 429. **No Docker Desktop, a porta 8000 e outros dispositivos compartilham a mesma contagem**, como documentado na spec (Edge Cases) e no research R-08; registrar o comportamento observado. Comentar no `.env.example`, junto de `GRANA_LOGIN_TENTATIVAS_POR_MINUTO`, que no Docker Desktop o limite vale para todos os dispositivos juntos
+
+  > **Resultado (2026-10-04)**: ✅ 101 testes verdes.
+  > - S3: e-mail inexistente recebe 401 "E-mail ou senha incorretos.", e `{}` recebe 400 com os
+  >   dois campos obrigatórios.
+  > - S7: 10 × 401 e a 11ª com 429, a mensagem da spec e `Retry-After: 58`. Logo em seguida, a
+  >   porta 8000 também deu 429, como esperado no Docker Desktop.
+  > **Achado e correção**: na primeira rodada, a porta 8000 deu **401**, ou seja, uma contagem
+  > separada. O Vite (Node) escuta em IPv6 e encaminha clientes IPv4 como `::ffff:a.b.c.d`
+  > (confirmado num container: `::ffff:127.0.0.1`), enquanto o Django recebe `a.b.c.d`, e o mesmo
+  > dispositivo contava em dobro. O `get_ident` passou a normalizar o prefixo, com um teste novo
+  > em `test_throttles.py`.
 
 **Checkpoint**: login seguro contra enumeração e adivinhação; suíte verde.
 

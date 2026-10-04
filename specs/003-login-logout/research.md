@@ -146,7 +146,12 @@ Não restou nenhum "NEEDS CLARIFICATION".
   Linux e para o futuro modo de uso (RNF-09), e a limitação fica documentada na spec (Edge Cases,
   FR-015) e no README. Não há solução simples no Docker Desktop: `network_mode: host` não expõe a
   rede local do Windows.
-- **Verificar na implementação**: que o proxy do Vite 8 aceita `xfwd`. Se não aceitar, usar
+- **Na implementação (2026-10-04)**: o `xfwd: true` funciona no Vite 8, mas o Node registra
+  clientes IPv4 como `::ffff:a.b.c.d`. O `get_ident` normaliza esse prefixo, para que o mesmo
+  dispositivo tenha a mesma contagem pelo proxy e direto na API. A taxa é lida de
+  `settings.LOGIN_TENTATIVAS_POR_MINUTO` em `get_rate()`, e não de `DEFAULT_THROTTLE_RATES` (R-07),
+  porque o DRF congela esse dicionário no carregamento da classe.
+- **Verificar na implementação**: que o proxy do Vite 8 aceita `xfwd`. ✅ Aceita. Se não aceitar, usar
   `configure: (proxy) => proxy.on("proxyReq", …)` para definir o cabeçalho.
 
 ## R-09 — Rotas e nomes

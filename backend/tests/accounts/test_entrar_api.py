@@ -40,3 +40,35 @@ def test_senha_mascarada_na_pagina_de_erro(usuario):
     parametros = SafeExceptionReporterFilter().get_post_parameters(request)
     assert parametros["senha"] == "********************"
     assert parametros["email"] == "ana@exemplo.com"
+
+
+MENSAGEM_GENERICA = {"detail": "E-mail ou senha incorretos."}
+
+
+def _tentar(cliente, email, senha):
+    return cliente.post(URL_ENTRAR, {"email": email, "senha": senha}, format="json")
+
+
+def test_credenciais_recusadas_tem_resposta_identica(cliente, usuario):
+    from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
+
+    inexistente = _tentar(cliente, "ninguem@exemplo.com", SENHA)
+    senha_errada = _tentar(cliente, "ana@exemplo.com", "senha-errada-123")
+    usuario.is_active = False
+    usuario.save()
+    desativada = _tentar(cliente, "ana@exemplo.com", SENHA)
+
+    for resposta in (inexistente, senha_errada, desativada):
+        assert resposta.status_code == 401
+        assert resposta.json() == MENSAGEM_GENERICA
+    assert OutstandingToken.objects.count() == 0
+
+
+def test_campos_ausentes_sao_obrigatorios(cliente):
+    resposta = cliente.post(URL_ENTRAR, {}, format="json")
+
+    assert resposta.status_code == 400
+    assert resposta.json() == {
+        "email": ["Este campo é obrigatório."],
+        "senha": ["Este campo é obrigatório."],
+    }
