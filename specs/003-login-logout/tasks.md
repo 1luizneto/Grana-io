@@ -36,8 +36,8 @@ apresente o resumo e sugira o commit. O commit é manual, sem trailers de IA.
 
 **Purpose**: dependência nova e apps do simplejwt
 
-- [ ] T001 Adicionar `djangorestframework-simplejwt==5.5.1` a `backend/requirements.txt` ([research R-01, R-12](research.md))
-- [ ] T002 Em `backend/config/settings.py`, adicionar `"rest_framework_simplejwt"` e `"rest_framework_simplejwt.token_blacklist"` a `INSTALLED_APPS`, depois de `"rest_framework"`. Rodar `docker compose up -d --build --wait` e conferir:
+- [X] T001 Adicionar `djangorestframework-simplejwt==5.5.1` a `backend/requirements.txt` ([research R-01, R-12](research.md))
+- [X] T002 Em `backend/config/settings.py`, adicionar `"rest_framework_simplejwt"` e `"rest_framework_simplejwt.token_blacklist"` a `INSTALLED_APPS`, depois de `"rest_framework"`. Rodar `docker compose up -d --build --wait` e conferir:
   - nos logs do backend, a aplicação das migrations `token_blacklist.*`;
   - que existem as tabelas `token_blacklist_outstandingtoken` e `token_blacklist_blacklistedtoken`;
   - a suíte verde (80) e `makemigrations --check` sem pendências.
