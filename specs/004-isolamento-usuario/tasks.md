@@ -146,12 +146,12 @@ merge ficam com o responsável.
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T016 [US2] Acrescentar ao kit `backend/tests/isolamento.py`:
+- [X] T016 [US2] Acrescentar ao kit `backend/tests/isolamento.py`:
   - `test_abrir_de_outra_conta_igual_a_inexistente`: `GET` no registro de Bia, feito por Ana, tem o mesmo `status_code` (404) e o mesmo `json()` de um `GET` num id inexistente (`registro_de_bia.pk + 1000`);
   - `test_alterar_de_outra_conta_nao_muda_nada`: `PATCH` com `payload_alteracao` → 404 idêntico; `refresh_from_db()` mostra o registro igual ao original;
   - `test_excluir_de_outra_conta_nao_exclui`: `DELETE` → 404 idêntico; o registro continua existindo;
   - `test_dono_opera_normalmente`: Ana abre (200), altera (200) e exclui (204) o próprio registro; um novo `GET` nele, pela própria Ana, dá 404 (caso de borda "registro excluído pelo dono").
-- [ ] T017 [US2] Acrescentar a `backend/tests/exemplo/test_isolamento_exemplo.py`:
+- [X] T017 [US2] Acrescentar a `backend/tests/exemplo/test_isolamento_exemplo.py`:
   - `test_id_mal_formado_e_nao_encontrado`: `GET /api/exemplo/itens/abc/` → 404 com o mesmo corpo do id inexistente;
   - `test_texto_do_nao_encontrado`: o corpo é `{"detail": "Não encontrado."}` (ponto de atenção 4 do plano; se o texto for outro, ajustar o teste e o [contrato](contracts/isolamento.md)).
 
@@ -159,8 +159,20 @@ merge ficam com o responsável.
 
 ### Implementation for User Story 2
 
-- [ ] T018 [US2] Se algum caso da T016/T017 falhar, corrigir no `FiltroPorDonoMixin` (`backend/core/mixins.py`), nunca na viewset de exemplo. Se o router recusar `abc` antes da view (404 do Django em vez do DRF), garantir que a resposta seja idêntica à do id inexistente (ex.: `lookup_value_regex` no mixin) e registrar a decisão
-- [ ] T019 [US2] Rodar a suíte e confirmar T016 e T017 **verdes**
+- [X] T018 [US2] Se algum caso da T016/T017 falhar, corrigir no `FiltroPorDonoMixin` (`backend/core/mixins.py`), nunca na viewset de exemplo. Se o router recusar `abc` antes da view (404 do Django em vez do DRF), garantir que a resposta seja idêntica à do id inexistente (ex.: `lookup_value_regex` no mixin) e registrar a decisão
+- [X] T019 [US2] Rodar a suíte e confirmar T016 e T017 **verdes**
+
+  > **Resultado (2026-10-05)**: ✅ 143 testes verdes (137 + 6).
+  > - Os 4 casos novos do kit passaram de primeira (o filtro da T012 já entregava). Prova da falha:
+  >   sem o `FiltroPorDonoMixin` na viewset, **9** testes do exemplo falharam (lista, busca,
+  >   total, abrir, alterar e excluir de outra conta). Mixin restaurado.
+  > - **Bug real achado pela T017**: id inexistente respondia `{"detail": "No ItemExemplo
+  >   matches the given query."}` (inglês, com o nome interno do model), diferente do mal
+  >   formado (`"Não encontrado."`). O DRF 3.18 repassa o texto do `Http404` do Django.
+  > - T018: `FiltroPorDonoMixin.get_object()` troca todo `Http404` por `NotFound()`. Agora outra
+  >   conta, inexistente e mal formado respondem `{"detail": "Não encontrado."}`, como no
+  >   contrato. O router aceita `abc` e a view devolve o 404, então não foi preciso
+  >   `lookup_value_regex`. Research R-02 e R-10 atualizados.
 
 **Checkpoint**: registro de outra conta é indistinguível de inexistente; suíte verde.
 

@@ -47,6 +47,22 @@ def test_total_so_do_dono(usuario, outro_usuario, cliente_autenticado):
     assert resposta.json() == {"quantidade": 2, "soma": "30.00"}
 
 
+def test_id_mal_formado_e_nao_encontrado(usuario, cliente_autenticado):
+    item = _item(usuario)
+
+    mal_formado = cliente_autenticado.get(f"{URL_ITENS}abc/")
+    inexistente = cliente_autenticado.get(f"{URL_ITENS}{item.pk + 1000}/")
+
+    assert mal_formado.status_code == inexistente.status_code == 404
+    assert mal_formado.json() == inexistente.json()
+
+
+def test_texto_do_nao_encontrado(cliente_autenticado):
+    resposta = cliente_autenticado.get(f"{URL_ITENS}999999/")
+
+    assert resposta.json() == {"detail": "Não encontrado."}
+
+
 def test_sem_sessao_e_recusado(usuario, cliente):
     _item(usuario)
 

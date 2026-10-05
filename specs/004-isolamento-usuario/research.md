@@ -48,10 +48,15 @@ os métodos seguem o pt-BR (`dono`, `do_dono`).
 Como o DRF sempre chama `filter_queryset(self.get_queryset())` e `get_object()` parte do
 `get_queryset()`, o filtro por dono roda **antes** de busca, filtros, paginação, leitura,
 alteração e exclusão (FR-004, FR-005, FR-008). Registro de outra conta e registro inexistente
-caem no mesmo `Http404` do `get_object_or_404`, que o DRF transforma em
-`{"detail": "Não encontrado."}` com status 404 (FR-005). Identificador mal formado
-(`/api/x/abc/`) também vira 404, porque o `get_object_or_404` do DRF trata `ValueError` e
-`TypeError` como "não encontrado".
+caem no mesmo `Http404` do `get_object_or_404`. Identificador mal formado (`/api/x/abc/`)
+também vira 404, porque o `get_object_or_404` do DRF trata `ValueError` e `TypeError` como "não
+encontrado".
+
+**Ajuste da implementação (T017/T018)**: o DRF 3.18 repassa o texto do `Http404` do Django, e o
+id inexistente respondia `"No ItemExemplo matches the given query."` (inglês, com o nome
+interno do model), enquanto o mal formado respondia `"Não encontrado."`. O mixin passou a
+sobrescrever `get_object()` e trocar todo `Http404` por `NotFound()`, que sai sempre como
+`{"detail": "Não encontrado."}` (FR-005).
 
 **Rationale**: um único lugar faz o filtro, e as viewsets das próximas USs herdam sem escrever
 filtro à mão (SC-005). O mixin precisa vir **antes** da classe do DRF na herança
@@ -227,18 +232,18 @@ suficiente aqui, porque a autenticação real já está coberta pela spec 003.
 
 ---
 
-## R-10 — Respostas de erro: nada a configurar
+## R-10 — Respostas de erro
 
-**Decisão**: manter os comportamentos padrão do DRF com `LANGUAGE_CODE = "pt-br"`:
+**Decisão**: usar os comportamentos padrão do DRF com `LANGUAGE_CODE = "pt-br"`, com uma exceção:
 
-- 404: `{"detail": "Não encontrado."}`;
+- 404: `{"detail": "Não encontrado."}`, padronizado pelo `FiltroPorDonoMixin.get_object()`
+  (ver o ajuste em R-02; o padrão do DRF 3.18 vazava o nome do model em inglês);
 - campo de referência inválido: mensagem própria de R-04;
 - sem sessão: 401 da spec 003, antes de qualquer consulta (as classes de autenticação e
   permissão rodam antes do `get_queryset`).
 
-**Ponto a verificar na implementação**: o texto exato do 404 em pt-BR na versão instalada. O
-contrato cita o texto, e os testes comparam a resposta de "outra conta" com a de "inexistente",
-o que vale para qualquer texto.
+**Verificado na implementação (T017)**: o texto do contrato vale para os três casos (outra
+conta, inexistente e mal formado) só depois do ajuste do mixin.
 
 ---
 
