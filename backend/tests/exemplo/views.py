@@ -7,12 +7,17 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from core.mixins import FiltroPorDonoMixin
-from tests.exemplo.models import ItemExemplo
-from tests.exemplo.serializers import ItemExemploSerializer
+from tests.exemplo.models import GrupoExemplo, ItemExemplo
+from tests.exemplo.serializers import GrupoExemploSerializer, ItemExemploSerializer
 
 
 class BuscaFilter(SearchFilter):
     search_param = "busca"
+
+
+class GrupoExemploViewSet(FiltroPorDonoMixin, ModelViewSet):
+    queryset = GrupoExemplo.objects.all()
+    serializer_class = GrupoExemploSerializer
 
 
 class ItemExemploViewSet(FiltroPorDonoMixin, ModelViewSet):

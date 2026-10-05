@@ -118,13 +118,12 @@ name="...")`, nunca `unique=True` no campo isolado. Com o `HiddenField` de R-03,
 o `UniqueTogetherValidator` para a constraint, e o erro vira um 400 de validação, sem
 `IntegrityError`.
 
-**Ponto a verificar na implementação**: a mensagem padrão do validador do DRF cita os nomes dos
-campos (`"Os campos dono, nome devem criar um set único."`), o que expõe o termo técnico `dono`.
-Se a versão instalada usar a `violation_error_message` da constraint, a mensagem é definida nela
-(no exemplo, `"Já existe um grupo com este nome."`; cada recurso define a sua). Se não usar, o `RegistroComDonoSerializer` troca a
-mensagem dos `UniqueTogetherValidator` que envolvem `dono`. Nos dois casos, só registros do
-próprio dono são considerados, porque a consulta do validador filtra pelo valor de `dono`, que é
-sempre o usuário atual.
+**Verificado na implementação (T023)**: o DRF 3.18 usa a `violation_error_message` da constraint
+(`ModelSerializer._get_constraint_violation_error_message`) quando ela é diferente da padrão do
+Django. Por isso cada model define a sua (no exemplo, `"Já existe um grupo com este nome."`), e o
+erro sai como `{"non_field_errors": [...]}` sem citar `dono`. Nenhum código extra no serializer
+base. A consulta do validador filtra pelo valor de `dono`, que é sempre o usuário atual, então só
+registros do próprio dono contam.
 
 **Alternativas consideradas**: capturar `IntegrityError` na view. Rejeitado: vira 500 se alguém
 esquecer, e o erro não sai no formato de campo.

@@ -186,13 +186,13 @@ merge ficam com o responsável.
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T020 [P] [US3] Acrescentar ao kit `backend/tests/isolamento.py`:
+- [X] T020 [P] [US3] Acrescentar ao kit `backend/tests/isolamento.py`:
   - `test_dono_do_payload_ignorado_na_criacao`: Ana faz `POST` com `{**payload_criacao, "dono": outro_usuario.pk}` → 201; o registro criado tem `dono == usuario`; a resposta **não** contém a chave `dono`;
   - `test_dono_do_payload_ignorado_na_alteracao`: Ana faz `PATCH` no próprio registro com `{"dono": outro_usuario.pk}` → 200; o dono continua Ana.
-- [ ] T021 [P] [US3] Escrever `backend/tests/core/test_serializers_dono.py` (com `ItemExemplo`/`GrupoExemplo`). Montar o contexto com `request = APIRequestFactory().post("/")`, depois `request.user = usuario`, e passar `context={"request": request}` aos serializers (o `CurrentUserDefault` e o `RelacionadoDoDonoField` leem `request.user`):
+- [X] T021 [P] [US3] Escrever `backend/tests/core/test_serializers_dono.py` (com `ItemExemplo`/`GrupoExemplo`). Montar o contexto com `request = APIRequestFactory().post("/")`, depois `request.user = usuario`, e passar `context={"request": request}` aos serializers (o `CurrentUserDefault` e o `RelacionadoDoDonoField` leem `request.user`):
   - `RegistroComDonoSerializer`: `dono` é `HiddenField` e não aparece em `.data`; `validated_data["dono"]` é o usuário do `request` mesmo com `dono` no payload;
   - `RelacionadoDoDonoField`: aceita o grupo de Ana para Ana; recusa o grupo de Bia e um id inexistente com **a mesma** mensagem `"Registro não encontrado."`.
-- [ ] T022 [US3] Acrescentar a `backend/tests/exemplo/test_isolamento_exemplo.py`:
+- [X] T022 [US3] Acrescentar a `backend/tests/exemplo/test_isolamento_exemplo.py`:
   - `TestIsolamentoGrupoExemplo(CasosDeIsolamento)`, com `url_lista = "/api/exemplo/grupos/"` e payloads com `nome`;
   - `test_item_com_grupo_de_outra_conta_e_recusado`: `POST` de item com o `grupo` de Bia → 400 `{"grupo": ["Registro não encontrado."]}`; mesma resposta para grupo inexistente;
   - `test_nome_de_grupo_repetido_entre_contas_e_aceito`: Ana e Bia criam "Mercado" → 201 e 201;
@@ -202,13 +202,25 @@ merge ficam com o responsável.
 
 ### Implementation for User Story 3
 
-- [ ] T023 [US3] Implementar `backend/core/serializers.py` ([research R-03, R-04, R-05](research.md)):
+- [X] T023 [US3] Implementar `backend/core/serializers.py` ([research R-03, R-04, R-05](research.md)):
   - `RegistroComDonoSerializer(ModelSerializer)` com `dono = HiddenField(default=CurrentUserDefault())`. Verificar se o `UniqueTogetherValidator` gerado para `UniqueConstraint(dono, ...)` usa a `violation_error_message`; se não usar, sobrescrever `get_validators()` para trocar a mensagem dos validadores que envolvem `dono` pela `violation_error_message` da constraint, e registrar a decisão nesta tarefa;
   - `RelacionadoDoDonoField(PrimaryKeyRelatedField)`, cujo `get_queryset()` aplica `.do_dono(self.context["request"].user)` sobre o queryset declarado, com `default_error_messages` `does_not_exist` e `incorrect_type` = `"Registro não encontrado."`.
-- [ ] T024 [US3] Em `backend/tests/exemplo/serializers.py`:
+- [X] T024 [US3] Em `backend/tests/exemplo/serializers.py`:
   - `ItemExemploSerializer` passa a herdar de `RegistroComDonoSerializer`, com `grupo = RelacionadoDoDonoField(queryset=GrupoExemplo.objects.all(), allow_null=True, required=False)` e `fields = ["id", "descricao", "valor", "grupo", "dono"]` (o `dono` oculto precisa estar em `fields`);
   - `GrupoExemploSerializer(RegistroComDonoSerializer)`, com `fields = ["id", "nome", "dono"]`.
-- [ ] T025 [US3] Em `backend/tests/exemplo/views.py` e `urls.py`, criar `GrupoExemploViewSet(FiltroPorDonoMixin, ModelViewSet)` e registrar `grupos` no router. Rodar a suíte e confirmar T020, T021 e T022 **verdes**
+- [X] T025 [US3] Em `backend/tests/exemplo/views.py` e `urls.py`, criar `GrupoExemploViewSet(FiltroPorDonoMixin, ModelViewSet)` e registrar `grupos` no router. Rodar a suíte e confirmar T020, T021 e T022 **verdes**
+
+  > **Resultado (2026-10-05)**: ✅ 159 testes verdes (143 + 16).
+  > - Falharam primeiro: a coleta de `test_serializers_dono.py` (módulo `core.serializers`
+  >   inexistente) e 11 testes do exemplo (rota de grupos inexistente).
+  > - Os 2 casos de `dono` no payload **dos itens** passaram de primeira: o `dono` ainda não era
+  >   campo do serializer (o DRF ignora campos desconhecidos) e o `perform_create` do mixin já
+  >   gravava quem está conectado. Nos grupos, falharam primeiro por falta de rota.
+  > - **Ponto de atenção 2**: o DRF 3.18 usa a `violation_error_message` da `UniqueConstraint`.
+  >   A resposta é `{"non_field_errors": ["Já existe um grupo com este nome."]}`, sem citar `dono`,
+  >   e não foi preciso sobrescrever `get_validators()`. Research R-05 atualizado.
+  > - O kit ganhou o atributo `modelo` (o model do recurso), usado para conferir o registro criado
+  >   e o que não pode ser excluído; a docstring mostra o uso.
 
 **Checkpoint**: dono definido pelo servidor, referências e unicidade isoladas; suíte verde.
 

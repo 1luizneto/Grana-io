@@ -4,6 +4,7 @@ Todo endpoint de dados financeiros declara uma subclasse de ``CasosDeIsolamento`
 casos mínimos da FR-011 (contracts/isolamento.md, "Testes obrigatórios por recurso"):
 
     class TestIsolamentoCategoria(CasosDeIsolamento):
+        modelo = Categoria
         url_lista = "/api/categorias/"
         payload_criacao = {"nome": "Mercado"}
         payload_alteracao = {"nome": "Feira"}
@@ -19,6 +20,7 @@ O módulo da subclasse precisa do marcador ``pytest.mark.django_db``. Ana é ``u
 class CasosDeIsolamento:
     """Base sem prefixo ``Test``: o pytest só coleta as subclasses."""
 
+    modelo: type
     url_lista: str
     payload_criacao: dict
     payload_alteracao: dict
@@ -90,7 +92,7 @@ class CasosDeIsolamento:
 
         assert resposta.status_code == inexistente.status_code == 404
         assert resposta.json() == inexistente.json()
-        assert type(da_bia).objects.filter(pk=da_bia.pk).exists()
+        assert self.modelo.objects.filter(pk=da_bia.pk).exists()
 
     def test_dono_opera_normalmente(self, usuario, cliente_autenticado):
         da_ana = self.criar(usuario)
@@ -101,3 +103,29 @@ class CasosDeIsolamento:
         assert cliente_autenticado.delete(url).status_code == 204
         # Registro excluído também é "não encontrado" para o próprio dono (Edge Cases).
         assert cliente_autenticado.get(url).status_code == 404
+
+    # O dono é sempre quem está conectado (US3; FR-002, FR-003)
+
+    def test_dono_do_payload_ignorado_na_criacao(self, usuario, outro_usuario, cliente_autenticado):
+        resposta = cliente_autenticado.post(
+            self.url_lista, {**self.payload_criacao, "dono": outro_usuario.pk}, format="json"
+        )
+
+        assert resposta.status_code == 201
+        assert "dono" not in resposta.json()
+        criado = self.modelo.objects.get(pk=resposta.json()["id"])
+        assert criado.dono == usuario
+
+    def test_dono_do_payload_ignorado_na_alteracao(
+        self, usuario, outro_usuario, cliente_autenticado
+    ):
+        da_ana = self.criar(usuario)
+
+        resposta = cliente_autenticado.patch(
+            self.url_detalhe(da_ana.pk), {"dono": outro_usuario.pk}, format="json"
+        )
+
+        assert resposta.status_code == 200
+        assert "dono" not in resposta.json()
+        da_ana.refresh_from_db()
+        assert da_ana.dono == usuario
