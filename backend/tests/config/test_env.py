@@ -1,7 +1,7 @@
 import pytest
 from django.core.exceptions import ImproperlyConfigured
 
-from config.env import CHAVE_DEV_PADRAO, env_bool, env_list, env_str, validar_secret_key
+from config.env import CHAVE_DEV_PADRAO, env_bool, env_int, env_list, env_str, validar_secret_key
 
 VAR = "GRANA_TESTE_VAR"
 
@@ -72,3 +72,21 @@ class TestValidarSecretKey:
 
     def test_aceita_chave_padrao_no_modo_dev(self):
         validar_secret_key(CHAVE_DEV_PADRAO, debug=True)
+
+
+class TestEnvInt:
+    def test_retorna_inteiro_definido(self, monkeypatch):
+        monkeypatch.setenv(VAR, "45")
+        assert env_int(VAR, 30) == 45
+
+    @pytest.mark.parametrize("valor", [None, ""])
+    def test_retorna_padrao_quando_ausente_ou_vazia(self, monkeypatch, valor):
+        if valor is not None:
+            monkeypatch.setenv(VAR, valor)
+        assert env_int(VAR, 30) == 30
+
+    @pytest.mark.parametrize("valor", ["abc", "0", "-5", "1.5"])
+    def test_recusa_valor_que_nao_e_inteiro_positivo(self, monkeypatch, valor):
+        monkeypatch.setenv(VAR, valor)
+        with pytest.raises(ImproperlyConfigured, match=VAR):
+            env_int(VAR, 30)

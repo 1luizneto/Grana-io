@@ -47,9 +47,22 @@ class CadastroSerializer(serializers.Serializer):
         return valor
 
 
-class UsuarioCadastradoSerializer(serializers.ModelSerializer):
-    """Saída do cadastro: só nome e e-mail, sem id nem credenciais (FR-009)."""
+class UsuarioSerializer(serializers.ModelSerializer):
+    """Dados públicos da conta: só nome e e-mail, sem id nem credenciais."""
 
     class Meta:
         model = Usuario
         fields = ["nome", "email"]
+
+
+class EntrarSerializer(serializers.Serializer):
+    """Entrada do login (specs/003-login-logout/contracts/api-sessao.md)."""
+
+    email = serializers.CharField()
+    senha = serializers.CharField(trim_whitespace=False)
+
+
+class RenovacaoSerializer(serializers.Serializer):
+    """Credencial de renovação enviada para renovar ou encerrar a sessão."""
+
+    renovacao = serializers.CharField()
