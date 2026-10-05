@@ -3,9 +3,11 @@
 from datetime import timedelta
 
 import pytest
-from django.urls import URLPattern, URLResolver, get_resolver
+from django.urls import get_resolver
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import AccessToken
+
+from tests.rotas import rotas
 
 URL_EU = "/api/usuarios/eu/"
 ROTAS_PUBLICAS = {"saude", "cadastro", "entrar", "renovar"}
@@ -69,19 +71,11 @@ def test_rotas_publicas_nao_exigem_credencial(cliente, metodo, url):
     assert getattr(cliente, metodo)(url, {}, format="json").status_code != 401
 
 
-def _rotas(padroes, prefixo=""):
-    for padrao in padroes:
-        if isinstance(padrao, URLResolver):
-            yield from _rotas(padrao.url_patterns, prefixo + str(padrao.pattern))
-        elif isinstance(padrao, URLPattern):
-            yield prefixo + str(padrao.pattern), padrao
-
-
 def test_guarda_toda_rota_nao_publica_exige_autenticacao():
     # Uma rota nova sem proteção quebra este teste (RNF-02: autenticação em todas as rotas,
     # exceto as públicas declaradas).
     desprotegidas = []
-    for caminho, padrao in _rotas(get_resolver().url_patterns):
+    for caminho, padrao in rotas(get_resolver().url_patterns):
         if padrao.name in ROTAS_PUBLICAS:
             continue
         view = getattr(padrao.callback, "view_class", None)

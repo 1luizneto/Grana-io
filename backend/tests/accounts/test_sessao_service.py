@@ -11,7 +11,7 @@ from accounts.services.sessao import (
     encerrar_sessao,
     renovar_sessao,
 )
-from tests.accounts.conftest import SENHA
+from tests.conftest import SENHA
 
 pytestmark = pytest.mark.django_db
 

@@ -58,6 +58,30 @@ arquitetura não exijam emenda; a constituição só torna o documento vinculant
 
 ### TODOs Adiados
 - Nenhum.
+
+---
+
+Version change: 1.1.0 → 1.2.0 (2026-10-05)
+Origem: /speckit-analyze da spec 004-isolamento-usuario (achados D1 e D2).
+
+### Princípios Modificados
+- II. Isolamento por Usuário — acrescenta a exceção dos "dados de referência compartilhados"
+  (somente leitura, sem dono), que MUST ser declarada na guarda e justificada no plan.md.
+
+### Seções Modificadas
+- Development Workflow → Commits e PRs — o assistente de IA MAY commitar cada checkpoint e dar
+  push, com autorização do responsável (prática adotada desde a spec 003). PR e merge continuam
+  com o responsável. A proibição de trailers e rodapés de IA continua.
+- Development Workflow → Marcos de commit — o checkpoint pode terminar com o commit feito pelo
+  assistente, quando autorizado.
+
+### Templates Verificados
+- ✅ .specify/templates/plan-template.md — sem alteração necessária.
+- ✅ .specify/templates/spec-template.md — sem alteração necessária.
+- ✅ .specify/templates/tasks-template.md — sem alteração necessária.
+
+### TODOs Adiados
+- Nenhum.
 -->
 
 # Grana.io Constitution
@@ -84,6 +108,11 @@ de qualquer outra operação; o dono de um registro MUST ser definido pelo servi
 sessão, nunca pelo payload do cliente. Tentativas de acessar, alterar ou excluir registro de
 outro usuário MUST retornar 404 (não 403), para não revelar a existência do registro. Todo
 novo endpoint de domínio MUST ter teste automatizado cobrindo o isolamento.
+
+Ficam fora da regra de dono apenas os **dados de referência compartilhados**: dados que não
+pertencem a ninguém, valem igualmente para todos os usuários e são somente leitura pela API
+(ex.: tabelas de INSS e IRRF por ano, US-15). Cada exceção MUST ser declarada na lista de
+exceções da guarda de isolamento e justificada no `plan.md` da spec que a criar.
 
 **Rationale**: O sistema é multiusuário (US-01 a US-03). Um único endpoint sem filtro por dono
 expõe as finanças de todos os usuários; por isso a regra é estrutural e testada, não opcional.
@@ -165,8 +194,12 @@ consome o tempo que deveria ir para as funcionalidades do backlog.
 - **Marcos de commit**: o `tasks.md` MUST ser organizado em fases que terminam em
   **Checkpoint**, e MUST listar ao final "Commit recomendado após cada checkpoint (Txxx, …)".
   Na implementação, o trabalho MUST parar em cada checkpoint com os testes verdes, apresentar
-  o resumo das mudanças e sugerir a mensagem de commit antes de avançar para a próxima fase.
-- **Commits e PRs**: são feitos manualmente pelo responsável. Mensagens em pt-BR no padrão
+  o resumo das mudanças e sugerir a mensagem de commit (ou fazer o commit, se autorizado; ver
+  "Commits e PRs") antes de avançar para a próxima fase.
+- **Commits e PRs**: o responsável decide quem faz os commits. Com autorização dele, o
+  assistente de IA MAY fazer o commit de cada checkpoint, com a mensagem sugerida no `tasks.md`,
+  e o push da feature branch. Abrir e mergear Pull Requests MUST ficar com o responsável.
+  Mensagens em pt-BR no padrão
   Conventional Commits (`feat:`, `fix:`, `test:`, `docs:`, `chore:`, `refactor:`). Commits e
   PRs MUST NOT conter trailers de coautoria de ferramentas de IA (ex.: `Co-Authored-By`) nem
   rodapés de geração automática.
@@ -200,4 +233,4 @@ constituição e a aderência a `docs/arquitetura.md`. Violações só são acei
 registradas em "Complexity Tracking" com justificativa. No início de cada sprint, as features
 planejadas MUST ser conferidas contra esta constituição antes da especificação.
 
-**Version**: 1.1.0 | **Ratified**: 2026-09-25 | **Last Amended**: 2026-09-25
+**Version**: 1.2.0 | **Ratified**: 2026-09-25 | **Last Amended**: 2026-10-05
