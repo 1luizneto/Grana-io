@@ -13,12 +13,19 @@ from accounts.serializers import (
     UsuarioSerializer,
 )
 from accounts.services.cadastro import EmailJaCadastrado, cadastrar_usuario, cadastro_aberto
-from accounts.services.sessao import SessaoInvalida, autenticar, emitir_sessao, renovar_sessao
+from accounts.services.sessao import (
+    SessaoInvalida,
+    autenticar,
+    emitir_sessao,
+    encerrar_sessao,
+    renovar_sessao,
+)
 from accounts.throttles import MuitasTentativas, TentativasLoginThrottle
 
 MENSAGEM_CADASTRO_FECHADO = "O cadastro de novas contas está desativado neste sistema."
 MENSAGEM_CREDENCIAIS_INVALIDAS = "E-mail ou senha incorretos."
 MENSAGEM_SESSAO_ENCERRADA = "Sessão expirada ou encerrada. Entre novamente."
+MENSAGEM_SESSAO_INVALIDA = "Sessão inválida ou já encerrada."
 
 
 @method_decorator(sensitive_post_parameters("senha", "confirmacao_senha"), name="dispatch")
@@ -92,3 +99,19 @@ class RenovarView(APIView):
         except SessaoInvalida:
             return Response({"detail": MENSAGEM_SESSAO_ENCERRADA}, status=status.HTTP_401_UNAUTHORIZED)
         return Response(sessao)
+
+
+@method_decorator(sensitive_post_parameters("renovacao"), name="dispatch")
+class SairView(APIView):
+    """Encerra a sessão do próprio usuário; exige credencial de acesso (contracts/api-sessao.md)."""
+
+    http_method_names = ["post", "options"]
+
+    def post(self, request):
+        serializer = RenovacaoSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            encerrar_sessao(request.user, serializer.validated_data["renovacao"])
+        except SessaoInvalida:
+            return Response({"renovacao": [MENSAGEM_SESSAO_INVALIDA]}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(status=status.HTTP_204_NO_CONTENT)

@@ -4,7 +4,13 @@ import pytest
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
 
-from accounts.services.sessao import SessaoInvalida, autenticar, emitir_sessao, renovar_sessao
+from accounts.services.sessao import (
+    SessaoInvalida,
+    autenticar,
+    emitir_sessao,
+    encerrar_sessao,
+    renovar_sessao,
+)
 from tests.accounts.conftest import SENHA
 
 pytestmark = pytest.mark.django_db
@@ -63,3 +69,36 @@ def test_renovacao_vencida_adulterada_ou_de_conta_desativada_e_recusada(usuario)
     for renovacao in (str(vencida), "abc.def.ghi", valida):
         with pytest.raises(SessaoInvalida):
             renovar_sessao(renovacao)
+
+
+# --- Saída (US5) ---------------------------------------------------------------------------
+
+
+def test_encerrar_sessao_bloqueia_a_renovacao(usuario):
+    renovacao = emitir_sessao(usuario)["renovacao"]
+
+    encerrar_sessao(usuario, renovacao)
+
+    with pytest.raises(SessaoInvalida):
+        renovar_sessao(renovacao)
+
+
+def test_encerrar_sessao_de_outra_pessoa_e_recusado_sem_bloquear(usuario, outro_usuario):
+    renovacao_da_ana = emitir_sessao(usuario)["renovacao"]
+
+    with pytest.raises(SessaoInvalida):
+        encerrar_sessao(outro_usuario, renovacao_da_ana)
+
+    assert BlacklistedToken.objects.count() == 0
+    assert renovar_sessao(renovacao_da_ana)["renovacao"]
+
+
+def test_encerrar_sessao_invalida_e_recusado(usuario):
+    ja_encerrada = emitir_sessao(usuario)["renovacao"]
+    encerrar_sessao(usuario, ja_encerrada)
+    vencida = RefreshToken.for_user(usuario)
+    vencida.set_exp(lifetime=-timedelta(seconds=1))
+
+    for renovacao in (ja_encerrada, str(vencida), "abc.def.ghi"):
+        with pytest.raises(SessaoInvalida):
+            encerrar_sessao(usuario, renovacao)

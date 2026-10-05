@@ -301,11 +301,11 @@ apresente o resumo e sugira o commit. O commit é manual, sem trailers de IA.
 
 ### Tests for User Story 5 ⚠️
 
-- [ ] T031 [P] [US5] Adicionar a `backend/tests/accounts/test_sessao_service.py`:
+- [X] T031 [P] [US5] Adicionar a `backend/tests/accounts/test_sessao_service.py`:
   - `encerrar_sessao(usuario, renovacao)` bloqueia a renovação, que deixa de renovar;
   - com a renovação de **outro** usuário, lança `SessaoInvalida` e **não** bloqueia nada;
   - com renovação já bloqueada, vencida ou adulterada, lança `SessaoInvalida`.
-- [ ] T032 [P] [US5] Adicionar a `backend/tests/accounts/test_renovar_sair_api.py`, parte "sair":
+- [X] T032 [P] [US5] Adicionar a `backend/tests/accounts/test_renovar_sair_api.py`, parte "sair":
   - com o par A, `POST /api/auth/sair/` usando `Authorization: Bearer <acesso A>` e `{"renovacao": <A>}` retorna 204; renovar A dá 401, e renovar B, da mesma conta, dá 200;
   - sem credencial de acesso → 401;
   - com o acesso da Bia e a renovação da Ana → 400 `{"renovacao": ["Sessão inválida ou já encerrada."]}`, e a renovação da Ana continua funcionando;
@@ -316,20 +316,28 @@ apresente o resumo e sugira o commit. O commit é manual, sem trailers de IA.
 
 ### Implementation for User Story 5
 
-- [ ] T033 [US5] Implementar `encerrar_sessao(usuario, renovacao)` em `backend/accounts/services/sessao.py`:
+- [X] T033 [US5] Implementar `encerrar_sessao(usuario, renovacao)` em `backend/accounts/services/sessao.py`:
   1. `token = RefreshToken(renovacao)`, que já recusa vencida, adulterada e bloqueada; se lançar `TokenError`, relançar como `SessaoInvalida`;
   2. se `str(token[api_settings.USER_ID_CLAIM]) != str(usuario.pk)`, lançar `SessaoInvalida`, com `from rest_framework_simplejwt.settings import api_settings`;
   3. `token.blacklist()`.
 
   ([research R-05](research.md))
-- [ ] T034 [US5] Criar em `backend/accounts/views.py` a `SairView`:
+- [X] T034 [US5] Criar em `backend/accounts/views.py` a `SairView`:
   - protegida (padrão), só `post`;
   - `sensitive_post_parameters("renovacao")`;
   - valida com `RenovacaoSerializer`, chama `encerrar_sessao(request.user, ...)` e responde 204;
   - `SessaoInvalida` vira 400 com a mensagem do contrato.
 
   Registrar `path("auth/sair/", ...)`. Confirmar T031 e T032 **verdes**.
-- [ ] T035 [US5] Validar o S5 do [quickstart.md](quickstart.md)
+- [X] T035 [US5] Validar o S5 do [quickstart.md](quickstart.md)
+
+  > **Resultado (2026-10-05)**: ✅ 126 testes verdes, e a guarda da T023 reconhece `auth/sair/`
+  > como protegida. No ambiente real, com dois logins da Ana (A e B) e um da Bia:
+  > - a Bia tentando encerrar a sessão B da Ana recebe 400 "Sessão inválida ou já encerrada.";
+  > - a Ana sai da sessão A pela interface (5173) e recebe 204;
+  > - renovar A dá 401, e renovar B dá 200 (o outro dispositivo segue conectado e não foi afetado
+  >   pela tentativa da Bia);
+  > - sair sem credencial de acesso dá 401.
 
 **Checkpoint**: saída funcionando, sem afetar outras sessões nem aceitar credencial de outra pessoa; suíte verde.
 
