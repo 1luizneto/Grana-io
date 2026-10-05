@@ -64,19 +64,19 @@ merge ficam com o responsável.
 
 **⚠️ CRITICAL**: nenhuma história começa antes desta fase.
 
-- [ ] T006 [P] Escrever **primeiro** `frontend/src/auth/armazenamento.test.js` ([data-model.md](data-model.md)):
+- [X] T006 [P] Escrever **primeiro** `frontend/src/auth/armazenamento.test.js` ([data-model.md](data-model.md)):
   - `salvarSessao(s)` e `lerSessao()` devolvem o mesmo objeto, gravado na chave `grana.sessao`;
   - `apagarSessao()` remove a chave;
   - `lerSessao()` devolve `null` sem nada guardado;
   - JSON inválido, ou sem `acesso`, `renovacao` ou `usuario.nome` como textos não vazios → `null` **e** a chave é apagada;
   - nenhuma função guarda campo `senha`, mesmo se o objeto recebido tiver um (só `acesso`, `renovacao` e `usuario: {nome, email}` são gravados).
-- [ ] T007 [P] Escrever **primeiro** `frontend/src/api/erros.test.js` para `interpretarErro` ([research R-06](research.md)):
+- [X] T007 [P] Escrever **primeiro** `frontend/src/api/erros.test.js` para `interpretarErro` ([research R-06](research.md)):
   - resposta 400 `{"email": ["a"], "senha": ["b", "c"]}` → `{campos: {email: ["a"], senha: ["b", "c"]}, geral: null}`;
   - 400 com `non_field_errors` → vai para `geral` (mensagens unidas por espaço);
   - 401/403/429 com `detail` → `geral` igual ao `detail`;
   - erro de rede (`TypeError`) e tempo esgotado (`DOMException` `TimeoutError`/`AbortError`) → `geral = "Não foi possível falar com o servidor. Tente novamente."`;
   - 500 ou corpo que não é JSON → a mesma mensagem genérica.
-- [ ] T008 [P] Escrever **primeiro** `frontend/src/api/client.test.js` para `requisitarAutenticada` ([research R-03](research.md)), com `fetch` simulado e sessão gravada:
+- [X] T008 [P] Escrever **primeiro** `frontend/src/api/client.test.js` para `requisitarAutenticada` ([research R-03](research.md)), com `fetch` simulado e sessão gravada:
   - envia `Authorization: Bearer <acesso>`;
   - 401 `{"code": "token_not_valid"}` → chama `POST /api/auth/renovar/` com a `renovacao`, grava o par novo e repete a requisição com o `acesso` novo, devolvendo a resposta da repetição;
   - **3 requisições simultâneas** com 401 `token_not_valid` → **1** chamada de renovação e 3 repetições com o acesso novo;
@@ -86,16 +86,30 @@ merge ficam com o responsável.
   - **corrida entre abas**: a renovação responde 401, mas a sessão guardada já tem outra `renovacao` e outro `acesso` (simular gravando a sessão nova dentro do mock da renovação) → a requisição é repetida com o `acesso` guardado, a sessão **não** é apagada e o callback de expiração **não** é chamado ([research R-03](research.md), passo 4).
 
   Rodar a suíte e confirmar a **falha** de T006, T007 e T008.
-- [ ] T009 [P] Implementar `frontend/src/auth/armazenamento.js` (`lerSessao`, `salvarSessao`, `apagarSessao`; chave `grana.sessao`). Confirmar T006 **verde**
-- [ ] T010 [P] Implementar `frontend/src/api/erros.js` (`interpretarErro(respostaOuErro)`, assíncrona, e a constante `MENSAGEM_FALHA_COMUNICACAO`). Confirmar T007 **verde**
-- [ ] T011 Estender `frontend/src/api/client.js`, mantendo o `requisitar` público: `requisitarAutenticada(caminho, opcoes)`, `registrarAoExpirar(fn)` e a classe `SessaoExpirada`. Renovação única com uma variável de módulo que guarda a promessa em andamento e é zerada no `finally`. Com a renovação recusada, reler a sessão guardada antes de expirar (corrida entre abas, R-03 passo 4). Exportar `_reiniciarParaTestes()` para zerar o estado entre testes. Confirmar T008 **verde**
-- [ ] T012 [P] Criar `frontend/src/api/sessao.js` (`entrar(email, senha)`, `renovar(renovacao)`, `sair(renovacao)` via `requisitarAutenticada`, `obterEu()` via `requisitarAutenticada`) e `frontend/src/api/usuarios.js` (`cadastrar({nome, email, senha, confirmacao_senha})`), seguindo os contratos [api-sessao.md](../003-login-logout/contracts/api-sessao.md) e [api-cadastro.md](../002-cadastro-usuario/contracts/api-cadastro.md). Cada função devolve a `Response`; quem chama usa `interpretarErro` nas falhas
-- [ ] T013 [P] Criar os componentes de apresentação ([contracts/interface.md](contracts/interface.md), "Acessibilidade"):
+- [X] T009 [P] Implementar `frontend/src/auth/armazenamento.js` (`lerSessao`, `salvarSessao`, `apagarSessao`; chave `grana.sessao`). Confirmar T006 **verde**
+- [X] T010 [P] Implementar `frontend/src/api/erros.js` (`interpretarErro(respostaOuErro)`, assíncrona, e a constante `MENSAGEM_FALHA_COMUNICACAO`). Confirmar T007 **verde**
+- [X] T011 Estender `frontend/src/api/client.js`, mantendo o `requisitar` público: `requisitarAutenticada(caminho, opcoes)`, `registrarAoExpirar(fn)` e a classe `SessaoExpirada`. Renovação única com uma variável de módulo que guarda a promessa em andamento e é zerada no `finally`. Com a renovação recusada, reler a sessão guardada antes de expirar (corrida entre abas, R-03 passo 4). Exportar `_reiniciarParaTestes()` para zerar o estado entre testes. Confirmar T008 **verde**
+- [X] T012 [P] Criar `frontend/src/api/sessao.js` (`entrar(email, senha)`, `renovar(renovacao)`, `sair(renovacao)` via `requisitarAutenticada`, `obterEu()` via `requisitarAutenticada`) e `frontend/src/api/usuarios.js` (`cadastrar({nome, email, senha, confirmacao_senha})`), seguindo os contratos [api-sessao.md](../003-login-logout/contracts/api-sessao.md) e [api-cadastro.md](../002-cadastro-usuario/contracts/api-cadastro.md). Cada função devolve a `Response`; quem chama usa `interpretarErro` nas falhas
+- [X] T013 [P] Criar os componentes de apresentação ([contracts/interface.md](contracts/interface.md), "Acessibilidade"):
   - `frontend/src/components/CampoTexto.jsx`: props `rotulo`, `nome`, `tipo`, `valor`, `aoMudar`, `erros` (lista), `autoComplete`; `<label htmlFor>` visível; com erros, `aria-invalid="true"` e `aria-describedby` apontando para a lista de mensagens logo abaixo do campo;
   - `frontend/src/components/AvisoFormulario.jsx`: mensagem geral com `role="alert"` (variante "erro" e "informação").
-- [ ] T014 Criar a base do `frontend/src/auth/AuthProvider.jsx`: contexto, hook `useAuth()`, estado inicial lido do `armazenamento` (`usuario` ou `null`; `estado` `"conectado"`/`"desconectado"`), `aviso` com `consumirAviso()`, e o registro de `registrarAoExpirar` que apaga a sessão, define `estado = "desconectado"` e o aviso "Sua sessão expirou. Entre novamente." (FR-008). As ações `entrar`, `cadastrarEEntrar` e `sair` entram nas histórias
-- [ ] T015 Criar `frontend/src/estilos.css` ([research R-10](research.md)): variáveis de cor, fonte do sistema, formulários em coluna com largura máxima de 420 px e campos 100%, botões com estado desabilitado, mensagens de erro em vermelho abaixo do campo, sem largura fixa maior que a tela. Em `frontend/src/main.jsx`, envolver o `App` com `<BrowserRouter>` e `<AuthProvider>`, e importar `estilos.css`. Em `frontend/src/App.jsx`, trocar o `<Inicio />` direto por `<Routes>` com `/` → `Inicio` (provisório, sem proteção até a US2). Criar `frontend/src/testes/renderizar.jsx` com `renderizarComRotas(ui, {rota = "/", rotas})`, que monta `MemoryRouter` + `AuthProvider`
-- [ ] T016 Rodar as duas suítes e abrir `http://localhost:5173`: a página atual continua aparecendo (agora via roteador)
+- [X] T014 Criar a base do `frontend/src/auth/AuthProvider.jsx`: contexto, hook `useAuth()`, estado inicial lido do `armazenamento` (`usuario` ou `null`; `estado` `"conectado"`/`"desconectado"`), `aviso` com `consumirAviso()`, e o registro de `registrarAoExpirar` que apaga a sessão, define `estado = "desconectado"` e o aviso "Sua sessão expirou. Entre novamente." (FR-008). As ações `entrar`, `cadastrarEEntrar` e `sair` entram nas histórias
+- [X] T015 Criar `frontend/src/estilos.css` ([research R-10](research.md)): variáveis de cor, fonte do sistema, formulários em coluna com largura máxima de 420 px e campos 100%, botões com estado desabilitado, mensagens de erro em vermelho abaixo do campo, sem largura fixa maior que a tela. Em `frontend/src/main.jsx`, envolver o `App` com `<BrowserRouter>` e `<AuthProvider>`, e importar `estilos.css`. Em `frontend/src/App.jsx`, trocar o `<Inicio />` direto por `<Routes>` com `/` → `Inicio` (provisório, sem proteção até a US2). Criar `frontend/src/testes/renderizar.jsx` com `renderizarComRotas(ui, {rota = "/", rotas})`, que monta `MemoryRouter` + `AuthProvider`
+- [X] T016 Rodar as duas suítes e abrir `http://localhost:5173`: a página atual continua aparecendo (agora via roteador)
+
+  > **Resultado (2026-10-05)**: ✅ interface com 31 testes verdes (3 + 9 + 11 + 8); backend sem
+  > mudança.
+  > - T006 a T008 falharam primeiro (módulos inexistentes).
+  > - Renovação única provada com 3 requisições simultâneas (1 chamada a `/auth/renovar/`, 3
+  >   repetições) e a corrida entre abas (usa o par gravado pela outra aba, sem expirar).
+  > - Ajustes de desenho: a função de renovação ficou **dentro do `client.js`** (não em
+  >   `api/sessao.js`), para evitar importação circular e manter a renovação única num lugar só.
+  >   No `AuthProvider`, o aviso é exposto como `aviso` + `limparAviso()` (em vez de
+  >   `consumirAviso()`, que mudaria estado durante a renderização).
+  > - O `requisitar` passou a mesclar os cabeçalhos (`Accept` + os da chamada), em vez de
+  >   substituí-los; a saúde (spec 001) continua igual.
+  > - T016: `http://localhost:5173/` mostra "Grana.io" e "API acessível (banco operacional)" pelo
+  >   roteador, sem erros no console.
 
 **Checkpoint**: base de sessão, cliente com renovação única e roteador prontos; suítes verdes.
 
