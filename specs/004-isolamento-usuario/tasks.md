@@ -103,12 +103,12 @@ merge ficam com o responsável.
 
 ### Tests for User Story 1 ⚠️
 
-- [ ] T010 [P] [US1] Criar o kit em `backend/tests/isolamento.py` ([research R-08](research.md)) com a classe base `CasosDeIsolamento` (sem prefixo `Test`, para o pytest não coletá-la sozinha). Atributos que a subclasse define: `url_lista`; `url_detalhe(self, pk)`; `criar(self, usuario)` (devolve um registro do usuário); `payload_criacao`; `payload_alteracao`. Casos desta história:
+- [X] T010 [P] [US1] Criar o kit em `backend/tests/isolamento.py` ([research R-08](research.md)) com a classe base `CasosDeIsolamento` (sem prefixo `Test`, para o pytest não coletá-la sozinha). Atributos que a subclasse define: `url_lista`; `url_detalhe(self, pk)`; `criar(self, usuario)` (devolve um registro do usuário); `payload_criacao`; `payload_alteracao`. Casos desta história:
   - `test_lista_so_do_dono`: 2 registros de Ana e 1 de Bia; Ana lista e recebe exatamente os ids dos seus;
   - `test_lista_vazia_sem_pistas`: só Bia tem registros; Ana recebe 200 e `[]`.
 
   Usar as fixtures `usuario`, `outro_usuario`, `cliente_autenticado` e `cliente_da_bia` (T003).
-- [ ] T011 [P] [US1] Criar `backend/tests/exemplo/test_isolamento_exemplo.py` com `pytestmark = [pytest.mark.django_db, pytest.mark.urls("tests.exemplo.urls")]` e:
+- [X] T011 [P] [US1] Criar `backend/tests/exemplo/test_isolamento_exemplo.py` com `pytestmark = [pytest.mark.django_db, pytest.mark.urls("tests.exemplo.urls")]` e:
   - `TestIsolamentoItemExemplo(CasosDeIsolamento)`, com `url_lista = "/api/exemplo/itens/"`, `criar` via ORM e payloads com `descricao` e `valor`;
   - `test_busca_so_do_dono`: Ana e Bia têm itens com "mercado" na descrição; `?busca=mercado` para Ana devolve só os dela;
   - `test_total_so_do_dono`: Ana tem itens de `Decimal("10.00")` e `Decimal("20.00")`, e Bia um de `Decimal("99.00")`; `GET /api/exemplo/itens/total/` para Ana devolve `{"quantidade": 2, "soma": "30.00"}`;
@@ -118,14 +118,21 @@ merge ficam com o responsável.
 
 ### Implementation for User Story 1
 
-- [ ] T012 [US1] Implementar `backend/core/mixins.py` com `FiltroPorDonoMixin` ([research R-02](research.md)):
+- [X] T012 [US1] Implementar `backend/core/mixins.py` com `FiltroPorDonoMixin` ([research R-02](research.md)):
   - `get_queryset()` → `super().get_queryset().do_dono(self.request.user)`;
   - `perform_create(serializer)` → `serializer.save(dono=self.request.user)`.
 
   Docstring: o mixin vem **antes** da classe do DRF na herança.
-- [ ] T013 [US1] Criar `backend/tests/exemplo/serializers.py` com `ItemExemploSerializer(ModelSerializer)`, `fields = ["id", "descricao", "valor", "grupo"]` (a base com dono entra na US3, T024)
-- [ ] T014 [US1] Criar `backend/tests/exemplo/views.py` com `ItemExemploViewSet(FiltroPorDonoMixin, ModelViewSet)`: `queryset = ItemExemplo.objects.all()`; `serializer_class = ItemExemploSerializer`; `filter_backends = [BuscaFilter]`, onde `BuscaFilter(SearchFilter)` (no mesmo arquivo) define `search_param = "busca"`; `search_fields = ["descricao"]`; e a ação `@action(detail=False) total`, que responde `{"quantidade": n, "soma": "<Decimal com 2 casas>"}` calculado sobre `self.filter_queryset(self.get_queryset())`
-- [ ] T015 [US1] Criar `backend/tests/exemplo/urls.py`: `urlpatterns = [*config.urls.urlpatterns, path("api/exemplo/", include(router.urls))]`, com `DefaultRouter(trailing_slash=True)` registrando `itens` → `ItemExemploViewSet`. Rodar a suíte e confirmar T010 e T011 **verdes**
+- [X] T013 [US1] Criar `backend/tests/exemplo/serializers.py` com `ItemExemploSerializer(ModelSerializer)`, `fields = ["id", "descricao", "valor", "grupo"]` (a base com dono entra na US3, T024)
+- [X] T014 [US1] Criar `backend/tests/exemplo/views.py` com `ItemExemploViewSet(FiltroPorDonoMixin, ModelViewSet)`: `queryset = ItemExemplo.objects.all()`; `serializer_class = ItemExemploSerializer`; `filter_backends = [BuscaFilter]`, onde `BuscaFilter(SearchFilter)` (no mesmo arquivo) define `search_param = "busca"`; `search_fields = ["descricao"]`; e a ação `@action(detail=False) total`, que responde `{"quantidade": n, "soma": "<Decimal com 2 casas>"}` calculado sobre `self.filter_queryset(self.get_queryset())`
+- [X] T015 [US1] Criar `backend/tests/exemplo/urls.py`: `urlpatterns = [*config.urls.urlpatterns, path("api/exemplo/", include(router.urls))]`, com `DefaultRouter(trailing_slash=True)` registrando `itens` → `ItemExemploViewSet`. Rodar a suíte e confirmar T010 e T011 **verdes**
+
+  > **Resultado (2026-10-05)**: ✅ 137 testes verdes (132 + 5).
+  > - T010 e T011 falharam primeiro (5 falhas: módulo `tests.exemplo.urls` inexistente).
+  > - Kit `CasosDeIsolamento` com os 2 casos de lista; o exemplo de itens herda os dois e soma
+  >   busca, total e sem sessão.
+  > - Sem paginação configurada no DRF, as listas são arrays simples, como o kit espera.
+  > - O `DefaultRouter` usa `basename="exemplo-item"`.
 
 **Checkpoint**: listas, busca e total isolados por dono; suíte verde.
 
