@@ -1,5 +1,5 @@
 // Layout base das páginas protegidas (US4 e US5).
-import { screen } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Route } from 'react-router'
 import { describe, expect, it } from 'vitest'
@@ -61,5 +61,24 @@ describe('layout: cabeçalho e saída (US4)', () => {
 
     expect(await screen.findByRole('heading', { name: 'Entrar' })).toBeInTheDocument()
     expect(lerSessao()).toBeNull()
+  })
+})
+
+describe('layout: menu (US5)', () => {
+  it('tem o menu principal com "Início", marcado como página atual', async () => {
+    abrirConectada()
+
+    const menu = await screen.findByRole('navigation', { name: 'Menu principal' })
+    const inicio = within(menu).getByRole('link', { name: 'Início' })
+    expect(inicio).toHaveAttribute('href', '/')
+    expect(inicio).toHaveAttribute('aria-current', 'page')
+  })
+
+  it('a tela de login não mostra o menu nem o botão "Sair"', async () => {
+    renderizarComRotas(ROTAS, { rota: '/entrar' })
+
+    expect(await screen.findByRole('heading', { name: 'Entrar' })).toBeInTheDocument()
+    expect(screen.queryByRole('navigation')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Sair' })).not.toBeInTheDocument()
   })
 })

@@ -152,3 +152,65 @@ button:disabled {
   margin: 0 auto;
   padding: 1rem;
 }
+
+.menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding: 0.5rem 1rem;
+  background: var(--cor-superficie);
+  border-bottom: 1px solid var(--cor-borda);
+}
+
+.menu a {
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--raio);
+  text-decoration: none;
+}
+
+.menu a[aria-current='page'] {
+  background: var(--cor-info-fundo);
+  font-weight: 600;
+}
+
+.rodape {
+  max-width: 960px;
+  margin: 2rem auto 1rem;
+  padding: 0 1rem;
+  font-size: 0.85rem;
+  color: var(--cor-texto-suave);
+  text-align: center;
+}
+
+.carregando {
+  text-align: center;
+  margin-top: 3rem;
+  color: var(--cor-texto-suave);
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid var(--cor-primaria);
+  outline-offset: 2px;
+}
+
+/* Telas estreitas (FR-013): cabeçalho em coluna, sem rolagem horizontal a partir de 360 px. */
+@media (max-width: 640px) {
+  .cabecalho {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .usuario {
+    margin-left: 0;
+  }
+
+  .pagina-acesso {
+    margin: 1rem auto;
+  }
+
+  .cartao {
+    padding: 1rem;
+  }
+}

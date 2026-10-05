@@ -299,17 +299,30 @@ cadastro (FR-019).
 
 ### Tests for User Story 5 ⚠️
 
-- [ ] T039 [P] [US5] Acrescentar a `frontend/src/components/Layout.test.jsx`: o menu (`<nav>`) tem o link "Início" para `/`; as telas de login e cadastro não mostram o menu nem o botão "Sair".
-- [ ] T040 [P] [US5] Escrever `frontend/src/pages/NaoEncontrada/NaoEncontrada.test.jsx`: um endereço inexistente mostra "Página não encontrada." e o link "Voltar ao início" para `/`, com ou sem sessão.
+- [X] T039 [P] [US5] Acrescentar a `frontend/src/components/Layout.test.jsx`: o menu (`<nav>`) tem o link "Início" para `/`; as telas de login e cadastro não mostram o menu nem o botão "Sair".
+- [X] T040 [P] [US5] Escrever `frontend/src/pages/NaoEncontrada/NaoEncontrada.test.jsx`: um endereço inexistente mostra "Página não encontrada." e o link "Voltar ao início" para `/`, com ou sem sessão.
 
   Rodar e confirmar a **falha**.
 
 ### Implementation for User Story 5
 
-- [ ] T041 [US5] Acrescentar o menu ao `Layout.jsx` (`<nav aria-label="Menu principal">` com `NavLink` "Início"; marca o item atual com `aria-current`)
-- [ ] T042 [US5] Criar `frontend/src/components/Rodape.jsx` com o estado da API (`useSaudeApi` e as mensagens que hoje estão em `Inicio.jsx`) e exibi-lo em todas as telas, fora das rotas (no `App.jsx`, depois de `<Routes>`), para rodar uma vez por carregamento. Tirar o estado da API de `Inicio.jsx` ([research R-09](research.md))
-- [ ] T043 [US5] Implementar `frontend/src/pages/NaoEncontrada/NaoEncontrada.jsx` e a rota `*` no `App.jsx`. Rodar as suítes e confirmar T039 e T040 **verdes**
-- [ ] T044 [US5] Ajustar `frontend/src/estilos.css` para o layout: cabeçalho e menu que quebram em coluna abaixo de 640 px, rodapé discreto. Validar S9 e S10 do [quickstart.md](quickstart.md) (360 px sem rolagem horizontal; só teclado; banco parado mostrado no rodapé)
+- [X] T041 [US5] Acrescentar o menu ao `Layout.jsx` (`<nav aria-label="Menu principal">` com `NavLink` "Início"; marca o item atual com `aria-current`)
+- [X] T042 [US5] Criar `frontend/src/components/Rodape.jsx` com o estado da API (`useSaudeApi` e as mensagens que hoje estão em `Inicio.jsx`) e exibi-lo em todas as telas, fora das rotas (no `App.jsx`, depois de `<Routes>`), para rodar uma vez por carregamento. Tirar o estado da API de `Inicio.jsx` ([research R-09](research.md))
+- [X] T043 [US5] Implementar `frontend/src/pages/NaoEncontrada/NaoEncontrada.jsx` e a rota `*` no `App.jsx`. Rodar as suítes e confirmar T039 e T040 **verdes**
+- [X] T044 [US5] Ajustar `frontend/src/estilos.css` para o layout: cabeçalho e menu que quebram em coluna abaixo de 640 px, rodapé discreto. Validar S9 e S10 do [quickstart.md](quickstart.md) (360 px sem rolagem horizontal; só teclado; banco parado mostrado no rodapé)
+
+  > **Resultado (2026-10-05)**: ✅ interface com 69 testes verdes (65 + 2 do menu + 2 da página
+  > não encontrada).
+  > - T039 e T040 falharam primeiro, exceto "login sem menu", que passou de primeira (o menu ainda
+  >   não existia).
+  > - O estado da API saiu da página inicial e foi para o `Rodape`, fora das rotas, em todas as
+  >   telas (R-09).
+  > - Navegador em 360 px: login, cadastro e início sem rolagem horizontal; entrar (Tab, digitação,
+  >   Enter) e sair (Tab até "Sair", Enter) só pelo teclado; `/nao-existe` → "Página não
+  >   encontrada." com "Voltar ao início"; rodapé "API acessível (banco operacional)" em todas.
+  > - FR-016: nenhum recurso carregado de outro host (Performance API) e o `grep` por URLs em
+  >   `frontend/index.html` e `frontend/src` não acha nenhuma externa.
+  > - S10 passo 2 (banco parado) fica para o quickstart completo (T047).
 
 **Checkpoint**: layout base completo; suítes verdes.
 
