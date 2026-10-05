@@ -5,7 +5,7 @@ from django.test import RequestFactory
 from django.views.debug import SafeExceptionReporterFilter
 
 from accounts.views import EntrarView
-from tests.accounts.conftest import SENHA
+from tests.conftest import SENHA
 
 URL_ENTRAR = "/api/auth/entrar/"
 URL_EU = "/api/usuarios/eu/"

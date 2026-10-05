@@ -4,7 +4,7 @@ import pytest
 from django.test import RequestFactory, override_settings
 
 from accounts.throttles import TentativasLoginThrottle
-from tests.accounts.conftest import SENHA
+from tests.conftest import SENHA
 
 URL = "/api/auth/entrar/"
 MENSAGEM = {"detail": "Muitas tentativas. Tente novamente em instantes."}
