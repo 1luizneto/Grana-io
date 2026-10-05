@@ -37,7 +37,7 @@ merge ficam com o responsável.
 **Purpose**: settings de teste, app de exemplo vazio, fixtures compartilhadas e helper de rotas.
 
 - [X] T001 Criar `backend/config/settings_test.py` com `from config.settings import *  # noqa: F403` e `INSTALLED_APPS = [*INSTALLED_APPS, "tests.exemplo"]`. Em `backend/pytest.ini`, trocar `DJANGO_SETTINGS_MODULE` para `config.settings_test` ([research R-07](research.md))
-- [X] T002 Criar o app de exemplo **sem pasta `migrations`** em `backend/tests/exemplo/`:
+- [X] T002 Criar o app de exemplo **sem pasta `migrations`** (depois ganhou migration na T009) em `backend/tests/exemplo/`:
   - `__init__.py` vazio;
   - `apps.py` com `ExemploConfig(AppConfig)`, `name = "tests.exemplo"`, `label = "exemplo"`, `default_auto_field = "django.db.models.BigAutoField"`;
   - `models.py` só com o import de `models` (os models entram na T009).
@@ -60,7 +60,7 @@ merge ficam com o responsável.
 
 **⚠️ CRITICAL**: nenhuma história começa antes desta fase.
 
-- [ ] T006 Escrever **primeiro** `backend/tests/core/test_owned_model.py` (usando `ItemExemplo` e `GrupoExemplo` de `tests.exemplo.models`):
+- [X] T006 Escrever **primeiro** `backend/tests/core/test_owned_model.py` (usando `ItemExemplo` e `GrupoExemplo` de `tests.exemplo.models`):
   - `OwnedModel._meta.abstract` é `True`;
   - o campo `dono` é FK para `settings.AUTH_USER_MODEL`, `editable is False`, `remote_field.on_delete is CASCADE`, `remote_field.related_name == "+"`, e está indexado (`db_index`);
   - `ItemExemplo.objects.do_dono(usuario)` devolve só os itens de Ana, com itens de Ana e de Bia no banco;
@@ -71,15 +71,25 @@ merge ficam com o responsável.
   Toda operação que deve lançar `IntegrityError` fica dentro de `with transaction.atomic():` (dentro do `pytest.raises`), e as verificações seguintes vêm depois do bloco. Sem isso, o PostgreSQL invalida a transação do teste.
 
   Rodar e confirmar a **falha** (import inexistente).
-- [ ] T007 Implementar em `backend/core/models.py` ([research R-01](research.md); [data-model.md](data-model.md)):
+- [X] T007 Implementar em `backend/core/models.py` ([research R-01](research.md); [data-model.md](data-model.md)):
   - `RegistroDoDonoQuerySet(models.QuerySet)` com `do_dono(self, usuario)` → `self.filter(dono=usuario)`;
   - `OwnedModel(models.Model)` abstrato com `dono = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="+", editable=False)` e `objects = RegistroDoDonoQuerySet.as_manager()`. Docstring citando a constituição (Princípio II) e o contrato.
-- [ ] T008 Conferir que `backend/core/` continua sem `migrations` necessárias (`OwnedModel` é abstrato): `makemigrations --check --dry-run` sem alterações
-- [ ] T009 Implementar os models de exemplo em `backend/tests/exemplo/models.py` ([data-model.md](data-model.md)):
+- [X] T008 Conferir que `backend/core/` continua sem `migrations` necessárias (`OwnedModel` é abstrato): `makemigrations --check --dry-run` sem alterações
+- [X] T009 Implementar os models de exemplo em `backend/tests/exemplo/models.py` ([data-model.md](data-model.md)):
   - `GrupoExemplo(OwnedModel)`: `nome = CharField(max_length=60)`; `Meta.constraints = [UniqueConstraint(fields=["dono", "nome"], name="exemplo_grupo_nome_por_dono", violation_error_message="Já existe um grupo com este nome.")]`; `ordering = ["id"]`;
   - `ItemExemplo(OwnedModel)`: `descricao = CharField(max_length=100)`; `valor = DecimalField(max_digits=12, decimal_places=2)`; `grupo = ForeignKey(GrupoExemplo, null=True, blank=True, on_delete=SET_NULL, related_name="itens")`; `ordering = ["id"]`.
 
   Rodar a suíte e confirmar T006 **verde**. Confirmar o ponto de atenção 3 do plano: o banco de testes cria as tabelas sem migration e o `test_nao_ha_migrations_pendentes` (agora com `settings_test`) continua verde. Se não continuar, criar a migration inicial de `tests/exemplo` e registrar aqui.
+
+  > **Resultado (2026-10-05)**: ✅ 132 testes verdes (126 + 6 da T006).
+  > - T006 falhou primeiro na coleta (import de `core.models` inexistente).
+  > - **Ponto de atenção 3**: o app sem migration **não funcionou**. O Django cria as tabelas de
+  >   apps sem migration antes de aplicar as migrations, e a FK `dono` falhou com "relation
+  >   accounts_usuario does not exist". Plano B aplicado: `tests/exemplo/migrations/0001_initial.py`,
+  >   gerada com o `settings_test`. Research R-07, data-model e plan atualizados.
+  > - `makemigrations --check` sem alterações com os dois settings. No banco de uso: nenhuma
+  >   tabela `exemplo_*` e nenhuma linha `exemplo` em `django_migrations`.
+  > - T008: o `core` continua sem migrations (`OwnedModel` é abstrato).
 
 **Checkpoint**: `OwnedModel` pronto, exemplo com tabelas só no banco de testes, suíte verde.
 
@@ -270,8 +280,8 @@ Um checkpoint por fase, cada um com a suíte verde. Como não há rota nova na a
 ## Notes
 
 - **Sem rebuild**: nenhuma dependência nova; o código do backend é montado no container.
-- **O app `tests.exemplo` nunca entra no `config/settings.py`** (FR-013). Se precisar de migration
-  (T009), ela fica dentro de `tests/exemplo/` e só roda no banco de testes.
+- **O app `tests.exemplo` nunca entra no `config/settings.py`** (FR-013). A migration dele
+  (T009) fica dentro de `tests/exemplo/migrations/` e só roda no banco de testes.
 - Commits em pt-BR, Conventional Commits, **sem** `Co-Authored-By` nem rodapés de IA; push a cada
   commit. O assistente commita com autorização do responsável (constituição v1.2.0); PR e merge
   são do responsável.

@@ -42,8 +42,9 @@ dela. Nesta spec, a única exceção é o `Usuario`.
 
 ## Models de exemplo (só no banco de testes, app `tests.exemplo`)
 
-Existem para provar o isolamento antes da US-05 (FR-013; [R-07](research.md)). Não têm migration,
-não estão no `INSTALLED_APPS` de uso e não têm rotas na aplicação.
+Existem para provar o isolamento antes da US-05 (FR-013; [R-07](research.md)). Têm migration
+própria (`tests/exemplo/migrations/`), aplicada só no banco de testes, porque não estão no
+`INSTALLED_APPS` de uso. Também não têm rotas na aplicação.
 
 ### `GrupoExemplo(OwnedModel)`
 

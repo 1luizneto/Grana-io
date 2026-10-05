@@ -33,7 +33,7 @@ da clarificação). Detalhes em [research.md](research.md).
 **Primary Dependencies**: Django 5.2, DRF 3.18 (já instalados). Nenhuma dependência nova.
 
 **Storage**: PostgreSQL. **Nenhuma tabela nova no banco de uso.** `OwnedModel` é abstrato, e os
-models de exemplo existem só no banco de testes, criados sem migration ([R-07](research.md)).
+models de exemplo existem só no banco de testes, com migration própria aplicada só lá ([R-07](research.md)).
 
 **Testing**: pytest + pytest-django. Novo `config/settings_test.py`, que acrescenta o app de
 exemplo, e o marcador `@pytest.mark.urls` para as rotas de exemplo.
@@ -114,7 +114,7 @@ backend/
     │   ├── test_owned_model.py        # do_dono, cascade, dono não editável
     │   ├── test_serializers_dono.py   # HiddenField, RelacionadoDoDonoField, unicidade
     │   └── test_guarda_isolamento.py  # guardas de models e de rotas
-    └── exemplo/                 # app só de testes (sem migrations)
+    └── exemplo/                 # app só de testes (migration só no banco de testes)
         ├── __init__.py
         ├── apps.py
         ├── models.py            # GrupoExemplo, ItemExemplo
@@ -141,7 +141,8 @@ Nenhuma violação.
    `RegistroComDonoSerializer` para não citar `dono`.
 3. **App sem migrations** ([R-07](research.md)): confirmar que o banco de testes cria as tabelas
    do `tests.exemplo` e que o `makemigrations --check` (guarda da spec 001) continua passando. Se
-   não passar, criar a migration inicial do app de exemplo.
+   não passar, criar a migration inicial do app de exemplo. **Resolvido na T009**: precisou da
+   migration inicial, por causa da FK para `accounts_usuario`.
 4. **Texto do 404 em pt-BR** ([R-10](research.md)): confirmar `"Não encontrado."` e ajustar o
    contrato se for diferente.
 5. **Troca do `DJANGO_SETTINGS_MODULE` no `pytest.ini`**: os 126 testes atuais precisam continuar

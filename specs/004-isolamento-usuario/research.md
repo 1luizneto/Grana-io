@@ -173,11 +173,14 @@ O app entra no `INSTALLED_APPS` só em `config/settings_test.py` (que importa `c
 acrescenta `tests.exemplo`), usado pelo `pytest.ini`. As rotas entram só nos testes que pedem,
 via `@pytest.mark.urls("tests.exemplo.urls")`.
 
-- **Sem migrations**: o banco de testes é criado com `migrate --run-syncdb`, que cria as tabelas
-  de apps sem migrations. O banco de uso nunca vê o app, porque o `settings.py` não o inclui.
-- O `makemigrations --check` (guarda da spec 001) ignora apps sem pasta de migrations quando roda
-  sem rótulo de app. **Ponto a verificar na implementação**; se não ignorar, o app ganha uma
-  migration inicial (o banco de uso continua sem a tabela, pelo mesmo motivo).
+- **Com migration inicial** (`tests/exemplo/migrations/0001_initial.py`). O plano era não ter
+  migrations e deixar o `migrate --run-syncdb` criar as tabelas, mas a implementação (T009)
+  mostrou que o Django cria as tabelas de apps sem migration **antes** de aplicar as migrations,
+  e a FK `dono` → `accounts_usuario` falha ("relation accounts_usuario does not exist"). Com a
+  migration, a ordem de dependência é respeitada.
+- O banco de uso nunca vê o app nem a migration, porque o `settings.py` não o inclui: o
+  `migrate` de uso não conhece o app `exemplo` (verificado: nenhuma tabela `exemplo_*` e nenhuma
+  linha `exemplo` em `django_migrations`). O `makemigrations --check` passa com os dois settings.
 - As rotas de exemplo também não passam pela guarda de proteção do `test_protecao_api.py`, que
   usa o `ROOT_URLCONF` real. Ainda assim, elas herdam a autenticação padrão.
 
