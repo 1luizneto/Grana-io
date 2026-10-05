@@ -1,6 +1,7 @@
 import { Route, Routes } from 'react-router'
 import RotaProtegida from './auth/RotaProtegida.jsx'
 import RotaPublica from './auth/RotaPublica.jsx'
+import Layout from './components/Layout.jsx'
 import Cadastro from './pages/Cadastro/Cadastro.jsx'
 import Entrar from './pages/Entrar/Entrar.jsx'
 import Inicio from './pages/Inicio/Inicio.jsx'
@@ -11,7 +12,9 @@ export default function App() {
   return (
     <Routes>
       <Route element={<RotaProtegida />}>
-        <Route path="/" element={<Inicio />} />
+        <Route element={<Layout />}>
+          <Route path="/" element={<Inicio />} />
+        </Route>
       </Route>
       <Route element={<RotaPublica />}>
         <Route path="/entrar" element={<Entrar />} />

@@ -3,12 +3,13 @@ import { registrarAoExpirar, SessaoExpirada } from '../api/client.js'
 import { interpretarErro } from '../api/erros.js'
 import * as apiSessao from '../api/sessao.js'
 import * as apiUsuarios from '../api/usuarios.js'
-import { lerSessao, salvarSessao } from './armazenamento.js'
+import { apagarSessao, lerSessao, salvarSessao } from './armazenamento.js'
 
 // Sessão da interface (docs/arquitetura.md §3; specs/005-telas-login-cadastro, research R-04).
 // Estados: 'verificando' | 'conectado' | 'desconectado'.
 export const MENSAGEM_SESSAO_EXPIRADA = 'Sua sessão expirou. Entre novamente.'
 export const MENSAGEM_CONTA_CRIADA = 'Conta criada. Entre com sua senha.'
+export const MENSAGEM_SAIU = 'Você saiu do sistema.'
 
 const AuthContext = createContext(null)
 
@@ -98,6 +99,20 @@ export function AuthProvider({ children }) {
     [entrar],
   )
 
+  // Sair (US4; FR-011): encerra a sessão no servidor e sempre a descarta no navegador, mesmo se o
+  // servidor não responder.
+  const sair = useCallback(async () => {
+    const atual = lerSessao()
+    try {
+      if (atual) await apiSessao.sair(atual.renovacao)
+    } catch {
+      // Falha de rede ou sessão já expirada: a saída local acontece do mesmo jeito.
+    } finally {
+      apagarSessao()
+      desconectar(MENSAGEM_SAIU)
+    }
+  }, [desconectar])
+
   const valor = useMemo(
     () => ({
       usuario: sessao?.usuario ?? null,
@@ -106,8 +121,9 @@ export function AuthProvider({ children }) {
       limparAviso,
       entrar,
       cadastrarEEntrar,
+      sair,
     }),
-    [sessao, estado, aviso, limparAviso, entrar, cadastrarEEntrar],
+    [sessao, estado, aviso, limparAviso, entrar, cadastrarEEntrar, sair],
   )
 
   return <AuthContext.Provider value={valor}>{children}</AuthContext.Provider>

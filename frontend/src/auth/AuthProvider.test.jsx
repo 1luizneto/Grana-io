@@ -198,3 +198,44 @@ describe('AuthProvider: cadastrar e entrar (US3)', () => {
     expect(lerSessao()).toBeNull()
   })
 })
+
+describe('AuthProvider: sair (US4)', () => {
+  async function conectarESair(rotaSair) {
+    salvarSessao(LOGIN_OK)
+    const fetch = simularApi({ '/usuarios/eu/': () => json(200, USUARIO_ANA), '/auth/sair/': rotaSair })
+    const { result } = montar()
+    await waitFor(() => expect(result.current.estado).toBe('conectado'))
+
+    await act(async () => {
+      await result.current.sair()
+    })
+    return { result, fetch }
+  }
+
+  it('encerra a sessão no servidor com a credencial de renovação', async () => {
+    const { result, fetch } = await conectarESair(() => json(204))
+
+    const chamada = fetch.mock.calls.find(([url]) => url.endsWith('/auth/sair/'))
+    expect(JSON.parse(chamada[1].body)).toEqual({ renovacao: 'renovacao-1' })
+    expect(chamada[1].headers.Authorization).toBe('Bearer acesso-1')
+    expect(result.current.estado).toBe('desconectado')
+    expect(result.current.aviso).toBe('Você saiu do sistema.')
+    expect(lerSessao()).toBeNull()
+  })
+
+  it.each([
+    ['400 da API', () => json(400, { renovacao: ['Sessão inválida ou já encerrada.'] })],
+    [
+      'falha de rede',
+      () => {
+        throw new TypeError('Failed to fetch')
+      },
+    ],
+  ])('apaga a sessão local mesmo com %s', async (_caso, rotaSair) => {
+    const { result } = await conectarESair(rotaSair)
+
+    expect(result.current.estado).toBe('desconectado')
+    expect(result.current.aviso).toBe('Você saiu do sistema.')
+    expect(lerSessao()).toBeNull()
+  })
+})

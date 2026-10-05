@@ -263,17 +263,29 @@ cadastro (FR-019).
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T035 [P] [US4] Acrescentar a `frontend/src/auth/AuthProvider.test.jsx` (parte de `sair`):
+- [X] T035 [P] [US4] Acrescentar a `frontend/src/auth/AuthProvider.test.jsx` (parte de `sair`):
   - chama `POST /api/auth/sair/` com `{"renovacao": ...}` e `Authorization`;
   - com 204, com 400 e com **falha de rede**: a sessão é apagada, `estado = "desconectado"` e o aviso é "Você saiu do sistema." (FR-011).
-- [ ] T036 [P] [US4] Escrever `frontend/src/components/Layout.test.jsx`: conectada, o cabeçalho mostra "Grana.io", o nome da pessoa e o botão "Sair"; clicar em "Sair" leva a `/entrar` com "Você saiu do sistema."; depois disso, voltar para `/` (navegação simulada) mostra o login de novo.
+- [X] T036 [P] [US4] Escrever `frontend/src/components/Layout.test.jsx`: conectada, o cabeçalho mostra "Grana.io", o nome da pessoa e o botão "Sair"; clicar em "Sair" leva a `/entrar` com "Você saiu do sistema."; depois disso, voltar para `/` (navegação simulada) mostra o login de novo.
 
   Rodar e confirmar a **falha**.
 
 ### Implementation for User Story 4
 
-- [ ] T037 [US4] Acrescentar `sair()` ao `AuthProvider.jsx`, com a limpeza local no `finally`
-- [ ] T038 [US4] Implementar `frontend/src/components/Layout.jsx` com o cabeçalho (`<header>`: "Grana.io", nome, botão "Sair" que chama `sair()` e navega para `/entrar` com `replace`) e `<main><Outlet /></main>`. Em `App.jsx`, usar o `Layout` como elemento da rota-pai protegida. Rodar as suítes e confirmar T035 e T036 **verdes**. Validar o S8 do [quickstart.md](quickstart.md)
+- [X] T037 [US4] Acrescentar `sair()` ao `AuthProvider.jsx`, com a limpeza local no `finally`
+- [X] T038 [US4] Implementar `frontend/src/components/Layout.jsx` com o cabeçalho (`<header>`: "Grana.io", nome, botão "Sair" que chama `sair()` e navega para `/entrar` com `replace`) e `<main><Outlet /></main>`. Em `App.jsx`, usar o `Layout` como elemento da rota-pai protegida. Rodar as suítes e confirmar T035 e T036 **verdes**. Validar o S8 do [quickstart.md](quickstart.md)
+
+  > **Resultado (2026-10-05)**: ✅ interface com 65 testes verdes (59 + 3 do provider + 3 do layout).
+  > - T035 e T036 falharam primeiro (`sair` e `Layout` inexistentes).
+  > - **Teste instável corrigido**: o aviso entra na tela de login por um efeito, uma renderização
+  >   depois do título; dois testes (cadastro "conta criada" e layout "Sair") buscavam o alerta de
+  >   forma síncrona e falhavam às vezes. Passaram a usar `findByRole` (busca assíncrona); duas
+  >   rodadas seguidas verdes.
+  > - A página inicial deixou de ter o próprio `<main>` (o `Layout` tem) e o título virou "Início".
+  > - CSS mínimo do cabeçalho; menu e tela estreita ficam na US5.
+  > - S8 no navegador: "Sair" → `/entrar` com "Você saiu do sistema." e sessão apagada; "voltar"
+  >   continua no login; com duas abas, sair numa e recarregar a outra → login. Passo 3 (sair com o
+  >   backend parado) coberto pelos testes do provider e do layout, sem derrubar o backend.
 
 **Checkpoint**: saída funcionando, inclusive sem servidor; suítes verdes.
 

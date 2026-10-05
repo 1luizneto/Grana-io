@@ -14,11 +14,11 @@ export default function Inicio() {
   const estado = useSaudeApi()
 
   return (
-    <main>
-      <h1>Grana.io</h1>
+    <section>
+      <h1>Início</h1>
       {usuario && <p>Olá, {usuario.nome}!</p>}
       <p>Os recursos financeiros chegam nas próximas entregas.</p>
       <p>{MENSAGENS[estado]}</p>
-    </main>
+    </section>
   )
 }

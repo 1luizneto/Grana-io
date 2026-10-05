@@ -104,7 +104,7 @@ describe('tela de cadastro', () => {
     expect(await screen.findByRole('heading', { name: 'Entrar' })).toBeInTheDocument()
     expect(screen.getByTestId('local-atual')).toHaveTextContent('/entrar')
     expect(campo('E-mail')).toHaveValue('ana@exemplo.com')
-    expect(screen.getByRole('alert')).toHaveTextContent('Conta criada. Entre com sua senha.')
+    expect(await screen.findByRole('alert')).toHaveTextContent('Conta criada. Entre com sua senha.')
   })
 
   it('tem link para o login e trava o botão durante o envio', async () => {
