@@ -264,13 +264,25 @@ merge ficam com o responsável.
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T029 [P] Atualizar `docs/arquitetura.md` §2.2, linha "Abstract Base Model + Mixin": citar os nomes finais (`OwnedModel`/`do_dono`, `FiltroPorDonoMixin`, `RegistroComDonoSerializer`, `RelacionadoDoDonoField`), a convenção `UniqueConstraint(dono, ...)`, o kit `tests/isolamento.py` e o [contrato de isolamento](contracts/isolamento.md) como referência para os endpoints de dados. Commit `docs:` próprio não é necessário: entra no marco final
-- [ ] T030 [P] Atualizar o `README.md`: no "Estado atual", a US-03; numa nota para quem desenvolve, como criar um registro de dados isolado (herdar `OwnedModel`, usar o mixin e o serializer base, escrever a subclasse de `CasosDeIsolamento`), com link para o contrato
-- [ ] T031 Executar o [quickstart.md](quickstart.md) completo (S1 a S6) e registrar o resultado. Conferir também `makemigrations --check` com o settings de uso e a ausência de tabelas `exemplo_*` no banco de uso
-- [ ] T032 Fechar a Definition of Done:
+- [X] T029 [P] Atualizar `docs/arquitetura.md` §2.2, linha "Abstract Base Model + Mixin": citar os nomes finais (`OwnedModel`/`do_dono`, `FiltroPorDonoMixin`, `RegistroComDonoSerializer`, `RelacionadoDoDonoField`), a convenção `UniqueConstraint(dono, ...)`, o kit `tests/isolamento.py` e o [contrato de isolamento](contracts/isolamento.md) como referência para os endpoints de dados. Commit `docs:` próprio não é necessário: entra no marco final
+- [X] T030 [P] Atualizar o `README.md`: no "Estado atual", a US-03; numa nota para quem desenvolve, como criar um registro de dados isolado (herdar `OwnedModel`, usar o mixin e o serializer base, escrever a subclasse de `CasosDeIsolamento`), com link para o contrato
+- [X] T031 Executar o [quickstart.md](quickstart.md) completo (S1 a S6) e registrar o resultado. Conferir também `makemigrations --check` com o settings de uso e a ausência de tabelas `exemplo_*` no banco de uso
+
+  > **Resultado (2026-10-05)**: ✅
+  > - S1: 163 testes verdes;
+  > - S2: 24 testes do exemplo verdes (kit em itens e grupos + casos específicos);
+  > - S3 e S4: validados na T028;
+  > - S5: nenhuma tabela `exemplo_*` e nenhuma linha `exemplo` em `django_migrations` no banco de
+  >   uso; `makemigrations --check` sem alterações; `GET /api/exemplo/itens/` na aplicação → 404;
+  > - S6: saúde `{"status":"ok","database":"ok"}`.
+- [X] T032 Fechar a Definition of Done:
   - suíte verde e todas as tarefas marcadas;
   - em `BACKLOG.md`, na US-03, marcar ☑ os 4 critérios, com nota: "garantido pela base `OwnedModel` e pelas guardas; cada US de dados (US-05 em diante) confirma com o kit de isolamento";
   - no RNF-05, deixar ☐ "Os endpoints da API têm testes de integração, incluindo o isolamento entre usuários", com nota de que o kit existe e cada US de dados o aplica.
+
+  > **Resultado (2026-10-05)**: ✅ 163 testes verdes e 32/32 tarefas marcadas.
+  > - US-03 no BACKLOG: os 4 critérios ☑, com nota sobre a base, as guardas e o kit.
+  > - RNF-05: o critério de integração com isolamento continua ☐, com nota sobre o kit.
 
 **Checkpoint**: feature pronta para PR na `main`.
 

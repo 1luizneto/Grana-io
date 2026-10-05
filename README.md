@@ -13,8 +13,9 @@ O sistema tem três partes, todas em containers Docker:
 | Banco de dados | PostgreSQL 17 | não fica acessível fora do Docker |
 
 > Estado atual: fundação do projeto (Sprint 1). A interface mostra só uma página inicial
-> provisória. A API já tem verificação de saúde, cadastro, login, renovação e saída da sessão;
-> as telas chegam nas próximas entregas (ver [BACKLOG.md](BACKLOG.md)).
+> provisória. A API já tem verificação de saúde, cadastro, login, renovação e saída da sessão,
+> e a base de isolamento por usuário que todos os dados financeiros vão seguir; as telas e os
+> dados financeiros chegam nas próximas entregas (ver [BACKLOG.md](BACKLOG.md)).
 
 ---
 
@@ -156,6 +157,28 @@ docker compose run --rm backend pytest
 
 A suíte roda num banco de teste temporário, separado do banco real: os seus dados não são
 lidos nem alterados. Pode ser executada com o sistema no ar ou parado.
+
+A suíte usa o settings `config.settings_test`, que acrescenta o app `tests.exemplo`: registros de
+exemplo que existem só no banco de teste, para provar o isolamento por usuário. Eles nunca
+aparecem no banco real nem nas rotas da aplicação.
+
+### Para quem desenvolve: criar um registro de dados isolado
+
+Todo dado financeiro pertence a uma pessoa, e uma pessoa nunca vê os dados de outra (US-03).
+Regras completas em
+[specs/004-isolamento-usuario/contracts/isolamento.md](specs/004-isolamento-usuario/contracts/isolamento.md).
+
+1. O model herda de `core.models.OwnedModel` (campo `dono`). Nome único vale por pessoa:
+   `UniqueConstraint(fields=["dono", "nome"], ..., violation_error_message="...")`.
+2. O serializer herda de `core.serializers.RegistroComDonoSerializer`, com `"dono"` em
+   `Meta.fields`. Referências a outros registros usam `RelacionadoDoDonoField`.
+3. A viewset começa com `core.mixins.FiltroPorDonoMixin`:
+   `class GastoViewSet(FiltroPorDonoMixin, ModelViewSet)`.
+4. Os testes declaram uma subclasse de `tests.isolamento.CasosDeIsolamento` e ganham os casos de
+   isolamento prontos.
+
+Duas guardas da suíte falham se aparecer um model sem dono ou uma view sem o filtro
+(`tests/core/test_guarda_isolamento.py`).
 
 ## 7. Personalizar a configuração
 
