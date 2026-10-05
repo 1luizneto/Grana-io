@@ -11,7 +11,8 @@ export default function Entrar() {
   const { entrar, aviso, limparAviso } = useAuth()
   const navegar = useNavigate()
   const local = useLocation()
-  const [email, setEmail] = useState('')
+  // Depois de um cadastro sem entrada automática, o e-mail vem preenchido (FR-019).
+  const [email, setEmail] = useState(local.state?.email ?? '')
   const [senha, setSenha] = useState('')
   const [erro, setErro] = useState(SEM_ERROS)
   const [enviando, setEnviando] = useState(false)

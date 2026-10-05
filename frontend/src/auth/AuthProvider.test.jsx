@@ -131,3 +131,70 @@ describe('AuthProvider: verificação ao abrir (US2)', () => {
     expect(lerSessao()).toEqual(LOGIN_OK)
   })
 })
+
+describe('AuthProvider: cadastrar e entrar (US3)', () => {
+  const DADOS = {
+    nome: 'Ana Souza',
+    email: ' Ana@Exemplo.com ',
+    senha: 'uma-senha-boa-2026',
+    confirmacao_senha: 'uma-senha-boa-2026',
+  }
+
+  async function cadastrar(result) {
+    let resultado
+    await act(async () => {
+      resultado = await result.current.cadastrarEEntrar(DADOS)
+    })
+    return resultado
+  }
+
+  it('cria a conta e entra com o e-mail devolvido pela API', async () => {
+    const fetch = simularApi({
+      '/usuarios/': () => json(201, USUARIO_ANA),
+      '/auth/entrar/': () => json(200, LOGIN_OK),
+    })
+    const { result } = montar()
+
+    expect(await cadastrar(result)).toEqual({ ok: true })
+    const login = fetch.mock.calls.find(([url]) => url.endsWith('/auth/entrar/'))
+    expect(JSON.parse(login[1].body)).toEqual({ email: 'ana@exemplo.com', senha: 'uma-senha-boa-2026' })
+    expect(result.current.estado).toBe('conectado')
+    expect(lerSessao()).toEqual(LOGIN_OK)
+  })
+
+  it('devolve os erros por campo sem tentar entrar', async () => {
+    const fetch = simularApi({
+      '/usuarios/': () =>
+        json(400, {
+          email: ['Já existe uma conta com este e-mail.'],
+          confirmacao_senha: ['As senhas não conferem.'],
+        }),
+    })
+    const { result } = montar()
+
+    expect(await cadastrar(result)).toEqual({
+      ok: false,
+      erro: {
+        campos: {
+          email: ['Já existe uma conta com este e-mail.'],
+          confirmacao_senha: ['As senhas não conferem.'],
+        },
+        geral: null,
+      },
+    })
+    expect(fetch).toHaveBeenCalledOnce()
+    expect(result.current.estado).toBe('desconectado')
+  })
+
+  it('com a conta criada e o login falho, avisa e não grava nada', async () => {
+    simularApi({
+      '/usuarios/': () => json(201, USUARIO_ANA),
+      '/auth/entrar/': () => json(500, { detail: 'Erro interno' }),
+    })
+    const { result } = montar()
+
+    expect(await cadastrar(result)).toEqual({ ok: false, contaCriada: true, email: 'ana@exemplo.com' })
+    expect(result.current.aviso).toBe('Conta criada. Entre com sua senha.')
+    expect(lerSessao()).toBeNull()
+  })
+})

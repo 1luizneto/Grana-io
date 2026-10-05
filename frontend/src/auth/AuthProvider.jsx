@@ -2,11 +2,13 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 import { registrarAoExpirar, SessaoExpirada } from '../api/client.js'
 import { interpretarErro } from '../api/erros.js'
 import * as apiSessao from '../api/sessao.js'
+import * as apiUsuarios from '../api/usuarios.js'
 import { lerSessao, salvarSessao } from './armazenamento.js'
 
 // Sessão da interface (docs/arquitetura.md §3; specs/005-telas-login-cadastro, research R-04).
 // Estados: 'verificando' | 'conectado' | 'desconectado'.
 export const MENSAGEM_SESSAO_EXPIRADA = 'Sua sessão expirou. Entre novamente.'
+export const MENSAGEM_CONTA_CRIADA = 'Conta criada. Entre com sua senha.'
 
 const AuthContext = createContext(null)
 
@@ -75,9 +77,37 @@ export function AuthProvider({ children }) {
     }
   }, [])
 
+  // Cadastro seguido de entrada automática (US3; FR-019). Se só a entrada falhar, a tela leva ao
+  // login com o e-mail preenchido e o aviso de conta criada.
+  const cadastrarEEntrar = useCallback(
+    async (dados) => {
+      let conta
+      try {
+        const resposta = await apiUsuarios.cadastrar(dados)
+        if (!resposta.ok) return { ok: false, erro: await interpretarErro(resposta) }
+        conta = await resposta.json()
+      } catch (falha) {
+        return { ok: false, erro: await interpretarErro(falha) }
+      }
+      // A API devolve o e-mail normalizado (spec 002); é ele que entra no login.
+      const login = await entrar(conta.email, dados.senha)
+      if (login.ok) return { ok: true }
+      setAviso(MENSAGEM_CONTA_CRIADA)
+      return { ok: false, contaCriada: true, email: conta.email }
+    },
+    [entrar],
+  )
+
   const valor = useMemo(
-    () => ({ usuario: sessao?.usuario ?? null, estado, aviso, limparAviso, entrar }),
-    [sessao, estado, aviso, limparAviso, entrar],
+    () => ({
+      usuario: sessao?.usuario ?? null,
+      estado,
+      aviso,
+      limparAviso,
+      entrar,
+      cadastrarEEntrar,
+    }),
+    [sessao, estado, aviso, limparAviso, entrar, cadastrarEEntrar],
   )
 
   return <AuthContext.Provider value={valor}>{children}</AuthContext.Provider>

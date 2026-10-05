@@ -220,11 +220,11 @@ cadastro (FR-019).
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T030 [P] [US3] Acrescentar a `frontend/src/auth/AuthProvider.test.jsx` (parte de `cadastrarEEntrar`):
+- [X] T030 [P] [US3] Acrescentar a `frontend/src/auth/AuthProvider.test.jsx` (parte de `cadastrarEEntrar`):
   - 201 no cadastro e 200 no login → sessão gravada, `"conectado"`, `{ok: true}`;
   - 400 no cadastro → `{ok: false, erro}` com os erros por campo, sem chamar o login;
   - 201 no cadastro e falha no login → `{ok: false, contaCriada: true, email}` e nada gravado.
-- [ ] T031 [P] [US3] Escrever `frontend/src/pages/Cadastro/Cadastro.test.jsx`:
+- [X] T031 [P] [US3] Escrever `frontend/src/pages/Cadastro/Cadastro.test.jsx`:
   - 400 com `email`, `senha` e `confirmacao_senha` → as três mensagens aparecem ao mesmo tempo, cada uma abaixo do seu campo; nome e e-mail mantidos; senha e confirmação vazias (SC-006, FR-004);
   - 403 → "O cadastro de novas contas está desativado neste sistema." acima do formulário;
   - sucesso completo → navega para `/`;
@@ -235,9 +235,21 @@ cadastro (FR-019).
 
 ### Implementation for User Story 3
 
-- [ ] T032 [US3] Acrescentar `cadastrarEEntrar({nome, email, senha, confirmacao_senha})` ao `AuthProvider.jsx` ([research R-04](research.md)); no caso "conta criada, login falhou", definir o aviso "Conta criada. Entre com sua senha."
-- [ ] T033 [US3] Implementar `frontend/src/pages/Cadastro/Cadastro.jsx` com "Nome" (`autoComplete="name"`), "E-mail" (`autoComplete="email"`), "Senha" e "Confirme a senha" (`autoComplete="new-password"`), botão "Criar conta"/"Criando conta…" e link "Já tenho conta". Ao cair no caso "conta criada", navegar para `/entrar` com `state: {email}`. Em `Entrar.jsx`, usar `location.state?.email` como valor inicial do e-mail
-- [ ] T034 [US3] Em `frontend/src/App.jsx`, acrescentar `/cadastro` atrás de `RotaPublica`. Rodar as suítes e confirmar T030 e T031 **verdes**. Validar o S7 do [quickstart.md](quickstart.md)
+- [X] T032 [US3] Acrescentar `cadastrarEEntrar({nome, email, senha, confirmacao_senha})` ao `AuthProvider.jsx` ([research R-04](research.md)); no caso "conta criada, login falhou", definir o aviso "Conta criada. Entre com sua senha."
+- [X] T033 [US3] Implementar `frontend/src/pages/Cadastro/Cadastro.jsx` com "Nome" (`autoComplete="name"`), "E-mail" (`autoComplete="email"`), "Senha" e "Confirme a senha" (`autoComplete="new-password"`), botão "Criar conta"/"Criando conta…" e link "Já tenho conta". Ao cair no caso "conta criada", navegar para `/entrar` com `state: {email}`. Em `Entrar.jsx`, usar `location.state?.email` como valor inicial do e-mail
+- [X] T034 [US3] Em `frontend/src/App.jsx`, acrescentar `/cadastro` atrás de `RotaPublica`. Rodar as suítes e confirmar T030 e T031 **verdes**. Validar o S7 do [quickstart.md](quickstart.md)
+
+  > **Resultado (2026-10-05)**: ✅ interface com 59 testes verdes (51 + 3 do provider + 5 da tela).
+  > - T030 e T031 falharam primeiro (`cadastrarEEntrar` e a tela inexistentes).
+  > - O login automático usa o e-mail **devolvido pela API** (normalizado na spec 002), não o
+  >   digitado.
+  > - S7 no navegador: e-mail já usado + senha `123` + confirmação `456` → as quatro mensagens da
+  >   API (e-mail duplicado; senha curta, comum e numérica; senhas diferentes) de uma vez, cada uma
+  >   no seu campo; nome e e-mail mantidos, senhas vazias. Cadastro válido (`teste.s7@exemplo.com`,
+  >   conta de teste criada no banco local) → entrou direto com "Olá, Teste Cadastro!". Tempo do
+  >   fluxo completo, com uma tentativa recusada antes: **20 s** (SC-001: até 2 min).
+  > - S7 passo 4 (cadastro fechado) coberto pelo teste da tela (403 acima do formulário); não
+  >   mexi no `.env` do ambiente.
 
 **Checkpoint**: cadastro pela tela com entrada automática; suítes verdes.
 
