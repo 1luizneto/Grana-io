@@ -33,15 +33,16 @@ Execute na raiz do repositório, na ordem. Cada cenário indica o requisito que 
 1. Abra `http://localhost:8000/api/health/`. **Esperado**: HTTP 200 e corpo
    `{"status": "ok", "database": "ok"}` ([contrato](contracts/api-health.md)).
 2. Abra `http://localhost:5173`. **Esperado**: a página exibe o nome "Grana.io" e informa que a
-   API está acessível.
+   API está acessível. Desde a spec 005, sem sessão a interface abre o login, e o estado da API
+   fica no rodapé de todas as telas.
 3. Abra `http://localhost:5173/api/health/`. **Esperado**: a mesma resposta do passo 1, porque
    passa pelo proxy da interface.
 
 ### V3 — Acesso pela rede local (US1 cenário 6; FR-018, FR-019; SC-008)
 
 1. Descubra o IP da máquina (`ipconfig` no Windows ou `ip addr` no Linux).
-2. No celular, abra `http://<IP>:5173`. **Esperado**: a página carrega e mostra a API acessível,
-   sem configurar nada no celular.
+2. No celular, abra `http://<IP>:5173`. **Esperado**: a página carrega e mostra a API acessível
+   (no rodapé, desde a spec 005), sem configurar nada no celular.
 3. No celular, abra `http://<IP>:8000/api/health/`. **Esperado**: HTTP 200.
 4. De outro dispositivo (ou do próprio host), tente conectar em `<IP>:5432`. **Esperado**:
    conexão recusada, porque o banco não está exposto.
@@ -53,8 +54,8 @@ Execute na raiz do repositório, na ordem. Cada cenário indica o requisito que 
 1. Rode `docker compose stop db` e então `curl -i http://localhost:8000/api/health/`.
    **Esperado**: HTTP 503, com corpo `{"status": "error", "database": "unavailable"}` e sem stack
    trace, host ou credenciais.
-2. Abra `http://localhost:5173`. **Esperado**: a página informa que o banco está indisponível e
-   não quebra.
+2. Abra `http://localhost:5173`. **Esperado**: a página informa (no rodapé, desde a spec 005) que
+   o banco está indisponível e não quebra.
 3. Rode `docker compose stop backend`, recarregue a página. **Esperado**: "API inacessível", sem
    tela em branco.
 4. Rode `docker compose up -d --wait`. **Esperado**: tudo volta a ficar saudável.

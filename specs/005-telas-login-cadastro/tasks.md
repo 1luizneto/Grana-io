@@ -330,16 +330,35 @@ cadastro (FR-019).
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T045 [P] Atualizar o `README.md`:
+- [X] T045 [P] Atualizar o `README.md`:
   - "Estado atual": a interface tem login, cadastro e o layout base;
   - seção 6: `sh testar.sh` como comando principal (as duas suítes), e os comandos de cada camada separados;
   - seção 3: as telas `/entrar` e `/cadastro`, e o aviso de que a sessão fica no navegador até sair (computador compartilhado: usar "Sair");
   - nota para quem desenvolve: depois de mudar `package.json` ou `vite.config.js`, `docker compose up -d --build frontend`, e como instalar dependências ([research R-08](research.md)).
-- [ ] T046 [P] Atualizar `specs/001-infra-docker/quickstart.md`, passos que citam "a página exibe ... a API": o estado da API agora aparece no rodapé, inclusive na tela de login
-- [ ] T047 Executar o [quickstart.md](quickstart.md) completo (S1 a S10) e registrar o resultado, incluindo os tempos do S3 e do S7 (SC-001, SC-002), as duas abas do S8 e a verificação de recursos de terceiros do S10 (FR-016)
-- [ ] T048 Fechar a Definition of Done:
+- [X] T046 [P] Atualizar `specs/001-infra-docker/quickstart.md`, passos que citam "a página exibe ... a API": o estado da API agora aparece no rodapé, inclusive na tela de login
+- [X] T047 Executar o [quickstart.md](quickstart.md) completo (S1 a S10) e registrar o resultado, incluindo os tempos do S3 e do S7 (SC-001, SC-002), as duas abas do S8 e a verificação de recursos de terceiros do S10 (FR-016)
+
+  > **Resultado (2026-10-05)**: ✅
+  > - S1: `sh testar.sh` → backend 165 e interface 69 verdes, "Backend e interface: todos os
+  >   testes passaram.";
+  > - S2, S4, S5 e S6: validados na T029 (S5 pelo teste de rotas; S6 simulado no `localStorage`,
+  >   com uma única renovação nos logs);
+  > - S3: validado na T022; o login leva segundos (SC-002: até 30 s);
+  > - S7: validado na T034; cadastro completo em 20 s (SC-001: até 2 min);
+  > - S8: validado na T038, inclusive as duas abas; a saída com o backend parado ficou nos testes;
+  > - S9: validado na T044 (360 px e só teclado);
+  > - S10: página não encontrada e FR-016 na T044; **banco parado** agora: `docker compose stop db`
+  >   → rodapé do `/entrar` com "API acessível, banco indisponível"; `docker compose up -d --wait`
+  >   → os três containers saudáveis e a saúde `{"status":"ok","database":"ok"}`.
+- [X] T048 Fechar a Definition of Done:
   - suítes verdes e todas as tarefas marcadas;
   - em `BACKLOG.md`, marcar ☑ os 4 critérios da US-26 e, na US-02, os 2 critérios de tela ("O logout invalida a sessão no frontend e redireciona para o login" e "Rotas protegidas redirecionam para o login quando não há sessão"), com nota "spec 005".
+
+  > **Resultado (2026-10-05)**: ✅ backend 165 e interface 69 verdes; 48/48 tarefas marcadas.
+  > - US-26: 4 critérios ☑. US-02: os 2 de tela ☑, e a US-02 fica completa.
+  > - RNF-05: também ☑ "rodar toda a suíte com um comando" (`sh testar.sh`).
+  > - README: estado atual, telas, aviso de computador compartilhado, `sh testar.sh` e instalação
+  >   de dependências da interface. Quickstart da spec 001: o estado da API agora está no rodapé.
 
 **Checkpoint**: feature pronta para PR na `main`; Sprint 1 completa.
 
