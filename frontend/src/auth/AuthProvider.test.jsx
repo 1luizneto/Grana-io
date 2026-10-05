@@ -1,8 +1,9 @@
 // Sessão da interface (specs/005-telas-login-cadastro, research R-04).
-import { act, renderHook } from '@testing-library/react'
+import { act, renderHook, waitFor } from '@testing-library/react'
+import { StrictMode } from 'react'
 import { describe, expect, it } from 'vitest'
 import { json, LOGIN_OK, simularApi, USUARIO_ANA } from '../testes/respostas.js'
-import { lerSessao } from './armazenamento.js'
+import { lerSessao, salvarSessao } from './armazenamento.js'
 import { AuthProvider, useAuth } from './AuthProvider.jsx'
 
 function montar() {
@@ -46,5 +47,87 @@ describe('AuthProvider: entrar (US1)', () => {
     })
     expect(result.current.estado).toBe('desconectado')
     expect(lerSessao()).toBeNull()
+  })
+})
+
+describe('AuthProvider: verificação ao abrir (US2)', () => {
+  const VENCIDA = () => json(401, { code: 'token_not_valid', detail: 'Token expirado' })
+
+  it('com sessão guardada, verifica uma vez e atualiza o nome', async () => {
+    salvarSessao(LOGIN_OK)
+    const fetch = simularApi({
+      '/usuarios/eu/': () => json(200, { nome: 'Ana S. Souza', email: 'ana@exemplo.com' }),
+    })
+
+    const { result } = montar()
+
+    expect(result.current.estado).toBe('verificando')
+    await waitFor(() => expect(result.current.estado).toBe('conectado'))
+    expect(fetch).toHaveBeenCalledOnce()
+    expect(result.current.usuario.nome).toBe('Ana S. Souza')
+    expect(lerSessao().usuario.nome).toBe('Ana S. Souza')
+  })
+
+  it('em StrictMode, com o acesso vencido, renova uma única vez e continua conectado', async () => {
+    salvarSessao(LOGIN_OK)
+    const fetch = simularApi({
+      '/auth/renovar/': () =>
+        new Promise((resolve) =>
+          setTimeout(() => resolve(json(200, { acesso: 'acesso-2', renovacao: 'renovacao-2' })), 10),
+        ),
+      '/usuarios/eu/': (opcoes) =>
+        opcoes.headers.Authorization === 'Bearer acesso-2' ? json(200, USUARIO_ANA) : VENCIDA(),
+    })
+
+    const { result } = renderHook(() => useAuth(), {
+      wrapper: ({ children }) => (
+        <StrictMode>
+          <AuthProvider>{children}</AuthProvider>
+        </StrictMode>
+      ),
+    })
+
+    await waitFor(() => expect(result.current.estado).toBe('conectado'))
+    const renovacoes = fetch.mock.calls.filter(([url]) => url.endsWith('/auth/renovar/'))
+    expect(renovacoes).toHaveLength(1)
+    expect(lerSessao().renovacao).toBe('renovacao-2')
+  })
+
+  it('com a renovação recusada, desconecta e avisa que a sessão expirou', async () => {
+    salvarSessao(LOGIN_OK)
+    simularApi({
+      '/auth/renovar/': () => json(401, { detail: 'Sessão expirada ou encerrada. Entre novamente.' }),
+      '/usuarios/eu/': () => VENCIDA(),
+    })
+
+    const { result } = montar()
+
+    await waitFor(() => expect(result.current.estado).toBe('desconectado'))
+    expect(result.current.aviso).toBe('Sua sessão expirou. Entre novamente.')
+    expect(lerSessao()).toBeNull()
+  })
+
+  it('sem sessão guardada, não chama a API', () => {
+    const fetch = simularApi({})
+
+    const { result } = montar()
+
+    expect(result.current.estado).toBe('desconectado')
+    expect(fetch).not.toHaveBeenCalled()
+  })
+
+  it('com falha de rede na verificação, mantém a sessão e fica conectado', async () => {
+    salvarSessao(LOGIN_OK)
+    simularApi({
+      '/usuarios/eu/': () => {
+        throw new TypeError('Failed to fetch')
+      },
+    })
+
+    const { result } = montar()
+
+    await waitFor(() => expect(result.current.estado).toBe('conectado'))
+    expect(result.current.usuario).toEqual(USUARIO_ANA)
+    expect(lerSessao()).toEqual(LOGIN_OK)
   })
 })

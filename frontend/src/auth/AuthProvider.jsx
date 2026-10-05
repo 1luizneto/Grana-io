@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { registrarAoExpirar } from '../api/client.js'
+import { registrarAoExpirar, SessaoExpirada } from '../api/client.js'
 import { interpretarErro } from '../api/erros.js'
 import * as apiSessao from '../api/sessao.js'
 import { lerSessao, salvarSessao } from './armazenamento.js'
@@ -12,7 +12,8 @@ const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
   const [sessao, setSessao] = useState(() => lerSessao())
-  const [estado, setEstado] = useState(() => (sessao ? 'conectado' : 'desconectado'))
+  // Com sessão guardada, começa verificando: nada protegido aparece antes da confirmação (SC-004).
+  const [estado, setEstado] = useState(() => (sessao ? 'verificando' : 'desconectado'))
   // Aviso de uma vez só, mostrado pela tela de login (ex.: sessão expirada).
   const [aviso, setAviso] = useState(null)
 
@@ -27,6 +28,34 @@ export function AuthProvider({ children }) {
     () => registrarAoExpirar(() => desconectar(MENSAGEM_SESSAO_EXPIRADA)),
     [desconectar],
   )
+
+  // Verificação ao abrir: renova a credencial se preciso, confirma a sessão e atualiza o nome.
+  // No StrictMode o efeito roda duas vezes; a renovação única do cliente evita derrubar a sessão.
+  useEffect(() => {
+    if (!lerSessao()) return undefined
+    let ativo = true
+    apiSessao
+      .obterEu()
+      .then(async (resposta) => {
+        if (!ativo) return
+        const atual = lerSessao()
+        if (resposta.ok && atual) {
+          salvarSessao({ ...atual, usuario: await resposta.json() })
+        }
+        if (ativo && lerSessao()) {
+          setSessao(lerSessao())
+          setEstado('conectado')
+        }
+      })
+      .catch((falha) => {
+        // Sessão expirada já foi tratada pelo callback; queda momentânea do servidor mantém a
+        // pessoa conectada com o nome guardado (research R-04).
+        if (ativo && !(falha instanceof SessaoExpirada) && lerSessao()) setEstado('conectado')
+      })
+    return () => {
+      ativo = false
+    }
+  }, [])
 
   const limparAviso = useCallback(() => setAviso(null), [])
 

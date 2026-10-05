@@ -51,7 +51,8 @@ e confirme que volta para o endereço pedido.
 
 ### S6 — Renovação transparente e sessão expirada (US2; FR-007, FR-008)
 
-1. Suba o backend com acesso curto: `GRANA_SESSAO_ACESSO_MINUTOS=1` no `.env` e
+1. Alternativa sem mexer no `.env`: no DevTools, troque só o `acesso` de `grana.sessao` por `x`
+   e recarregue; o efeito é o mesmo de um acesso vencido. Ou suba o backend com acesso curto: `GRANA_SESSAO_ACESSO_MINUTOS=1` no `.env` e
    `docker compose up -d backend`. Entre, espere 2 minutos e recarregue → continua conectada
    (a renovação aconteceu sem aviso). Nos logs do backend aparece **um** `POST /api/auth/renovar/`.
 2. Com a sessão aberta, estrague as credenciais no DevTools (Application → Local Storage →

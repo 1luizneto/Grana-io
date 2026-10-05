@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router'
+import { useEffect, useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router'
 import { useAuth } from '../../auth/AuthProvider.jsx'
 import AvisoFormulario from '../../components/AvisoFormulario.jsx'
 import CampoTexto from '../../components/CampoTexto.jsx'
@@ -8,21 +8,34 @@ const SEM_ERROS = { campos: {}, geral: null }
 
 // Tela de login (US1; specs/005-telas-login-cadastro/contracts/interface.md).
 export default function Entrar() {
-  const { entrar } = useAuth()
+  const { entrar, aviso, limparAviso } = useAuth()
   const navegar = useNavigate()
+  const local = useLocation()
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [erro, setErro] = useState(SEM_ERROS)
   const [enviando, setEnviando] = useState(false)
+  const [avisoMostrado, setAvisoMostrado] = useState(null)
+
+  // Aviso de uma vez só (sessão expirada, saída...): a tela guarda e o provider esquece, para não
+  // reaparecer numa próxima visita. Some quando a pessoa envia o formulário.
+  useEffect(() => {
+    if (aviso) {
+      setAvisoMostrado(aviso)
+      limparAviso()
+    }
+  }, [aviso, limparAviso])
 
   async function aoEnviar(evento) {
     evento.preventDefault()
     if (enviando) return
     setEnviando(true)
     setErro(SEM_ERROS)
+    setAvisoMostrado(null)
     const resultado = await entrar(email, senha)
     if (resultado.ok) {
-      navegar('/', { replace: true })
+      // Volta para a página que a pessoa tentou abrir antes do login (FR-009).
+      navegar(local.state?.de?.pathname ?? '/', { replace: true })
       return
     }
     // Mantém o e-mail e apaga a senha depois da recusa (FR-004).
@@ -35,6 +48,7 @@ export default function Entrar() {
     <main className="pagina-acesso">
       <form className="cartao" onSubmit={aoEnviar} noValidate>
         <h1>Entrar</h1>
+        <AvisoFormulario mensagem={avisoMostrado} tipo="informacao" />
         <AvisoFormulario mensagem={erro.geral} />
         <CampoTexto
           rotulo="E-mail"

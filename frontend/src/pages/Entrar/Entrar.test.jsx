@@ -124,3 +124,22 @@ describe('tela de login', () => {
     expect(fetch).toHaveBeenCalledOnce()
   })
 })
+
+describe('tela de login: aviso pendente (US2)', () => {
+  it('mostra "Sua sessão expirou. Entre novamente." quando a sessão expira', async () => {
+    // Sessão guardada que não pode mais ser renovada: o provider expira e a tela de login avisa.
+    localStorage.setItem(
+      'grana.sessao',
+      JSON.stringify({ ...LOGIN_OK, acesso: 'x', renovacao: 'x' }),
+    )
+    simularApi({
+      '/usuarios/eu/': () => json(401, { code: 'token_not_valid', detail: 'Token inválido' }),
+      '/auth/renovar/': () => json(401, { detail: 'Sessão expirada ou encerrada. Entre novamente.' }),
+    })
+
+    abrirLogin()
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Sua sessão expirou. Entre novamente.')
+    expect(screen.getAllByText('Sua sessão expirou. Entre novamente.')).toHaveLength(1)
+  })
+})

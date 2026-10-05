@@ -170,27 +170,42 @@ página pedida; renovação transparente; sessão expirada leva ao login com avi
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T023 [P] [US2] Escrever `frontend/src/auth/rotas.test.jsx` ([research R-05](research.md)):
+- [X] T023 [P] [US2] Escrever `frontend/src/auth/rotas.test.jsx` ([research R-05](research.md)):
   - sem sessão, abrir `/` → mostra a tela de login e não mostra o conteúdo protegido;
   - sem sessão, abrir `/algum-lugar-protegido`, entrar com sucesso → volta para `/algum-lugar-protegido`;
   - com sessão, abrir `/entrar` ou `/cadastro` → vai para `/` (FR-010);
   - com `estado = "verificando"`, a rota protegida mostra "Carregando…" e nenhum conteúdo protegido (SC-004).
-- [ ] T024 [P] [US2] Acrescentar a `frontend/src/auth/AuthProvider.test.jsx`:
+- [X] T024 [P] [US2] Acrescentar a `frontend/src/auth/AuthProvider.test.jsx`:
   - com sessão guardada, ao montar fica `"verificando"`, chama `GET /api/usuarios/eu/` uma vez e passa a `"conectado"`, atualizando o nome com o da resposta;
   - montado duas vezes em `StrictMode`, com o acesso vencido (401 `token_not_valid`), a renovação é chamada **uma** vez e a sessão continua (ponto de atenção 2 do plano);
   - com renovação recusada, termina `"desconectado"`, sessão apagada e aviso "Sua sessão expirou. Entre novamente.";
   - sem sessão guardada, não chama a API e fica `"desconectado"`;
   - com sessão guardada e **falha de rede** na verificação, fica `"conectado"` com o nome guardado e a sessão não é apagada ([research R-04](research.md)).
-- [ ] T025 [P] [US2] Acrescentar a `frontend/src/pages/Entrar/Entrar.test.jsx`: com um aviso pendente no provider, a tela mostra "Sua sessão expirou. Entre novamente." uma vez (o aviso é consumido).
+- [X] T025 [P] [US2] Acrescentar a `frontend/src/pages/Entrar/Entrar.test.jsx`: com um aviso pendente no provider, a tela mostra "Sua sessão expirou. Entre novamente." uma vez (o aviso é consumido).
 
   Rodar e confirmar a **falha**.
 
 ### Implementation for User Story 2
 
-- [ ] T026 [US2] Acrescentar a verificação inicial ao `AuthProvider.jsx`: com sessão guardada, `estado = "verificando"` e chamada a `obterEu()`; 200 atualiza `usuario` (e grava); `SessaoExpirada` já é tratada pelo callback da T014; erro de rede mantém a sessão e marca `"conectado"` com o nome guardado (sem derrubar a pessoa por queda momentânea do servidor)
-- [ ] T027 [US2] Implementar `frontend/src/auth/RotaProtegida.jsx` e `frontend/src/auth/RotaPublica.jsx` conforme [research R-05](research.md) (`<Navigate replace state={{de: location}}>` e "Carregando…")
-- [ ] T028 [US2] Em `frontend/src/App.jsx`, colocar `/` atrás de `RotaProtegida` (como rota-pai, para que as próximas telas entrem como filhas) e `/entrar` atrás de `RotaPublica`. Em `Entrar.jsx`, depois do sucesso, navegar para `location.state?.de?.pathname ?? "/"` com `replace`, e mostrar o aviso do provider (consumindo-o) num `AvisoFormulario` de informação. Rodar as suítes e confirmar T023 a T025 **verdes**
-- [ ] T029 [US2] Validar S2, S4, S5 e S6 do [quickstart.md](quickstart.md). No S6, conferir nos logs do backend **um único** `POST /api/auth/renovar/` por recarga
+- [X] T026 [US2] Acrescentar a verificação inicial ao `AuthProvider.jsx`: com sessão guardada, `estado = "verificando"` e chamada a `obterEu()`; 200 atualiza `usuario` (e grava); `SessaoExpirada` já é tratada pelo callback da T014; erro de rede mantém a sessão e marca `"conectado"` com o nome guardado (sem derrubar a pessoa por queda momentânea do servidor)
+- [X] T027 [US2] Implementar `frontend/src/auth/RotaProtegida.jsx` e `frontend/src/auth/RotaPublica.jsx` conforme [research R-05](research.md) (`<Navigate replace state={{de: location}}>` e "Carregando…")
+- [X] T028 [US2] Em `frontend/src/App.jsx`, colocar `/` atrás de `RotaProtegida` (como rota-pai, para que as próximas telas entrem como filhas) e `/entrar` atrás de `RotaPublica`. Em `Entrar.jsx`, depois do sucesso, navegar para `location.state?.de?.pathname ?? "/"` com `replace`, e mostrar o aviso do provider (consumindo-o) num `AvisoFormulario` de informação. Rodar as suítes e confirmar T023 a T025 **verdes**
+- [X] T029 [US2] Validar S2, S4, S5 e S6 do [quickstart.md](quickstart.md). No S6, conferir nos logs do backend **um único** `POST /api/auth/renovar/` por recarga
+
+  > **Resultado (2026-10-05)**: ✅ interface com 51 testes verdes (40 + 11); backend 165.
+  > - T023 a T025 falharam primeiro (guardas inexistentes; provider sem verificação; aviso).
+  > - **Aviso na tela de login**: a primeira versão guardava o aviso só ao abrir a tela e perdia o
+  >   aviso que chegava depois; a segunda limpava no desmonte, o que o `StrictMode` (que desmonta
+  >   uma vez a mais) apagaria na hora. Versão final: a tela copia o aviso para o próprio estado e
+  >   limpa o do provider; ele some quando a pessoa envia o formulário.
+  > - O helper `renderizarComRotas` passou a usar `StrictMode`, como o `main.jsx`.
+  > - `RotaPublica` redireciona para a página pedida (`state.de`), não só para `/`, para não
+  >   competir com a navegação da tela de login.
+  > - Navegador: S2 ✅ (`/` sem sessão → `/entrar`); S4 ✅ (recarga mantém "Olá, Ana Souza!"); S5
+  >   coberto pelo teste de rotas (hoje `/` é a única rota protegida); S6 ✅ simulado no
+  >   `localStorage`: com o `acesso` inválido e a `renovacao` válida, os logs mostram 2 `GET
+  >   /usuarios/eu/` 401 (StrictMode), **1** `POST /auth/renovar/` 200 e 2 repetições 200; com as
+  >   duas inválidas, `/entrar` com "Sua sessão expirou. Entre novamente." e a sessão apagada.
 
 **Checkpoint**: sessão persistente, páginas protegidas e renovação transparente; suítes verdes.
 
