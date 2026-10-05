@@ -123,8 +123,8 @@ merge ficam com o responsável.
 
 ### Tests for User Story 1 ⚠️
 
-- [ ] T017 [P] [US1] Escrever `frontend/src/auth/AuthProvider.test.jsx` (parte de `entrar`): com `fetch` simulado, `entrar("ana@exemplo.com", "x")` com 200 grava a sessão (`acesso`, `renovacao`, `usuario`), põe `estado = "conectado"` e expõe o `usuario`; com 401 devolve `{ok: false, erro}` com `geral = "E-mail ou senha incorretos."` e não grava nada
-- [ ] T018 [P] [US1] Escrever `frontend/src/pages/Entrar/Entrar.test.jsx` (Testing Library + `user-event`, `fetch` simulado):
+- [X] T017 [P] [US1] Escrever `frontend/src/auth/AuthProvider.test.jsx` (parte de `entrar`): com `fetch` simulado, `entrar("ana@exemplo.com", "x")` com 200 grava a sessão (`acesso`, `renovacao`, `usuario`), põe `estado = "conectado"` e expõe o `usuario`; com 401 devolve `{ok: false, erro}` com `geral = "E-mail ou senha incorretos."` e não grava nada
+- [X] T018 [P] [US1] Escrever `frontend/src/pages/Entrar/Entrar.test.jsx` (Testing Library + `user-event`, `fetch` simulado):
   - envio vazio com 400 da API → "Este campo é obrigatório." abaixo de "E-mail" e de "Senha" (mensagem ligada ao campo por `aria-describedby`);
   - 401 → "E-mail ou senha incorretos." num `role="alert"`, e-mail mantido, senha vazia;
   - 429 → "Muitas tentativas. Tente novamente em instantes.";
@@ -137,10 +137,21 @@ merge ficam com o responsável.
 
 ### Implementation for User Story 1
 
-- [ ] T019 [US1] Acrescentar `entrar(email, senha)` ao `AuthProvider.jsx`: chama `api/sessao.entrar`; com 200 grava a sessão e atualiza o estado; senão devolve `{ok: false, erro: await interpretarErro(resposta)}`; erros de rede viram o mesmo formato. A senha nunca é guardada (FR-016)
-- [ ] T020 [US1] Implementar `frontend/src/pages/Entrar/Entrar.jsx`: título "Entrar", campos "E-mail" (`type="email"`, `autoComplete="username"`) e "Senha" (`type="password"`, `autoComplete="current-password"`), botão "Entrar"/"Entrando…", link "Criar conta" para `/cadastro`, `AvisoFormulario` para o erro geral. Depois de recusa, apaga a senha e mantém o e-mail (FR-004). Com sucesso, `navigate("/", {replace: true})` (o retorno à página pedida entra na US2)
-- [ ] T021 [US1] Em `frontend/src/App.jsx`, acrescentar a rota `/entrar`. Em `frontend/src/pages/Inicio/Inicio.jsx`, mostrar "Olá, {usuario.nome}!" e o aviso "Os recursos financeiros chegam nas próximas entregas." (FR-017), mantendo por enquanto o estado da API logo abaixo. Até a proteção da US2 (T028), a rota `/` fica aberta: sem `usuario`, a página mostra só o aviso, sem saudação e sem quebrar. Rodar as suítes e confirmar T017 e T018 **verdes**
-- [ ] T022 [US1] Validar o S3 do [quickstart.md](quickstart.md) no navegador. Nesta fase o nome aparece na saudação da página inicial; o nome no cabeçalho (US1, cenário 1) só existe a partir da T038 e é conferido no S8 e no S9
+- [X] T019 [US1] Acrescentar `entrar(email, senha)` ao `AuthProvider.jsx`: chama `api/sessao.entrar`; com 200 grava a sessão e atualiza o estado; senão devolve `{ok: false, erro: await interpretarErro(resposta)}`; erros de rede viram o mesmo formato. A senha nunca é guardada (FR-016)
+- [X] T020 [US1] Implementar `frontend/src/pages/Entrar/Entrar.jsx`: título "Entrar", campos "E-mail" (`type="email"`, `autoComplete="username"`) e "Senha" (`type="password"`, `autoComplete="current-password"`), botão "Entrar"/"Entrando…", link "Criar conta" para `/cadastro`, `AvisoFormulario` para o erro geral. Depois de recusa, apaga a senha e mantém o e-mail (FR-004). Com sucesso, `navigate("/", {replace: true})` (o retorno à página pedida entra na US2)
+- [X] T021 [US1] Em `frontend/src/App.jsx`, acrescentar a rota `/entrar`. Em `frontend/src/pages/Inicio/Inicio.jsx`, mostrar "Olá, {usuario.nome}!" e o aviso "Os recursos financeiros chegam nas próximas entregas." (FR-017), mantendo por enquanto o estado da API logo abaixo. Até a proteção da US2 (T028), a rota `/` fica aberta: sem `usuario`, a página mostra só o aviso, sem saudação e sem quebrar. Rodar as suítes e confirmar T017 e T018 **verdes**
+- [X] T022 [US1] Validar o S3 do [quickstart.md](quickstart.md) no navegador. Nesta fase o nome aparece na saudação da página inicial; o nome no cabeçalho (US1, cenário 1) só existe a partir da T038 e é conferido no S8 e no S9
+
+  > **Resultado (2026-10-05)**: ✅ interface com 40 testes verdes (31 + 2 do provider + 7 da tela).
+  > - T017 e T018 falharam primeiro (`entrar` e a tela inexistentes).
+  > - S3 no navegador: senha errada → "E-mail ou senha incorretos.", e-mail mantido, senha vazia;
+  >   dados certos → `/` com "Olá, Ana Souza!"; a sessão gravada não contém a senha.
+  > - **Achado**: com os campos em branco, a API responde "Este campo pode não estar em branco."
+  >   (texto padrão do DRF para campo vazio), e não "Este campo é obrigatório." como a spec (US1,
+  >   cenário 3) e o contrato da spec 003 citam (esse texto é o de campo **ausente**). A interface
+  >   mostra o texto da API como está (Princípio V). Decisão pendente com o responsável antes da US2.
+  > - `testes/preparacao.js` passou a desfazer os `fetch` simulados e o estado do cliente entre os
+  >   testes; `testes/respostas.js` reúne as respostas simuladas.
 
 **Checkpoint**: login funcionando pela tela; suítes verdes.
 

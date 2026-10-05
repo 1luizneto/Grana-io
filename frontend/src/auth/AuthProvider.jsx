@@ -1,6 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { registrarAoExpirar } from '../api/client.js'
-import { lerSessao } from './armazenamento.js'
+import { interpretarErro } from '../api/erros.js'
+import * as apiSessao from '../api/sessao.js'
+import { lerSessao, salvarSessao } from './armazenamento.js'
 
 // Sessão da interface (docs/arquitetura.md §3; specs/005-telas-login-cadastro, research R-04).
 // Estados: 'verificando' | 'conectado' | 'desconectado'.
@@ -28,9 +30,25 @@ export function AuthProvider({ children }) {
 
   const limparAviso = useCallback(() => setAviso(null), [])
 
+  // Entra com e-mail e senha (US1). A senha só vai para a API; nunca é guardada (FR-016).
+  const entrar = useCallback(async (email, senha) => {
+    try {
+      const resposta = await apiSessao.entrar(email, senha)
+      if (!resposta.ok) return { ok: false, erro: await interpretarErro(resposta) }
+      const { acesso, renovacao, usuario } = await resposta.json()
+      salvarSessao({ acesso, renovacao, usuario })
+      setSessao(lerSessao())
+      setEstado('conectado')
+      setAviso(null)
+      return { ok: true }
+    } catch (falha) {
+      return { ok: false, erro: await interpretarErro(falha) }
+    }
+  }, [])
+
   const valor = useMemo(
-    () => ({ usuario: sessao?.usuario ?? null, estado, aviso, limparAviso }),
-    [sessao, estado, aviso, limparAviso],
+    () => ({ usuario: sessao?.usuario ?? null, estado, aviso, limparAviso, entrar }),
+    [sessao, estado, aviso, limparAviso, entrar],
   )
 
   return <AuthContext.Provider value={valor}>{children}</AuthContext.Provider>
