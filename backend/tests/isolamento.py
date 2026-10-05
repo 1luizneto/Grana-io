@@ -16,6 +16,23 @@ O módulo da subclasse precisa do marcador ``pytest.mark.django_db``. Ana é ``u
 (``cliente_autenticado``) e Bia é ``outro_usuario`` (``cliente_da_bia``), de ``tests/conftest.py``.
 """
 
+from core.models import OwnedModel
+
+
+def modelos_sem_dono(models, excecoes):
+    """Devolve, ordenados, os ``"<app>.<Model>"`` concretos que não herdam de ``OwnedModel``.
+
+    Usada pela guarda de models (tests/core/test_guarda_isolamento.py; research R-06).
+    """
+    return sorted(
+        model._meta.label
+        for model in models
+        if not model._meta.abstract
+        and not model._meta.proxy
+        and not issubclass(model, OwnedModel)
+        and model._meta.label not in excecoes
+    )
+
 
 class CasosDeIsolamento:
     """Base sem prefixo ``Test``: o pytest só coleta as subclasses."""

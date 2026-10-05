@@ -53,7 +53,7 @@ Remova o trecho e rode de novo: passa.
    `ItemExemploViewSet`.
 2. Rode `docker compose run --rm backend pytest tests/core/test_guarda_isolamento.py`.
 
-**Esperado**: a guarda falha e aponta a rota de itens de exemplo. Os testes de `tests/exemplo`
+**Esperado**: a guarda falha e aponta a view (`ItemExemploViewSet`) com a primeira rota dela. Os testes de `tests/exemplo`
 também falham (Bia passa a ver os itens de Ana). Desfaça e rode de novo: passa.
 
 ### S5 — Exemplo não existe no banco de uso nem na aplicação (FR-013)

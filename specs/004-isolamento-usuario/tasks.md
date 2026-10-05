@@ -234,7 +234,7 @@ merge ficam com o responsável.
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T026 [US4] Escrever `backend/tests/core/test_guarda_isolamento.py` ([research R-06](research.md)):
+- [X] T026 [US4] Escrever `backend/tests/core/test_guarda_isolamento.py` ([research R-06](research.md)):
   - `test_funcao_aponta_model_sem_dono`: `modelos_sem_dono([Usuario, ItemExemplo], excecoes=set())` devolve `["accounts.Usuario"]` (caso negativo da US4, cenário 1);
   - `test_funcao_respeita_excecoes`: com `excecoes={"accounts.Usuario"}`, devolve `[]`;
   - `test_guarda_todo_model_do_projeto_tem_dono`: aplica `modelos_sem_dono` a todos os models concretos de apps cujo `path` está dentro de `settings.BASE_DIR`, com `MODELS_SEM_DONO = {"accounts.Usuario"}`, e exige `[]`; a mensagem de falha lista os models e lembra que exceções só valem para dados de referência compartilhados (constituição v1.2.0, Princípio II), com comentário citando a spec. Declarar `MODELS_SEM_DONO` no topo do arquivo, com comentário `# accounts.Usuario: é o próprio dono (spec 004)`;
@@ -244,8 +244,19 @@ merge ficam com o responsável.
 
 ### Implementation for User Story 4
 
-- [ ] T027 [US4] Implementar `modelos_sem_dono(models, excecoes) -> list[str]` em `backend/tests/isolamento.py`: devolve, ordenados, os `"<app_label>.<ModelName>"` de models concretos (não abstratos, não proxy) que não herdam de `OwnedModel` e não estão em `excecoes`. Rodar e confirmar T026 **verde**
-- [ ] T028 [US4] Validar os cenários S3 e S4 do [quickstart.md](quickstart.md) (experimentos temporários: `Rascunho` sem dono e viewset sem mixin), registrar as mensagens de falha obtidas e **desfazer** os dois experimentos. Suíte verde ao final
+- [X] T027 [US4] Implementar `modelos_sem_dono(models, excecoes) -> list[str]` em `backend/tests/isolamento.py`: devolve, ordenados, os `"<app_label>.<ModelName>"` de models concretos (não abstratos, não proxy) que não herdam de `OwnedModel` e não estão em `excecoes`. Rodar e confirmar T026 **verde**
+- [X] T028 [US4] Validar os cenários S3 e S4 do [quickstart.md](quickstart.md) (experimentos temporários: `Rascunho` sem dono e viewset sem mixin), registrar as mensagens de falha obtidas e **desfazer** os dois experimentos. Suíte verde ao final
+
+  > **Resultado (2026-10-05)**: ✅ 163 testes verdes (159 + 4).
+  > - T026 falhou primeiro na coleta (`modelos_sem_dono` inexistente).
+  > - **S3**: com `Rascunho` sem dono em `tests/exemplo/models.py`, a guarda falhou com
+  >   "Models sem dono: ['exemplo.Rascunho']...", lembrando a regra da constituição v1.2.0.
+  > - **S4**: sem o mixin na `ItemExemploViewSet`, a guarda falhou e, com ela, mais 9 testes do
+  >   exemplo (10 falhas no total). A primeira versão da mensagem listava as 6 rotas geradas pelo
+  >   viewset (lista, detalhe, `total` e sufixos de formato); a guarda passou a agrupar por view:
+  >   "{'ItemExemploViewSet': 'api/exemplo/^itens/$'}".
+  > - Os dois experimentos foram desfeitos (`git diff` vazio em `tests/exemplo/`), e a suíte voltou
+  >   a 163 verdes.
 
 **Checkpoint**: guardas de models e de rotas ativas e demonstradas; suíte verde.
 
