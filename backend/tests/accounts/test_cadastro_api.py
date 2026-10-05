@@ -175,3 +175,18 @@ def test_nome_com_acentos_e_apostrofo(cliente):
 
     assert resposta.status_code == 201
     assert resposta.json()["nome"] == "João D'Ávila"
+
+
+def test_campos_em_branco_sao_obrigatorios(cliente):
+    # A interface envia os campos vazios, não ausentes (specs/005-telas-login-cadastro, T022).
+    resposta = cliente.post(
+        URL, {"nome": "", "email": "", "senha": "", "confirmacao_senha": ""}, format="json"
+    )
+
+    assert resposta.status_code == 400
+    assert resposta.json() == {
+        "nome": [OBRIGATORIO],
+        "email": [OBRIGATORIO],
+        "senha": [OBRIGATORIO],
+        "confirmacao_senha": [OBRIGATORIO],
+    }

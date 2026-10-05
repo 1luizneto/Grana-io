@@ -201,7 +201,9 @@ o layout continua utilizável, sem rolagem horizontal.
   layout base com uma página inicial provisória. Dados financeiros e as demais telas são das USs
   seguintes (US-27 em diante).
 - **API pronta**: cadastro, login, renovação, saída e consulta da própria conta já existem (specs
-  002 e 003). Esta spec não muda a API.
+  002 e 003). A única mudança na API é de texto: campo **vazio** passa a responder "Este campo é
+  obrigatório.", igual ao campo ausente, no login, no cadastro e na renovação (achado da T022;
+  antes vinha o padrão do DRF, "Este campo pode não estar em branco.").
 - **Mensagens vindas da API**: os textos de erro de validação e de recusa vêm da API e são exibidos
   como estão (constituição, Princípio V). Os textos próprios da interface (sessão expirada, saiu
   do sistema, falha de comunicação, página não encontrada) são definidos aqui.

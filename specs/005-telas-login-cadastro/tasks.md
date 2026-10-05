@@ -149,7 +149,11 @@ merge ficam com o responsável.
   > - **Achado**: com os campos em branco, a API responde "Este campo pode não estar em branco."
   >   (texto padrão do DRF para campo vazio), e não "Este campo é obrigatório." como a spec (US1,
   >   cenário 3) e o contrato da spec 003 citam (esse texto é o de campo **ausente**). A interface
-  >   mostra o texto da API como está (Princípio V). Decisão pendente com o responsável antes da US2.
+  >   mostra o texto da API como está (Princípio V). **Decisão do responsável (opção A)**: o
+  >   backend passou a responder "Este campo é obrigatório." também para campo vazio, no login, no
+  >   cadastro (e-mail, senha, confirmação) e na renovação. Testes `test_campos_em_branco_sao_obrigatorios`
+  >   em `test_entrar_api.py` e `test_cadastro_api.py` (falharam primeiro); backend com 165 verdes.
+  >   Contratos das specs 002 e 003 e Assumptions desta spec atualizados. Commit próprio `fix:`.
   > - `testes/preparacao.js` passou a desfazer os `fetch` simulados e o estado do cliente entre os
   >   testes; `testes/respostas.js` reúne as respostas simuladas.
 

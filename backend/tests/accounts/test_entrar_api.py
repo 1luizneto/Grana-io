@@ -72,3 +72,14 @@ def test_campos_ausentes_sao_obrigatorios(cliente):
         "email": ["Este campo é obrigatório."],
         "senha": ["Este campo é obrigatório."],
     }
+
+
+def test_campos_em_branco_sao_obrigatorios(cliente):
+    # A interface envia os campos vazios, não ausentes (specs/005-telas-login-cadastro, T022).
+    resposta = cliente.post(URL_ENTRAR, {"email": "", "senha": ""}, format="json")
+
+    assert resposta.status_code == 400
+    assert resposta.json() == {
+        "email": ["Este campo é obrigatório."],
+        "senha": ["Este campo é obrigatório."],
+    }

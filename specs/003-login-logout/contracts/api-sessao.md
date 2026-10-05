@@ -28,7 +28,8 @@ Pública. Limitada a `GRANA_LOGIN_TENTATIVAS_POR_MINUTO` tentativas por minuto p
 }
 ```
 
-**400 Bad Request**: campo ausente.
+**400 Bad Request**: campo ausente ou vazio, com a mesma mensagem nos dois casos (ajuste da spec
+005-telas-login-cadastro; antes, o campo vazio recebia o texto padrão do DRF).
 
 ```json
 { "email": ["Este campo é obrigatório."], "senha": ["Este campo é obrigatório."] }
