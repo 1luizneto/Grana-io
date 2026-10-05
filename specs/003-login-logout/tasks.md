@@ -345,17 +345,39 @@ apresente o resumo e sugira o commit. O commit é manual, sem trailers de IA.
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T036 [P] Atualizar o `README.md`:
+- [X] T036 [P] Atualizar o `README.md`:
   - na seção 3, acrescentar as rotas de sessão e a própria conta, com exemplo de login e de uso do `Authorization: Bearer`, e link para [contracts/api-sessao.md](contracts/api-sessao.md);
   - na seção 7, explicar as 4 variáveis novas;
   - acrescentar uma nota sobre a limpeza periódica com `docker compose exec backend python manage.py flushexpiredtokens`;
   - atualizar o "Estado atual".
-- [ ] T037 [P] Acrescentar as 4 variáveis novas à tabela "Configuráveis" de `specs/001-infra-docker/contracts/environment.md`, com referência a esta spec
-- [ ] T038 Executar o [quickstart.md](quickstart.md) completo (S1 a S10) e registrar o resultado. Conferir também `makemigrations --check` e o S9 (nenhum `eyJ`, nenhuma senha nos logs)
-- [ ] T039 Fechar a Definition of Done:
+- [X] T037 [P] Acrescentar as 4 variáveis novas à tabela "Configuráveis" de `specs/001-infra-docker/contracts/environment.md`, com referência a esta spec
+- [X] T038 Executar o [quickstart.md](quickstart.md) completo (S1 a S10) e registrar o resultado. Conferir também `makemigrations --check` e o S9 (nenhum `eyJ`, nenhuma senha nos logs)
+
+  > **Resultado (2026-10-05)**: ✅ numa rodada só:
+  > - S1: login devolve `acesso`, `renovacao` e `usuario`;
+  > - S2: `/eu/` dá 200 com credencial, 401 sem e 401 com credencial adulterada;
+  > - S3: inexistente 401, senha errada 401 e vazio 400;
+  > - S4: renovação antiga, usada de novo, dá 401;
+  > - S5: sair dá 204, e renovar depois dá 401;
+  > - S8: saúde 200 e cadastro 400 sem credencial;
+  > - S9: **0** senhas ou JWT nos logs;
+  > - S10: 126 testes verdes.
+  >
+  > `makemigrations --check` não acusou nada pendente, e o `flushexpiredtokens` rodou sem erro.
+  > S6 e S7 foram validados nas T025, T030 e T022.
+  > Uma rodada da suíte levou 96 s, de forma pontual; repetida com `--durations`, levou 12 s, e
+  > nenhum teste passou de 1,2 s.
+- [X] T039 Fechar a Definition of Done:
   - suíte verde e todas as tarefas marcadas;
   - em `BACKLOG.md`, marcar ☑ na US-02 os critérios "Login com e-mail e senha retorna um token/sessão válido", "Credenciais inválidas exibem mensagem genérica" e "O token expira após um período definido e pode ser renovado". Os dois critérios de redirecionamento continuam ☐, anotados como cobertos pela US-26;
   - no RNF-02, marcar ☑ "A API exige autenticação em todas as rotas, exceto login e cadastro".
+
+  > **Resultado (2026-10-05)**: ✅ 126 testes verdes e 39/39 tarefas marcadas.
+  > - US-02 no BACKLOG: 3 critérios marcados ☑. Os 2 de redirecionamento continuam ☐, anotados
+  >   como US-26.
+  > - RNF-02: "autenticação em todas as rotas" marcado ☑, com nota sobre a verificação de saúde
+  >   pública.
+  > - O RNF-02 agora tem 4 de 5 critérios ☑. Resta "Nenhum dado é enviado a serviços externos".
 
 **Checkpoint**: feature pronta para PR na `main`.
 

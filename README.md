@@ -13,8 +13,8 @@ O sistema tem três partes, todas em containers Docker:
 | Banco de dados | PostgreSQL 17 | não fica acessível fora do Docker |
 
 > Estado atual: fundação do projeto (Sprint 1). A interface mostra só uma página inicial
-> provisória. A API expõe a verificação de saúde e o cadastro de usuários; o login e as telas
-> chegam nas próximas entregas (ver [BACKLOG.md](BACKLOG.md)).
+> provisória. A API já tem verificação de saúde, cadastro, login, renovação e saída da sessão;
+> as telas chegam nas próximas entregas (ver [BACKLOG.md](BACKLOG.md)).
 
 ---
 
@@ -66,9 +66,12 @@ Isso não afeta os dados do banco. Alterações no código Python (`backend/`) e
 | Interface | http://localhost:5173 |
 | Verificação de saúde da API | http://localhost:8000/api/health/ |
 | Cadastro de usuário (API) | `POST` http://localhost:8000/api/usuarios/ |
+| Entrar / renovar / sair (API) | `POST` http://localhost:8000/api/auth/entrar/, `.../renovar/`, `.../sair/` |
+| Própria conta (API, exige login) | `GET` http://localhost:8000/api/usuarios/eu/ |
 
 Todas as rotas da API ficam sob `http://localhost:8000/api/`. O endereço base sozinho responde
-404, porque não é uma rota.
+404, porque não é uma rota. Só saúde, cadastro, entrar e renovar funcionam sem login; **todas as
+outras exigem login**.
 
 **Criar uma conta.** Enquanto a tela de cadastro não existe (US-26), crie pela API:
 
@@ -80,6 +83,27 @@ No PowerShell, use `curl.exe` no lugar de `curl`. A resposta 201 traz só o nome
 senha precisa de ao menos 8 caracteres e não pode ser só números, muito comum ou parecida com
 o nome ou o e-mail. Os erros voltam em português, campo a campo. Detalhes em
 [specs/002-cadastro-usuario/contracts/api-cadastro.md](specs/002-cadastro-usuario/contracts/api-cadastro.md).
+
+**Entrar e usar a sessão.** O login devolve duas credenciais: `acesso`, que vale 30 minutos e vai
+em cada requisição, e `renovacao`, que vale 7 dias e serve para obter um par novo sem digitar a
+senha.
+
+```bash
+curl -H "Content-Type: application/json" -d '{"email":"ana@exemplo.com","senha":"uma-senha-boa-2026"}' http://localhost:8000/api/auth/entrar/
+curl -H "Authorization: Bearer <acesso>" http://localhost:8000/api/usuarios/eu/
+```
+
+- **Renovar**: `POST /api/auth/renovar/` com `{"renovacao": "<renovacao>"}` devolve um par novo,
+  e a credencial usada deixa de valer.
+- **Sair**: `POST /api/auth/sair/`, com o cabeçalho `Authorization: Bearer <acesso>` e
+  `{"renovacao": "<renovacao>"}`, encerra só aquela sessão. As de outros dispositivos continuam.
+- E-mail inexistente, senha errada e conta desativada recebem a mesma resposta: "E-mail ou senha
+  incorretos.".
+- Depois de 10 tentativas de login em 1 minuto, o login responde "Muitas tentativas. Tente
+  novamente em instantes." até o minuto passar.
+
+Detalhes, inclusive os erros 401 que a interface usa para renovar a sessão, em
+[specs/003-login-logout/contracts/api-sessao.md](specs/003-login-logout/contracts/api-sessao.md).
 
 A verificação de saúde responde `{"status": "ok", "database": "ok"}` quando tudo está no ar,
 ou HTTP 503 com `{"status": "error", "database": "unavailable"}` quando o banco não responde. A
@@ -159,6 +183,23 @@ O `.env` **nunca é versionado** (está no `.gitignore`). Todas as variáveis es
   conta. Depois de criar as contas da casa, defina `0` para fechar o cadastro: novas tentativas
   recebem "O cadastro de novas contas está desativado neste sistema." e as contas existentes
   continuam funcionando.
+- **`GRANA_SESSAO_ACESSO_MINUTOS`** (padrão `30`) e **`GRANA_SESSAO_RENOVACAO_DIAS`** (padrão `7`):
+  quanto duram as credenciais de acesso e de renovação. A renovação define por quanto tempo você
+  fica conectado sem digitar a senha.
+- **`GRANA_LOGIN_TENTATIVAS_POR_MINUTO`** (padrão `10`): limite de tentativas de login por
+  endereço. **No Docker Desktop (Windows/macOS), todos os dispositivos chegam com o mesmo
+  endereço**, então o limite vale para a casa inteira: se alguém errar a senha 10 vezes, todos
+  esperam até 1 minuto. No Linux, o limite é por dispositivo. Aumente o valor se isso incomodar.
+- **`GRANA_PROXY_CONFIAVEL`** (padrão `frontend`): não altere sem motivo. É o serviço da interface
+  cujo endereço repassado é aceito para identificar o dispositivo.
+
+### Limpar sessões vencidas
+
+O banco guarda as credenciais de renovação emitidas. De tempos em tempos, apague as vencidas:
+
+```bash
+docker compose exec backend python manage.py flushexpiredtokens
+```
 
 ### Criar um administrador
 
