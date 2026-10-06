@@ -6,6 +6,9 @@ from accounts.models import Usuario
 
 MENSAGEM_EMAIL_DUPLICADO = "Já existe uma conta com este e-mail."
 MENSAGEM_SENHAS_DIFERENTES = "As senhas não conferem."
+# Campo vazio e campo ausente recebem a mesma mensagem; o padrão do DRF para vazio é
+# "Este campo pode não estar em branco." (specs/005-telas-login-cadastro, T022).
+OBRIGATORIO = {"blank": "Este campo é obrigatório."}
 
 
 class CadastroSerializer(serializers.Serializer):
@@ -15,10 +18,14 @@ class CadastroSerializer(serializers.Serializer):
     tem erro, e as mensagens de senha sumiriam da resposta (FR-008; research R-10).
     """
 
-    nome = serializers.CharField(max_length=150, error_messages={"blank": "Este campo é obrigatório."})
-    email = serializers.EmailField(max_length=254)
-    senha = serializers.CharField(max_length=128, write_only=True, trim_whitespace=False)
-    confirmacao_senha = serializers.CharField(write_only=True, trim_whitespace=False)
+    nome = serializers.CharField(max_length=150, error_messages=OBRIGATORIO)
+    email = serializers.EmailField(max_length=254, error_messages=OBRIGATORIO)
+    senha = serializers.CharField(
+        max_length=128, write_only=True, trim_whitespace=False, error_messages=OBRIGATORIO
+    )
+    confirmacao_senha = serializers.CharField(
+        write_only=True, trim_whitespace=False, error_messages=OBRIGATORIO
+    )
 
     def validate_email(self, valor):
         email = Usuario.normalizar_email(valor)
@@ -58,11 +65,11 @@ class UsuarioSerializer(serializers.ModelSerializer):
 class EntrarSerializer(serializers.Serializer):
     """Entrada do login (specs/003-login-logout/contracts/api-sessao.md)."""
 
-    email = serializers.CharField()
-    senha = serializers.CharField(trim_whitespace=False)
+    email = serializers.CharField(error_messages=OBRIGATORIO)
+    senha = serializers.CharField(trim_whitespace=False, error_messages=OBRIGATORIO)
 
 
 class RenovacaoSerializer(serializers.Serializer):
     """Credencial de renovação enviada para renovar ou encerrar a sessão."""
 
-    renovacao = serializers.CharField()
+    renovacao = serializers.CharField(error_messages=OBRIGATORIO)

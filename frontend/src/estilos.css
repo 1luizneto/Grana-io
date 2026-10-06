@@ -1,0 +1,216 @@
+/* Visual simples e responsivo (specs/005-telas-login-cadastro, research R-10).
+   Sem fontes nem recursos externos (FR-016). O refinamento visual é do RNF-04. */
+
+:root {
+  --cor-fundo: #f6f7f9;
+  --cor-superficie: #ffffff;
+  --cor-texto: #1f2933;
+  --cor-texto-suave: #52606d;
+  --cor-borda: #cbd2d9;
+  --cor-primaria: #1f7a4d;
+  --cor-primaria-escura: #17603c;
+  --cor-erro: #b42318;
+  --cor-erro-fundo: #fdecea;
+  --cor-info-fundo: #e6f4ea;
+  --raio: 6px;
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color: var(--cor-texto);
+  background: var(--cor-fundo);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 0;
+}
+
+a {
+  color: var(--cor-primaria);
+}
+
+/* Formulários de acesso (login e cadastro) */
+.pagina-acesso {
+  max-width: 420px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.cartao {
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  padding: 1.5rem;
+}
+
+.cartao h1 {
+  margin-top: 0;
+  font-size: 1.5rem;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.campo label {
+  font-weight: 600;
+}
+
+.campo input {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  font: inherit;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+}
+
+.campo input[aria-invalid='true'] {
+  border-color: var(--cor-erro);
+}
+
+.campo-erros {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--cor-erro);
+  font-size: 0.9rem;
+}
+
+.aviso {
+  padding: 0.75rem;
+  border-radius: var(--raio);
+  margin: 0 0 1rem;
+}
+
+.aviso-erro {
+  color: var(--cor-erro);
+  background: var(--cor-erro-fundo);
+}
+
+.aviso-informacao {
+  background: var(--cor-info-fundo);
+}
+
+button,
+.botao {
+  font: inherit;
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: var(--raio);
+  background: var(--cor-primaria);
+  color: #fff;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  background: var(--cor-primaria-escura);
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.cartao button[type='submit'] {
+  width: 100%;
+}
+
+.alternativa {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+/* Layout das páginas protegidas */
+.cabecalho {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--cor-superficie);
+  border-bottom: 1px solid var(--cor-borda);
+}
+
+.marca {
+  font-weight: 700;
+  font-size: 1.15rem;
+  color: var(--cor-primaria);
+}
+
+.usuario {
+  margin-left: auto;
+  color: var(--cor-texto-suave);
+}
+
+.conteudo {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+
+.menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  padding: 0.5rem 1rem;
+  background: var(--cor-superficie);
+  border-bottom: 1px solid var(--cor-borda);
+}
+
+.menu a {
+  padding: 0.35rem 0.75rem;
+  border-radius: var(--raio);
+  text-decoration: none;
+}
+
+.menu a[aria-current='page'] {
+  background: var(--cor-info-fundo);
+  font-weight: 600;
+}
+
+.rodape {
+  max-width: 960px;
+  margin: 2rem auto 1rem;
+  padding: 0 1rem;
+  font-size: 0.85rem;
+  color: var(--cor-texto-suave);
+  text-align: center;
+}
+
+.carregando {
+  text-align: center;
+  margin-top: 3rem;
+  color: var(--cor-texto-suave);
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid var(--cor-primaria);
+  outline-offset: 2px;
+}
+
+/* Telas estreitas (FR-013): cabeçalho em coluna, sem rolagem horizontal a partir de 360 px. */
+@media (max-width: 640px) {
+  .cabecalho {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .usuario {
+    margin-left: 0;
+  }
+
+  .pagina-acesso {
+    margin: 1rem auto;
+  }
+
+  .cartao {
+    padding: 1rem;
+  }
+}

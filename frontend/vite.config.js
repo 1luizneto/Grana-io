@@ -22,4 +22,11 @@ export default defineConfig({
       },
     },
   },
+  // Testes da interface (specs/005-telas-login-cadastro, research R-07):
+  // docker compose run --rm frontend npm test
+  test: {
+    environment: 'jsdom',
+    setupFiles: ['./src/testes/preparacao.js'],
+    restoreMocks: true,
+  },
 })

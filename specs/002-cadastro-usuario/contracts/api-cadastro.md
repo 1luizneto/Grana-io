@@ -44,7 +44,8 @@ acesso.
 ```
 
 **400 Bad Request**: dados inválidos. Todas as mensagens vêm de uma vez, por campo, no formato
-padrão do DRF (`docs/arquitetura.md` §4). Exemplos:
+padrão do DRF (`docs/arquitetura.md` §4). Campo vazio e campo ausente recebem a mesma mensagem,
+"Este campo é obrigatório.", em todos os campos (ajuste da spec 005-telas-login-cadastro). Exemplos:
 
 ```json
 {

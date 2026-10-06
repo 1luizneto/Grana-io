@@ -12,10 +12,11 @@ O sistema tem três partes, todas em containers Docker:
 | API | Django + Django REST Framework | http://localhost:8000/api/health/ |
 | Banco de dados | PostgreSQL 17 | não fica acessível fora do Docker |
 
-> Estado atual: fundação do projeto (Sprint 1). A interface mostra só uma página inicial
-> provisória. A API já tem verificação de saúde, cadastro, login, renovação e saída da sessão,
-> e a base de isolamento por usuário que todos os dados financeiros vão seguir; as telas e os
-> dados financeiros chegam nas próximas entregas (ver [BACKLOG.md](BACKLOG.md)).
+> Estado atual: fundação do projeto (Sprint 1 concluída). Pela interface já dá para criar conta,
+> entrar, continuar conectado e sair, dentro do layout base (cabeçalho, menu e rodapé com o estado
+> da API). A API tem verificação de saúde, cadastro, sessão e a base de isolamento por usuário
+> que todos os dados financeiros vão seguir; os dados financeiros chegam nas próximas entregas
+> (ver [BACKLOG.md](BACKLOG.md)).
 
 ---
 
@@ -64,7 +65,8 @@ Isso não afeta os dados do banco. Alterações no código Python (`backend/`) e
 
 | Recurso | Endereço |
 |---|---|
-| Interface | http://localhost:5173 |
+| Interface (login) | http://localhost:5173/entrar |
+| Interface (criar conta) | http://localhost:5173/cadastro |
 | Verificação de saúde da API | http://localhost:8000/api/health/ |
 | Cadastro de usuário (API) | `POST` http://localhost:8000/api/usuarios/ |
 | Entrar / renovar / sair (API) | `POST` http://localhost:8000/api/auth/entrar/, `.../renovar/`, `.../sair/` |
@@ -74,7 +76,13 @@ Todas as rotas da API ficam sob `http://localhost:8000/api/`. O endereço base s
 404, porque não é uma rota. Só saúde, cadastro, entrar e renovar funcionam sem login; **todas as
 outras exigem login**.
 
-**Criar uma conta.** Enquanto a tela de cadastro não existe (US-26), crie pela API:
+**Usar pela interface.** Abra http://localhost:5173: sem sessão, a interface leva ao login, que
+tem o link "Criar conta". Depois de entrar, a pessoa continua conectada ao recarregar e até ao
+fechar e reabrir o navegador, por até 7 dias sem uso. **Em computador compartilhado, use "Sair"**
+no cabeçalho ao terminar: a sessão fica guardada no navegador até lá. Telas e textos em
+[specs/005-telas-login-cadastro/contracts/interface.md](specs/005-telas-login-cadastro/contracts/interface.md).
+
+**Criar uma conta pela API** (para scripts e testes):
 
 ```bash
 curl -H "Content-Type: application/json" -d '{"nome":"Ana Souza","email":"ana@exemplo.com","senha":"uma-senha-boa-2026","confirmacao_senha":"uma-senha-boa-2026"}' http://localhost:8000/api/usuarios/
@@ -107,8 +115,8 @@ Detalhes, inclusive os erros 401 que a interface usa para renovar a sessão, em
 [specs/003-login-logout/contracts/api-sessao.md](specs/003-login-logout/contracts/api-sessao.md).
 
 A verificação de saúde responde `{"status": "ok", "database": "ok"}` quando tudo está no ar,
-ou HTTP 503 com `{"status": "error", "database": "unavailable"}` quando o banco não responde. A
-página inicial da interface mostra esse mesmo estado.
+ou HTTP 503 com `{"status": "error", "database": "unavailable"}` quando o banco não responde. O
+rodapé de todas as telas da interface, inclusive o login, mostra esse mesmo estado.
 
 ## 4. Acessar por outro dispositivo da rede (ex.: celular)
 
@@ -151,16 +159,39 @@ Encerra todos os containers. **Os dados do banco são mantidos** e voltam na pr�
 
 ## 6. Rodar os testes
 
+Suíte completa, backend e interface, com um comando (no Linux, no macOS ou no Git Bash do
+Windows):
+
 ```bash
-docker compose run --rm backend pytest
+sh testar.sh
 ```
 
-A suíte roda num banco de teste temporário, separado do banco real: os seus dados não são
-lidos nem alterados. Pode ser executada com o sistema no ar ou parado.
+Ele termina com erro se qualquer uma das partes falhar. Cada parte também roda sozinha:
+
+```bash
+docker compose run --rm backend pytest
+docker compose run --rm frontend npm test
+```
+
+A suíte do backend roda num banco de teste temporário, separado do banco real: os seus dados não
+são lidos nem alterados. A da interface (Vitest + Testing Library) simula as respostas da API e
+não precisa do backend. As duas podem ser executadas com o sistema no ar ou parado.
 
 A suíte usa o settings `config.settings_test`, que acrescenta o app `tests.exemplo`: registros de
 exemplo que existem só no banco de teste, para provar o isolamento por usuário. Eles nunca
 aparecem no banco real nem nas rotas da aplicação.
+
+### Para quem desenvolve: dependências da interface
+
+O container da interface só monta `frontend/src/`; o `package.json`, o `package-lock.json` e o
+`vite.config.js` ficam dentro da imagem. Para instalar uma dependência, rode o `npm install` no
+container com os dois arquivos montados (no Git Bash, prefixe com `MSYS_NO_PATHCONV=1`):
+
+```bash
+docker compose run --rm --no-deps -v "$(pwd)/frontend/package.json:/app/package.json" -v "$(pwd)/frontend/package-lock.json:/app/package-lock.json" frontend npm install --save-exact <pacote>@<versão>
+```
+
+Depois de mudar `package.json` ou `vite.config.js`, reconstrua: `docker compose up -d --build frontend`.
 
 ### Para quem desenvolve: criar um registro de dados isolado
 
