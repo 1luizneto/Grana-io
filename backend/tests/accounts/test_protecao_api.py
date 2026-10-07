@@ -78,7 +78,8 @@ def test_guarda_toda_rota_nao_publica_exige_autenticacao():
     for caminho, padrao in rotas(get_resolver().url_patterns):
         if padrao.name in ROTAS_PUBLICAS:
             continue
-        view = getattr(padrao.callback, "view_class", None)
+        # APIView expõe a classe em view_class; viewsets do router, em cls.
+        view = getattr(padrao.callback, "cls", None) or getattr(padrao.callback, "view_class", None)
         permissoes = getattr(view, "permission_classes", [])
         autenticacoes = getattr(view, "authentication_classes", [])
         if IsAuthenticated not in permissoes or not autenticacoes:

@@ -10,7 +10,10 @@ casos mínimos da FR-011 (contracts/isolamento.md, "Testes obrigatórios por rec
         payload_alteracao = {"nome": "Feira"}
 
         def criar(self, usuario):
-            return Categoria.objects.create(dono=usuario, nome="Mercado")
+            # O kit cria vários registros por conta: gere valores únicos se houver unicidade.
+            return Categoria.objects.create(
+                dono=usuario, nome=f"Categoria {Categoria.objects.count() + 1}", cor="azul"
+            )
 
 O módulo da subclasse precisa do marcador ``pytest.mark.django_db``. Ana é ``usuario``
 (``cliente_autenticado``) e Bia é ``outro_usuario`` (``cliente_da_bia``), de ``tests/conftest.py``.

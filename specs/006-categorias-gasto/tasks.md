@@ -130,7 +130,7 @@ maiúsculas (FR-003 a FR-006, FR-009).
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T014 [P] [US2] Escrever `backend/tests/gastos/test_categorias_api.py` com `pytestmark = pytest.mark.django_db` e:
+- [X] T014 [P] [US2] Escrever `backend/tests/gastos/test_categorias_api.py` com `pytestmark = pytest.mark.django_db` e:
   - `TestIsolamentoCategoria(CasosDeIsolamento)` ([kit da spec 004](../../backend/tests/isolamento.py)): `modelo = Categoria`, `url_lista = "/api/categorias/"`, `payload_criacao = {"nome": "Pets", "cor": "verde"}`, `payload_alteracao = {"nome": "Bichos"}`, e `criar(usuario)` gerando **nomes diferentes a cada chamada** (ex.: `f"Categoria {Categoria.objects.count() + 1}"`), porque o nome é único por conta;
   - `GET` lista em ordem alfabética sem diferenciar maiúsculas, com exatamente as chaves `{"id", "nome", "cor"}`;
   - `POST {"nome": "  Pets  ", "cor": "verde"}` → 201 com `nome == "Pets"`;
@@ -139,14 +139,28 @@ maiúsculas (FR-003 a FR-006, FR-009).
   - nome vazio e só espaços → `{"nome": ["Este campo é obrigatório."]}`; 51 caracteres → 400 no campo `nome` (registrar o texto exato do DRF e ajustar o [contrato](contracts/api-categorias.md), ponto de atenção 2 do plano);
   - `PATCH` renomeando "Lazer" para "Lazer e viagens" → 200, cor mantida; `PATCH` de "lazer" para "Lazer" na própria categoria → 200 (mesmo nome, outra grafia);
   - `PATCH` para o nome de outra categoria da mesma conta (sem diferenciar maiúsculas) → 400 com a mensagem de nome repetido.
-- [ ] T015 [P] [US2] Escrever em `backend/tests/gastos/test_categorias_api.py` o caso de corrida ([research R-06](research.md)): com `monkeypatch` fazendo o `validate_nome` aceitar o nome repetido, o `IntegrityError` da constraint vira 400 `{"nome": ["Já existe uma categoria com este nome."]}` (sem erro 500).
+- [X] T015 [P] [US2] Escrever em `backend/tests/gastos/test_categorias_api.py` o caso de corrida ([research R-06](research.md)): com `monkeypatch` fazendo o `validate_nome` aceitar o nome repetido, o `IntegrityError` da constraint vira 400 `{"nome": ["Já existe uma categoria com este nome."]}` (sem erro 500).
 
   Rodar e confirmar a **falha** (rota inexistente).
 
 ### Implementation for User Story 2
 
-- [ ] T016 [US2] Implementar `CategoriaSerializer(RegistroComDonoSerializer)` em `backend/gastos/serializers.py`: `fields = ["id", "nome", "cor", "dono"]`; `nome = CharField(max_length=50, error_messages={"blank": "Este campo é obrigatório."})` (o `trim_whitespace` do DRF tira os espaços das pontas); `validate_nome` recusa nome já usado pela pessoa (`do_dono(request.user).filter(nome__iexact=valor)`, excluindo a própria instância numa edição) com "Já existe uma categoria com este nome."
-- [ ] T017 [US2] Implementar `CategoriaViewSet(FiltroPorDonoMixin, ModelViewSet)` em `backend/gastos/views.py` (`queryset = Categoria.objects.all()`), com `perform_create` e `perform_update` que convertem `IntegrityError` em `ValidationError({"nome": [...]})`; e `backend/gastos/urls.py` com `DefaultRouter(trailing_slash=True)` registrando `categorias` (`basename="categoria"`). Confirmar T014 e T015 **verdes**, e a guarda de rotas da spec 004 verde
+- [X] T016 [US2] Implementar `CategoriaSerializer(RegistroComDonoSerializer)` em `backend/gastos/serializers.py`: `fields = ["id", "nome", "cor", "dono"]`; `nome = CharField(max_length=50, error_messages={"blank": "Este campo é obrigatório."})` (o `trim_whitespace` do DRF tira os espaços das pontas); `validate_nome` recusa nome já usado pela pessoa (`do_dono(request.user).filter(nome__iexact=valor)`, excluindo a própria instância numa edição) com "Já existe uma categoria com este nome."
+- [X] T017 [US2] Implementar `CategoriaViewSet(FiltroPorDonoMixin, ModelViewSet)` em `backend/gastos/views.py` (`queryset = Categoria.objects.all()`), com `perform_create` e `perform_update` que convertem `IntegrityError` em `ValidationError({"nome": [...]})`; e `backend/gastos/urls.py` com `DefaultRouter(trailing_slash=True)` registrando `categorias` (`basename="categoria"`). Confirmar T014 e T015 **verdes**, e a guarda de rotas da spec 004 verde
+
+  > **Resultado (2026-10-07)**: ✅ backend com 206 verdes (184 + 8 do kit de isolamento + 14 da API).
+  > - T014 e T015 falharam primeiro (`gastos.serializers` inexistente).
+  > - Texto do limite de 50 caracteres confirmado: "Certifique-se de que este campo não tenha mais
+  >   de 50 caracteres." (igual ao contrato; ponto de atenção 2 resolvido).
+  > - A docstring do kit (`tests/isolamento.py`) passou a gerar nomes únicos no exemplo (achado I2).
+  > - **Guarda de proteção da spec 003 corrigida**: ela só lia `view_class`, e as rotas de viewset
+  >   expõem a classe em `cls`; acusou as rotas de categorias como desprotegidas. Agora lê `cls`
+  >   ou `view_class`, como a guarda de isolamento da spec 004.
+  > - Router trocado para `SimpleRouter`: o `DefaultRouter` criaria uma página raiz em `/api/`
+  >   listando as rotas, e o README promete 404 nesse endereço. Conferido: `/api/` → 404,
+  >   `/api/categorias/` sem sessão → 401.
+  > - O `perform_create`/`perform_update` salvam dentro de `transaction.atomic()`, para o
+  >   `IntegrityError` da corrida não invalidar a transação antes de virar o 400.
 
 **Checkpoint**: API de categorias com isolamento comprovado; suítes verdes.
 
