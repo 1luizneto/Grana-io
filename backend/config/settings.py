@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "accounts",
     "core",
+    "gastos",
 ]
 
 MIDDLEWARE = [
