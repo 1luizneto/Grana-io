@@ -185,3 +185,40 @@ def test_troca_a_cor_e_mantem_o_nome(usuario, cliente_autenticado):
 
     assert resposta.status_code == 200
     assert resposta.json() == {"id": saude.pk, "nome": "Saúde", "cor": "indigo"}
+
+
+# Excluir (FR-008; a escolha de destino para gastos vinculados é da US-07)
+
+
+def test_exclui_a_propria_categoria(usuario, cliente_autenticado):
+    pets = _categoria(usuario, "Pets")
+
+    resposta = cliente_autenticado.delete(f"{URL}{pets.pk}/")
+
+    assert resposta.status_code == 204
+    assert cliente_autenticado.get(URL).json() == []
+
+
+def test_excluir_todas_nao_traz_as_padrao_de_volta(cliente):
+    dados = {"nome": "Ana", "email": "ana2@exemplo.com", "senha": "uma-senha-boa-2026"}
+    cliente.post("/api/usuarios/", {**dados, "confirmacao_senha": dados["senha"]}, format="json")
+    acesso = cliente.post(
+        "/api/auth/entrar/", {"email": dados["email"], "senha": dados["senha"]}, format="json"
+    ).json()["acesso"]
+    cliente.credentials(HTTP_AUTHORIZATION=f"Bearer {acesso}")
+    assert len(cliente.get(URL).json()) == 7
+
+    for categoria in cliente.get(URL).json():
+        assert cliente.delete(f"{URL}{categoria['id']}/").status_code == 204
+
+    assert cliente.get(URL).json() == []
+    assert cliente.get(URL).json() == []
+
+
+def test_excluir_categoria_de_outra_conta_nao_exclui(outro_usuario, cliente_autenticado):
+    da_bia = _categoria(outro_usuario, "Pets")
+
+    resposta = cliente_autenticado.delete(f"{URL}{da_bia.pk}/")
+
+    assert resposta.status_code == 404
+    assert Categoria.objects.filter(pk=da_bia.pk).exists()

@@ -207,12 +207,20 @@ maiúsculas (FR-003 a FR-006, FR-009).
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T022 [US4] Acrescentar a `backend/tests/gastos/test_categorias_api.py`: `DELETE` da própria categoria → 204 e ela some da lista; excluir todas as categorias → lista `[]`, e as padrão **não** voltam ao listar de novo; `DELETE` de categoria da Bia → 404 e ela continua existindo (já coberto pelo kit; conferir).
+- [X] T022 [US4] Acrescentar a `backend/tests/gastos/test_categorias_api.py`: `DELETE` da própria categoria → 204 e ela some da lista; excluir todas as categorias → lista `[]`, e as padrão **não** voltam ao listar de novo; `DELETE` de categoria da Bia → 404 e ela continua existindo (já coberto pelo kit; conferir).
 
   Nota: hoje `criar_categorias_padrao` cria para quem não tem nenhuma categoria; ela só é chamada no cadastro e na migration (uma vez por banco), então uma conta que excluiu tudo não recebe as padrão de novo. O teste confere a listagem depois de excluir tudo.
 
   Rodar e registrar: é esperado que **passe de primeira** (o `ModelViewSet` já tem `destroy`); nesse caso, registrar.
-- [ ] T023 [US4] Se a T022 falhar em algum ponto, corrigir em `backend/gastos/views.py`. Rodar a suíte
+- [X] T023 [US4] Se a T022 falhar em algum ponto, corrigir em `backend/gastos/views.py`. Rodar a suíte
+
+  > **Resultado (2026-10-07)**: ✅ backend com 219 verdes (216 + 3).
+  > - Os 3 testes **passaram de primeira**, como previsto: o `ModelViewSet` já tem `destroy`. Prova da
+  >   falha: com `DELETE` fora do `http_method_names` da viewset, **5** testes de exclusão falharam
+  >   (os 3 novos e 2 do kit de isolamento). Código restaurado (`git diff` vazio).
+  > - O teste "excluir todas" usa uma conta criada pelo cadastro real (com as 7 padrão) e confere
+  >   que, depois de excluir todas, a lista continua vazia.
+  > - T023 sem mudança de código.
 
 **Checkpoint**: exclusão coberta por testes; suítes verdes.
 
