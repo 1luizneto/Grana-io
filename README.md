@@ -12,11 +12,11 @@ O sistema tem três partes, todas em containers Docker:
 | API | Django + Django REST Framework | http://localhost:8000/api/health/ |
 | Banco de dados | PostgreSQL 17 | não fica acessível fora do Docker |
 
-> Estado atual: fundação do projeto (Sprint 1 concluída). Pela interface já dá para criar conta,
-> entrar, continuar conectado e sair, dentro do layout base (cabeçalho, menu e rodapé com o estado
-> da API). A API tem verificação de saúde, cadastro, sessão e a base de isolamento por usuário
-> que todos os dados financeiros vão seguir; os dados financeiros chegam nas próximas entregas
-> (ver [BACKLOG.md](BACKLOG.md)).
+> Estado atual: Sprint 2 em andamento. Pela interface já dá para criar conta, entrar, continuar
+> conectado, sair e gerenciar as **categorias de gasto** (toda conta começa com 7 categorias
+> padrão, cada uma com uma cor). A API tem verificação de saúde, cadastro, sessão, categorias e a
+> base de isolamento por usuário que todos os dados financeiros seguem; meses e gastos chegam nas
+> próximas entregas (ver [BACKLOG.md](BACKLOG.md)).
 
 ---
 
@@ -67,10 +67,13 @@ Isso não afeta os dados do banco. Alterações no código Python (`backend/`) e
 |---|---|
 | Interface (login) | http://localhost:5173/entrar |
 | Interface (criar conta) | http://localhost:5173/cadastro |
+| Interface (categorias, exige login) | http://localhost:5173/categorias |
 | Verificação de saúde da API | http://localhost:8000/api/health/ |
 | Cadastro de usuário (API) | `POST` http://localhost:8000/api/usuarios/ |
 | Entrar / renovar / sair (API) | `POST` http://localhost:8000/api/auth/entrar/, `.../renovar/`, `.../sair/` |
 | Própria conta (API, exige login) | `GET` http://localhost:8000/api/usuarios/eu/ |
+| Categorias (API, exige login) | `GET`/`POST` http://localhost:8000/api/categorias/, `GET`/`PATCH`/`DELETE` `.../categorias/<id>/` |
+| Paleta de cores (API, exige login) | `GET` http://localhost:8000/api/categorias/cores/ |
 
 Todas as rotas da API ficam sob `http://localhost:8000/api/`. O endereço base sozinho responde
 404, porque não é uma rota. Só saúde, cadastro, entrar e renovar funcionam sem login; **todas as
@@ -113,6 +116,12 @@ curl -H "Authorization: Bearer <acesso>" http://localhost:8000/api/usuarios/eu/
 
 Detalhes, inclusive os erros 401 que a interface usa para renovar a sessão, em
 [specs/003-login-logout/contracts/api-sessao.md](specs/003-login-logout/contracts/api-sessao.md).
+
+**Categorias.** Toda conta nasce com Moradia, Alimentação, Transporte, Saúde, Lazer, Educação e
+Outros (contas antigas também as receberam, uma única vez). Na tela "Categorias" dá para criar,
+renomear, trocar a cor (paleta de 12 cores) e excluir. O nome é único na conta, sem diferenciar
+maiúsculas ("Pets" e "pets" são o mesmo nome). Detalhes em
+[specs/006-categorias-gasto/contracts/api-categorias.md](specs/006-categorias-gasto/contracts/api-categorias.md).
 
 A verificação de saúde responde `{"status": "ok", "database": "ok"}` quando tudo está no ar,
 ou HTTP 503 com `{"status": "error", "database": "unavailable"}` quando o banco não responde. O

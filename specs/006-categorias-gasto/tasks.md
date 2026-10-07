@@ -280,11 +280,27 @@ confirmação (FR-011 a FR-014; [contrato da tela](contracts/tela-categorias.md)
 
 ## Phase 8: Polish & Cross-Cutting Concerns
 
-- [ ] T033 [P] Atualizar o `README.md`: "Estado atual" (categorias pela tela) e, na seção 3, a tela `/categorias` e as rotas `/api/categorias/` e `/api/categorias/cores/`, com link para o [contrato da API](contracts/api-categorias.md)
-- [ ] T034 Executar o [quickstart.md](quickstart.md) completo (S1 a S7) e registrar o resultado
-- [ ] T035 Fechar a Definition of Done:
+- [X] T033 [P] Atualizar o `README.md`: "Estado atual" (categorias pela tela) e, na seção 3, a tela `/categorias` e as rotas `/api/categorias/` e `/api/categorias/cores/`, com link para o [contrato da API](contracts/api-categorias.md)
+- [X] T034 Executar o [quickstart.md](quickstart.md) completo (S1 a S7) e registrar o resultado
+
+  > **Resultado (2026-10-07)**: ✅
+  > - S1: `sh testar.sh` → backend 219 e interface 85, "Backend e interface: todos os testes passaram.";
+  > - S2: todas as 9 contas do banco local com categorias (8 com as 7 padrão; `teste.s3cat` com 9,
+  >   por causa do S4 da T032); `makemigrations --check` sem pendências;
+  > - S3, S4 e S6: validados na T032 (S4 em 46 s);
+  > - S5: com a sessão de Ana, `GET /api/categorias/<id de categoria da Bia>/` → `404 {"detail":
+  >   "Não encontrado."}`;
+  > - S7: `/api/categorias/cores/` com 12 cores (de Azul a Índigo); `"cor": "dourado"` → `400
+  >   {"cor": ["Escolha uma das cores disponíveis."]}`.
+- [X] T035 Fechar a Definition of Done:
   - suítes verdes e todas as tarefas marcadas; `makemigrations --check` sem pendências;
   - em `BACKLOG.md`, na US-05, marcar ☑ os 3 primeiros critérios (padrão no cadastro e para contas antigas; criar, renomear e excluir com nome único; cor) e anotar o 4º ("categoria com gastos vinculados...") como coberto pela US-07 (Clarifications Q2); na US-01, marcar ☑ "Ao criar a conta, as categorias padrão são geradas", com nota "spec 006".
+
+  > **Resultado (2026-10-07)**: ✅ backend 219 e interface 85 verdes; 35/35 tarefas marcadas.
+  > - US-05: 3 critérios ☑; o 4º (excluir com gastos vinculados) anotado como coberto pela US-07, e
+  >   a própria US-07 ganhou esse critério, "herdado da US-05", para não se perder.
+  > - US-01: "categorias padrão no cadastro" ☑, e a US-01 fica completa.
+  > - README: estado atual, tela e rotas de categorias, nota sobre as categorias padrão.
 
 **Checkpoint**: feature pronta para PR na `main`.
 
