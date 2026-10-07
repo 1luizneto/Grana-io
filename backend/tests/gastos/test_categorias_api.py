@@ -2,6 +2,7 @@
 
 import pytest
 
+from gastos.cores import PALETA
 from gastos.models import Categoria
 from gastos.serializers import CategoriaSerializer
 from tests.isolamento import CasosDeIsolamento
@@ -134,3 +135,53 @@ def test_corrida_vira_erro_no_campo_e_nao_erro_500(usuario, cliente_autenticado,
     assert resposta.status_code == 400
     assert resposta.json() == NOME_REPETIDO
     assert Categoria.objects.do_dono(usuario).count() == 1
+
+
+# Cores (FR-007, FR-013)
+
+
+def test_paleta_pela_api(cliente_autenticado):
+    resposta = cliente_autenticado.get(f"{URL}cores/")
+
+    assert resposta.status_code == 200
+    assert resposta.json() == [{"codigo": c.codigo, "nome": c.nome, "hex": c.hex} for c in PALETA]
+
+
+def test_paleta_exige_sessao(cliente):
+    assert cliente.get(f"{URL}cores/").status_code == 401
+
+
+def test_sem_cor_recebe_a_primeira_livre(usuario, cliente_autenticado):
+    _categoria(usuario, "Moradia", cor="azul")
+
+    resposta = cliente_autenticado.post(URL, {"nome": "Pets"}, format="json")
+
+    assert resposta.status_code == 201
+    assert resposta.json()["cor"] == "laranja"
+
+
+def test_cor_fora_da_paleta_e_recusada_na_criacao(cliente_autenticado):
+    resposta = cliente_autenticado.post(URL, {"nome": "Pets", "cor": "dourado"}, format="json")
+
+    assert resposta.status_code == 400
+    assert resposta.json() == {"cor": ["Escolha uma das cores disponíveis."]}
+
+
+def test_cor_fora_da_paleta_e_recusada_na_edicao(usuario, cliente_autenticado):
+    saude = _categoria(usuario, "Saúde", cor="vermelho")
+
+    resposta = cliente_autenticado.patch(f"{URL}{saude.pk}/", {"cor": "dourado"}, format="json")
+
+    assert resposta.status_code == 400
+    assert resposta.json() == {"cor": ["Escolha uma das cores disponíveis."]}
+    saude.refresh_from_db()
+    assert saude.cor == "vermelho"
+
+
+def test_troca_a_cor_e_mantem_o_nome(usuario, cliente_autenticado):
+    saude = _categoria(usuario, "Saúde", cor="vermelho")
+
+    resposta = cliente_autenticado.patch(f"{URL}{saude.pk}/", {"cor": "indigo"}, format="json")
+
+    assert resposta.status_code == 200
+    assert resposta.json() == {"id": saude.pk, "nome": "Saúde", "cor": "indigo"}

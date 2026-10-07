@@ -1,7 +1,9 @@
 from rest_framework import serializers
 
 from core.serializers import RegistroComDonoSerializer
+from gastos.cores import CHOICES
 from gastos.models import Categoria
+from gastos.services.categorias import escolher_cor_livre
 
 MENSAGEM_NOME_REPETIDO = "Já existe uma categoria com este nome."
 
@@ -15,6 +17,12 @@ class CategoriaSerializer(RegistroComDonoSerializer):
 
     # trim_whitespace (padrão do DRF) tira os espaços das pontas antes de validar e salvar.
     nome = serializers.CharField(max_length=50, error_messages={"blank": "Este campo é obrigatório."})
+    # Opcional: sem cor, a criação usa a primeira cor livre da pessoa (research R-07).
+    cor = serializers.ChoiceField(
+        choices=CHOICES,
+        required=False,
+        error_messages={"invalid_choice": "Escolha uma das cores disponíveis."},
+    )
 
     class Meta:
         model = Categoria
@@ -27,3 +35,7 @@ class CategoriaSerializer(RegistroComDonoSerializer):
         if mesmas.exists():
             raise serializers.ValidationError(MENSAGEM_NOME_REPETIDO)
         return valor
+
+    def create(self, validated_data):
+        validated_data.setdefault("cor", escolher_cor_livre(validated_data["dono"]))
+        return super().create(validated_data)

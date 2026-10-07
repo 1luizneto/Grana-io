@@ -174,8 +174,8 @@ maiúsculas (FR-003 a FR-006, FR-009).
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T018 [P] [US3] Acrescentar a `backend/tests/gastos/test_categorias_service.py`: `escolher_cor_livre(usuario)` devolve a primeira cor da paleta que a pessoa não usa (com "azul" e "laranja" em uso → "roxo"); com as 12 em uso, devolve `PALETA[quantidade % 12].codigo` ([research R-07](research.md)); cores de outra conta não contam.
-- [ ] T019 [P] [US3] Acrescentar a `backend/tests/gastos/test_categorias_api.py`:
+- [X] T018 [P] [US3] Acrescentar a `backend/tests/gastos/test_categorias_service.py`: `escolher_cor_livre(usuario)` devolve a primeira cor da paleta que a pessoa não usa (com "azul" e "laranja" em uso → "roxo"); com as 12 em uso, devolve `PALETA[quantidade % 12].codigo` ([research R-07](research.md)); cores de outra conta não contam.
+- [X] T019 [P] [US3] Acrescentar a `backend/tests/gastos/test_categorias_api.py`:
   - `GET /api/categorias/cores/` → 200 com as 12 cores `{"codigo", "nome", "hex"}` na ordem do R-02; sem sessão → 401;
   - `POST` sem `cor` → 201 com a primeira cor livre da pessoa;
   - `POST` e `PATCH` com `"cor": "dourado"` → 400 `{"cor": ["Escolha uma das cores disponíveis."]}`, e a cor anterior fica;
@@ -185,8 +185,15 @@ maiúsculas (FR-003 a FR-006, FR-009).
 
 ### Implementation for User Story 3
 
-- [ ] T020 [US3] Acrescentar `escolher_cor_livre(usuario)` a `backend/gastos/services/categorias.py`. Confirmar T018 **verde**
-- [ ] T021 [US3] No `CategoriaSerializer`: `cor = ChoiceField(choices=CHOICES, required=False, error_messages={"invalid_choice": "Escolha uma das cores disponíveis."})`; na criação sem `cor`, usar `escolher_cor_livre(request.user)` (no `create` do serializer). No `CategoriaViewSet`, `@action(detail=False) cores` devolvendo `[{"codigo", "nome", "hex"}]` da `PALETA`. Confirmar T019 **verde**
+- [X] T020 [US3] Acrescentar `escolher_cor_livre(usuario)` a `backend/gastos/services/categorias.py`. Confirmar T018 **verde**
+- [X] T021 [US3] No `CategoriaSerializer`: `cor = ChoiceField(choices=CHOICES, required=False, error_messages={"invalid_choice": "Escolha uma das cores disponíveis."})`; na criação sem `cor`, usar `escolher_cor_livre(request.user)` (no `create` do serializer). No `CategoriaViewSet`, `@action(detail=False) cores` devolvendo `[{"codigo", "nome", "hex"}]` da `PALETA`. Confirmar T019 **verde**
+
+  > **Resultado (2026-10-07)**: ✅ backend com 216 verdes (206 + 4 do service + 6 da API).
+  > - T018 e T019 falharam primeiro (`escolher_cor_livre` inexistente).
+  > - Acrescentei o caso "sem categorias, a cor livre é a primeira" (azul) e o de troca de cor
+  >   mantendo o nome.
+  > - A cor automática entra no `create` do serializer (depois da validação, com o dono já
+  >   preenchido pela sessão); `PATCH` sem `cor` mantém a cor atual.
 
 **Checkpoint**: paleta e cores funcionando na API; suítes verdes.
 

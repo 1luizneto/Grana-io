@@ -1,8 +1,11 @@
 from django.db import IntegrityError, transaction
+from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
+from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from core.mixins import FiltroPorDonoMixin
+from gastos.cores import PALETA
 from gastos.models import Categoria
 from gastos.serializers import MENSAGEM_NOME_REPETIDO, CategoriaSerializer
 
@@ -20,6 +23,11 @@ class CategoriaViewSet(FiltroPorDonoMixin, ModelViewSet):
 
     def perform_update(self, serializer):
         self._salvar(lambda: super(CategoriaViewSet, self).perform_update(serializer))
+
+    @action(detail=False)
+    def cores(self, request):
+        """Paleta de cores aceitas, na ordem de exibição (FR-013; contracts/api-categorias.md)."""
+        return Response([{"codigo": c.codigo, "nome": c.nome, "hex": c.hex} for c in PALETA])
 
     @staticmethod
     def _salvar(salvar):
