@@ -4,6 +4,7 @@ import RotaPublica from './auth/RotaPublica.jsx'
 import Layout from './components/Layout.jsx'
 import Rodape from './components/Rodape.jsx'
 import Cadastro from './pages/Cadastro/Cadastro.jsx'
+import Categorias from './pages/Categorias/Categorias.jsx'
 import Entrar from './pages/Entrar/Entrar.jsx'
 import Inicio from './pages/Inicio/Inicio.jsx'
 import NaoEncontrada from './pages/NaoEncontrada/NaoEncontrada.jsx'
@@ -17,6 +18,7 @@ export default function App() {
         <Route element={<RotaProtegida />}>
           <Route element={<Layout />}>
             <Route path="/" element={<Inicio />} />
+            <Route path="/categorias" element={<Categorias />} />
           </Route>
         </Route>
         <Route element={<RotaPublica />}>

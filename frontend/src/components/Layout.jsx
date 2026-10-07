@@ -25,6 +25,7 @@ export default function Layout() {
         <NavLink to="/" end>
           Início
         </NavLink>
+        <NavLink to="/categorias">Categorias</NavLink>
       </nav>
       <main className="conteudo">
         <Outlet />
