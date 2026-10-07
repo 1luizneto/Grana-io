@@ -14,7 +14,8 @@
 **Constraint**: `UniqueConstraint(Lower("nome"), "dono", name="gastos_categoria_nome_por_dono",
 violation_error_message="Já existe uma categoria com este nome.")`.
 
-**Ordenação padrão**: `Lower("nome")` (FR-003).
+**Ordenação padrão**: `Collate(Lower("nome"), "und-x-icu")` (FR-003), para que acentos fiquem
+na posição alfabética ([research R-10](research.md)).
 
 **Relações futuras**: o `Gasto` (US-07) terá FK para `Categoria`; a regra de exclusão com destino
 entra lá (Clarifications Q2).

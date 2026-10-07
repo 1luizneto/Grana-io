@@ -183,6 +183,21 @@ spec 004 confere que a viewset usa o filtro por dono.
 
 ---
 
+## R-10 — Ordem alfabética com acentos: collation ICU
+
+**Decisão**: ordenar por `Collate(Lower("nome"), "und-x-icu")` (`Meta.ordering` da `Categoria`).
+
+**Por quê**: verificado em 2026-10-07 (achado U1 do `/speckit-analyze`). O banco da imagem
+`postgres:17-alpine` usa a collation `en_US.utf8` do provedor libc, que no Alpine ordena por bytes:
+`Academia | Banco | zebra | Água | Ônibus`. Com a collation ICU `und-x-icu`, que vem no próprio
+PostgreSQL, a ordem fica `Academia | Água | Banco | Ônibus | zebra`. O teste
+`test_ordem_alfabetica_sem_diferenciar_maiusculas_e_com_acentos` protege o caso.
+
+**Alternativas**: trocar a collation do banco inteiro (exigiria recriar o volume); ordenar na
+interface (viola o Princípio V e quebraria a paginação futura).
+
+---
+
 ## Resumo de dependências
 
 Nenhuma dependência nova, no backend nem na interface.

@@ -53,8 +53,8 @@ com o responsável.
 
 **⚠️ CRITICAL**: nenhuma história começa antes desta fase.
 
-- [ ] T003 [P] Escrever **primeiro** `backend/tests/gastos/test_cores.py` ([research R-02](research.md)): `PALETA` tem 12 cores, na ordem e com os códigos, nomes e hex exatos da tabela do R-02; códigos únicos; todo hex no formato `#RRGGBB`; `CODIGOS` é a lista de códigos na mesma ordem; `obter_cor("verde").nome == "Verde"`.
-- [ ] T004 [P] Escrever **primeiro** `backend/tests/gastos/test_models.py` ([data-model.md](data-model.md)):
+- [X] T003 [P] Escrever **primeiro** `backend/tests/gastos/test_cores.py` ([research R-02](research.md)): `PALETA` tem 12 cores, na ordem e com os códigos, nomes e hex exatos da tabela do R-02; códigos únicos; todo hex no formato `#RRGGBB`; `CODIGOS` é a lista de códigos na mesma ordem; `obter_cor("verde").nome == "Verde"`.
+- [X] T004 [P] Escrever **primeiro** `backend/tests/gastos/test_models.py` ([data-model.md](data-model.md)):
   - `Categoria` herda de `OwnedModel`;
   - `nome` é `CharField(max_length=50)`; `cor` é `CharField(max_length=20)` com `choices` iguais à paleta;
   - mesma conta: "Pets" e depois "pets" → `IntegrityError` (dentro de `transaction.atomic()`), pela constraint `gastos_categoria_nome_por_dono` (`UniqueConstraint(Lower("nome"), "dono")`);
@@ -63,8 +63,16 @@ com o responsável.
   - `Categoria.objects.do_dono(usuario)` vem em ordem alfabética sem diferenciar maiúsculas ("alimentação", "Banco", "casa").
 
   Rodar e confirmar a **falha**.
-- [ ] T005 Implementar `backend/gastos/cores.py`: `Cor = namedtuple("Cor", "codigo nome hex")`, `PALETA` (tupla na ordem do R-02), `CODIGOS`, `CHOICES = [(c.codigo, c.nome) for c in PALETA]` e `obter_cor(codigo)`. Confirmar T003 **verde**
-- [ ] T006 Implementar `Categoria(OwnedModel)` em `backend/gastos/models.py`: `nome = CharField(max_length=50)`, `cor = CharField(max_length=20, choices=CHOICES)`; `Meta.ordering = [Lower("nome")]`; `Meta.constraints = [UniqueConstraint(Lower("nome"), "dono", name="gastos_categoria_nome_por_dono", violation_error_message="Já existe uma categoria com este nome.")]`; `__str__` devolve o nome. Gerar `backend/gastos/migrations/0001_initial.py` (`docker compose run --rm backend python manage.py makemigrations gastos`). Confirmar T004 **verde** e a guarda de models da spec 004 verde (o app novo é coberto sozinho)
+- [X] T005 Implementar `backend/gastos/cores.py`: `Cor = namedtuple("Cor", "codigo nome hex")`, `PALETA` (tupla na ordem do R-02), `CODIGOS`, `CHOICES = [(c.codigo, c.nome) for c in PALETA]` e `obter_cor(codigo)`. Confirmar T003 **verde**
+- [X] T006 Implementar `Categoria(OwnedModel)` em `backend/gastos/models.py`: `nome = CharField(max_length=50)`, `cor = CharField(max_length=20, choices=CHOICES)`; `Meta.ordering = [Lower("nome")]`; `Meta.constraints = [UniqueConstraint(Lower("nome"), "dono", name="gastos_categoria_nome_por_dono", violation_error_message="Já existe uma categoria com este nome.")]`; `__str__` devolve o nome. Gerar `backend/gastos/migrations/0001_initial.py` (`docker compose run --rm backend python manage.py makemigrations gastos`). Confirmar T004 **verde** e a guarda de models da spec 004 verde (o app novo é coberto sozinho)
+
+  > **Resultado (2026-10-07)**: ✅ backend com 175 verdes (165 + 4 da paleta + 6 do model).
+  > - T003 e T004 falharam primeiro (módulos inexistentes).
+  > - **Achado U1 do analyze, confirmado**: a collation padrão do banco ordena "Água" e "Ônibus"
+  >   depois de "zebra". A T004 ganhou o caso com acentos e a T006 ordena com
+  >   `Collate(Lower("nome"), "und-x-icu")`. Registrado como research R-10; data-model ajustado.
+  > - `gastos.0001_initial` aplicada na subida do backend (`docker compose restart backend`);
+  >   `makemigrations --check` sem pendências; guardas de isolamento verdes com o app novo.
 
 **Checkpoint**: tabela `gastos_categoria` criada na subida; suítes verdes.
 
