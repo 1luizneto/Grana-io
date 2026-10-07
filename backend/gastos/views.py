@@ -6,8 +6,13 @@ from rest_framework.viewsets import ModelViewSet
 
 from core.mixins import FiltroPorDonoMixin
 from gastos.cores import PALETA
-from gastos.models import Categoria
-from gastos.serializers import MENSAGEM_NOME_REPETIDO, CategoriaSerializer
+from gastos.models import Categoria, MesReferencia
+from gastos.serializers import (
+    MENSAGEM_MES_REPETIDO,
+    MENSAGEM_NOME_REPETIDO,
+    CategoriaSerializer,
+    MesReferenciaSerializer,
+)
 
 
 def salvar_ou_erro_de_unicidade(salvar, erro):
@@ -47,3 +52,25 @@ class CategoriaViewSet(FiltroPorDonoMixin, ModelViewSet):
     def cores(self, request):
         """Paleta de cores aceitas, na ordem de exibição (FR-013; contracts/api-categorias.md)."""
         return Response([{"codigo": c.codigo, "nome": c.nome, "hex": c.hex} for c in PALETA])
+
+
+class MesReferenciaViewSet(FiltroPorDonoMixin, ModelViewSet):
+    """Meses de referência da pessoa conectada (specs/007-mes-referencia/contracts/api-meses.md)."""
+
+    queryset = MesReferencia.objects.all()
+    serializer_class = MesReferenciaSerializer
+
+    # Mês repetido em envios simultâneos vira o mesmo erro do validador (research R-03).
+    ERRO_MES_REPETIDO = {"non_field_errors": [MENSAGEM_MES_REPETIDO]}
+
+    def perform_create(self, serializer):
+        salvar_ou_erro_de_unicidade(
+            lambda: super(MesReferenciaViewSet, self).perform_create(serializer),
+            self.ERRO_MES_REPETIDO,
+        )
+
+    def perform_update(self, serializer):
+        salvar_ou_erro_de_unicidade(
+            lambda: super(MesReferenciaViewSet, self).perform_update(serializer),
+            self.ERRO_MES_REPETIDO,
+        )

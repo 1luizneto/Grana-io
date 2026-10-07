@@ -95,6 +95,7 @@ Nenhuma violação.
 1. **`UniqueTogetherValidator` com `HiddenField`**: confirmar que o DRF gera o validador para
    `fields=["dono", "ano", "mes"]` e usa a mensagem da constraint ([R-03](research.md)).
 2. **Kit de isolamento**: `criar(usuario)` gera meses diferentes a cada chamada (mesma lição da
-   spec 006); `payload_alteracao = {"fechado": True}`.
+   spec 006) e **já fechados**, com `payload_alteracao = {"fechado": False}`: o caso "o dono opera
+   normalmente" faz `PATCH` e depois `DELETE`, e mês fechado não se exclui (achado I1 do analyze).
 3. **`PATCH` com `mes`/`ano` iguais**: aceitar sem erro ([R-02](research.md)).
 4. **Refatoração do `_salvar`**: as suítes de categorias continuam verdes depois de extrair o helper.

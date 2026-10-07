@@ -23,7 +23,8 @@ existe na API.
 
 **Requisição**: `{ "mes": 10, "ano": 2026 }` (aceita `"10"` e `"2026"` como texto).
 
-**201 Created**: o mês criado, com `"fechado": false`.
+**201 Created**: o mês criado, com `"fechado": false`. Todo mês nasce aberto: `fechado` enviado na
+criação é ignorado.
 
 **400 Bad Request** (todas as mensagens de uma vez, por campo):
 

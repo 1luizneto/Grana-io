@@ -89,8 +89,8 @@ FR-002, FR-008, FR-009).
 
 ### Tests for User Story 1 ⚠️
 
-- [ ] T005 [US1] Escrever `backend/tests/gastos/test_meses_api.py` com `pytestmark = pytest.mark.django_db` e:
-  - `TestIsolamentoMes(CasosDeIsolamento)` ([kit da spec 004](../../backend/tests/isolamento.py)): `modelo = MesReferencia`, `url_lista = "/api/meses/"`, `payload_criacao = {"mes": 10, "ano": 2026}`, `payload_alteracao = {"fechado": True}`, e `criar(usuario)` gerando **um mês diferente a cada chamada** (ex.: `n = MesReferencia.objects.count()`; `mes = n % 12 + 1`, `ano = 2026 + n // 12`), porque o mês é único por conta (ponto de atenção 2 do plano);
+- [X] T005 [US1] Escrever `backend/tests/gastos/test_meses_api.py` com `pytestmark = pytest.mark.django_db` e:
+  - `TestIsolamentoMes(CasosDeIsolamento)` ([kit da spec 004](../../backend/tests/isolamento.py)): `modelo = MesReferencia`, `url_lista = "/api/meses/"`, `payload_criacao = {"mes": 10, "ano": 2026}`, `payload_alteracao = {"fechado": False}`, e `criar(usuario)` gerando **um mês diferente a cada chamada**, já **fechado** (achado I1) (ex.: `n = MesReferencia.objects.count()`; `mes = n % 12 + 1`, `ano = 2026 + n // 12`), porque o mês é único por conta (ponto de atenção 2 do plano);
   - `POST {"mes": 10, "ano": 2026}` → 201 com exatamente `{"id": ..., "mes": 10, "ano": 2026, "rotulo": "10/2026", "fechado": False}` ([contrato](contracts/api-meses.md));
   - `POST {"mes": "10", "ano": "2026"}` (texto) → 201;
   - `POST {"mes": 10, "ano": 2026, "fechado": True}` → 201 com `"fechado": False` (o mês nasce aberto; FR-001);
@@ -99,15 +99,36 @@ FR-002, FR-008, FR-009).
   - `mes` 0, 13, `"outubro"` e `"10.5"` → 400 `{"mes": ["Informe um mês de 1 a 12."]}`; `ano` 1999, 2101 e `"dois mil"` → 400 `{"ano": ["Informe um ano de 2000 a 2100."]}` ([research R-04](research.md)); `{"mes": 13, "ano": 1999}` → as duas mensagens de uma vez;
   - sem `mes`, sem `ano`, e com `""` em cada um → 400 `{"<campo>": ["Este campo é obrigatório."]}`;
   - `POST` sem sessão → 401.
-- [ ] T006 [US1] Acrescentar a `backend/tests/gastos/test_meses_api.py` o caso de corrida ([research R-03](research.md)): com `monkeypatch` tirando a validação de unicidade do serializer (ex.: `MesReferenciaSerializer.get_validators` devolvendo `[]`), o `IntegrityError` da constraint vira 400 `{"non_field_errors": ["Este mês já foi criado."]}`, sem erro 500 e com um mês só.
+- [X] T006 [US1] Acrescentar a `backend/tests/gastos/test_meses_api.py` o caso de corrida ([research R-03](research.md)): com `monkeypatch` tirando a validação de unicidade do serializer (ex.: `MesReferenciaSerializer.get_validators` devolvendo `[]`), o `IntegrityError` da constraint vira 400 `{"non_field_errors": ["Este mês já foi criado."]}`, sem erro 500 e com um mês só.
 
   Rodar e confirmar a **falha** (rota inexistente).
 
 ### Implementation for User Story 1
 
-- [ ] T007 [US1] Implementar `MesReferenciaSerializer(RegistroComDonoSerializer)` em `backend/gastos/serializers.py`: `fields = ["id", "mes", "ano", "rotulo", "fechado", "dono"]`; `mes = IntegerField(min_value=1, max_value=12, error_messages=...)` e `ano = IntegerField(min_value=2000, max_value=2100, error_messages=...)`, com `invalid`, `min_value` e `max_value` dizendo "Informe um mês de 1 a 12." / "Informe um ano de 2000 a 2100." e `required`/`null` dizendo "Este campo é obrigatório." (conferir que `""` cai em obrigatório; se cair em `invalid`, tratar para o contrato); `rotulo = CharField(read_only=True)`; `fechado` só leitura na criação (no `create`, forçar `fechado=False`). Exportar `MENSAGEM_MES_REPETIDO = "Este mês já foi criado."`
-- [ ] T008 [US1] Implementar `MesReferenciaViewSet(FiltroPorDonoMixin, ModelViewSet)` em `backend/gastos/views.py` (`queryset = MesReferencia.objects.all()`), com `perform_create` e `perform_update` passando por `salvar_ou_erro_de_unicidade(..., {"non_field_errors": [MENSAGEM_MES_REPETIDO]})`; em `backend/gastos/urls.py`, `router.register("meses", MesReferenciaViewSet, basename="mes")`. Confirmar T005 e T006 **verdes**, e as guardas de rotas das specs 003 e 004 verdes
-- [ ] T009 [US1] Validar o S2 do [quickstart.md](quickstart.md) com `curl` (Ana e Bia) e excluir os meses criados (S6)
+- [X] T007 [US1] Implementar `MesReferenciaSerializer(RegistroComDonoSerializer)` em `backend/gastos/serializers.py`: `fields = ["id", "mes", "ano", "rotulo", "fechado", "dono"]`; `mes = IntegerField(min_value=1, max_value=12, error_messages=...)` e `ano = IntegerField(min_value=2000, max_value=2100, error_messages=...)`, com `invalid`, `min_value` e `max_value` dizendo "Informe um mês de 1 a 12." / "Informe um ano de 2000 a 2100." e `required`/`null` dizendo "Este campo é obrigatório." (conferir que `""` cai em obrigatório; se cair em `invalid`, tratar para o contrato); `rotulo = CharField(read_only=True)`; `fechado` só leitura na criação (no `create`, forçar `fechado=False`). Exportar `MENSAGEM_MES_REPETIDO = "Este mês já foi criado."`
+- [X] T008 [US1] Implementar `MesReferenciaViewSet(FiltroPorDonoMixin, ModelViewSet)` em `backend/gastos/views.py` (`queryset = MesReferencia.objects.all()`), com `perform_create` e `perform_update` passando por `salvar_ou_erro_de_unicidade(..., {"non_field_errors": [MENSAGEM_MES_REPETIDO]})`; em `backend/gastos/urls.py`, `router.register("meses", MesReferenciaViewSet, basename="mes")`. Confirmar T005 e T006 **verdes**, e as guardas de rotas das specs 003 e 004 verdes
+- [X] T009 [US1] Validar o S2 do [quickstart.md](quickstart.md) com `curl` (Ana e Bia) e excluir os meses criados (S6)
+
+  > **Resultado (2026-10-07)**: ✅ backend com 259 verdes (231 + 8 do kit de isolamento + 20 da
+  > API); interface 85.
+  > - T005 e T006 falharam primeiro (`MesReferenciaSerializer` inexistente, erro na coleta).
+  > - **Achado I1 do analyze aplicado**: os meses do kit nascem fechados e
+  >   `payload_alteracao = {"fechado": False}`. Assim o caso "o dono opera normalmente" (PATCH e
+  >   depois DELETE) continua válido depois da T014, e "alterar de outra conta" confere que o mês
+  >   da Bia continua fechado. Ponto de atenção 2 do plano atualizado.
+  > - **Achado U1 aplicado**: `InteiroNaFaixaField` (em `gastos/serializers.py`) trata texto vazio
+  >   como ausente ("Este campo é obrigatório."); sem ele, o DRF responderia com a mensagem de
+  >   faixa. `null` também vira obrigatório. `"10.5"`, `"outubro"` e `"dois mil"` caem na mensagem
+  >   de faixa.
+  > - **Achado C1 aplicado**: o contrato diz que `fechado` é ignorado na criação (o `create` do
+  >   serializer força `False`).
+  > - Ponto de atenção 1 confirmado: o DRF gerou o validador de mês único a partir da
+  >   `UniqueConstraint` e usou a mensagem dela (`non_field_errors`). A corrida (validadores
+  >   desligados com `monkeypatch`) vira o mesmo 400, sem erro 500.
+  > - Rota `/api/meses/` passa nas guardas das specs 003 (exige sessão) e 004 (filtra por dono).
+  > - S2 com `curl`: 201 `"rotulo": "10/2026"`; repetido → 400 "Este mês já foi criado."; Bia →
+  >   201; 13/1999 → as duas mensagens; `"mes": ""` → obrigatório; sem sessão → 401. Meses de teste
+  >   excluídos (S6): Ana e Bia com `[]`.
 
 **Checkpoint**: criar meses pela API, com isolamento comprovado; suítes verdes.
 

@@ -2,10 +2,12 @@ from rest_framework import serializers
 
 from core.serializers import RegistroComDonoSerializer
 from gastos.cores import CHOICES
-from gastos.models import Categoria
+from gastos.models import Categoria, MesReferencia
 from gastos.services.categorias import escolher_cor_livre
 
 MENSAGEM_NOME_REPETIDO = "Já existe uma categoria com este nome."
+MENSAGEM_MES_REPETIDO = "Este mês já foi criado."
+OBRIGATORIO = "Este campo é obrigatório."
 
 
 class CategoriaSerializer(RegistroComDonoSerializer):
@@ -38,4 +40,44 @@ class CategoriaSerializer(RegistroComDonoSerializer):
 
     def create(self, validated_data):
         validated_data.setdefault("cor", escolher_cor_livre(validated_data["dono"]))
+        return super().create(validated_data)
+
+
+class InteiroNaFaixaField(serializers.IntegerField):
+    """Inteiro com uma única mensagem para "fora da faixa" e "não é número" (research R-04).
+
+    Texto vazio conta como ausente: o ``IntegerField`` do DRF o trataria como número inválido.
+    """
+
+    def __init__(self, *, mensagem, **kwargs):
+        mensagens = {"invalid": mensagem, "min_value": mensagem, "max_value": mensagem}
+        mensagens.update(required=OBRIGATORIO, null=OBRIGATORIO)
+        super().__init__(error_messages=mensagens, **kwargs)
+
+    def to_internal_value(self, data):
+        if isinstance(data, str) and not data.strip():
+            self.fail("required")
+        return super().to_internal_value(data)
+
+
+class MesReferenciaSerializer(RegistroComDonoSerializer):
+    """Mês de referência (specs/007-mes-referencia/contracts/api-meses.md).
+
+    Mês repetido na conta é recusado pelo validador que o DRF gera a partir da
+    ``UniqueConstraint(fields=["dono", "ano", "mes"])``, com a mensagem dela (research R-03).
+    """
+
+    mes = InteiroNaFaixaField(min_value=1, max_value=12, mensagem="Informe um mês de 1 a 12.")
+    ano = InteiroNaFaixaField(
+        min_value=2000, max_value=2100, mensagem="Informe um ano de 2000 a 2100."
+    )
+    rotulo = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = MesReferencia
+        fields = ["id", "mes", "ano", "rotulo", "fechado", "dono"]
+
+    def create(self, validated_data):
+        # Todo mês nasce aberto (FR-001); "fechado" enviado na criação é ignorado.
+        validated_data["fechado"] = False
         return super().create(validated_data)
