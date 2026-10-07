@@ -54,7 +54,7 @@ com o responsável.
 
 **⚠️ CRITICAL**: nenhuma história começa antes desta fase.
 
-- [ ] T002 Escrever **primeiro** `backend/tests/gastos/test_meses_models.py` ([data-model.md](data-model.md), [research R-01](research.md)), com `pytestmark = pytest.mark.django_db`:
+- [X] T002 [P] Escrever **primeiro** `backend/tests/gastos/test_meses_models.py` ([data-model.md](data-model.md), [research R-01](research.md)), com `pytestmark = pytest.mark.django_db`:
   - `MesReferencia` herda de `OwnedModel`;
   - `mes` e `ano` são `PositiveSmallIntegerField`; `fechado` é `BooleanField` com `default=False`, e um mês criado só com `mes`, `ano` e `dono` nasce com `fechado is False`;
   - mesma conta, 10/2026 duas vezes → `IntegrityError` (dentro de `transaction.atomic()`), pela constraint `gastos_mes_unico_por_dono` (`UniqueConstraint(fields=["dono", "ano", "mes"])`);
@@ -64,8 +64,17 @@ com o responsável.
   - `str(mes)` devolve `"MM/AAAA"` (ex.: `"03/2027"`).
 
   Rodar e confirmar a **falha** (model inexistente).
-- [ ] T003 Implementar `MesReferencia(OwnedModel)` em `backend/gastos/models.py`: `mes = PositiveSmallIntegerField()`, `ano = PositiveSmallIntegerField()`, `fechado = BooleanField(default=False)`; `Meta.ordering = ["ano", "mes"]`; `Meta.constraints` com `CheckConstraint(condition=Q(mes__gte=1, mes__lte=12), name="gastos_mes_mes_valido")`, `CheckConstraint(condition=Q(ano__gte=2000, ano__lte=2100), name="gastos_mes_ano_valido")` e `UniqueConstraint(fields=["dono", "ano", "mes"], name="gastos_mes_unico_por_dono", violation_error_message="Este mês já foi criado.")`; propriedade `rotulo` (`f"{self.mes:02d}/{self.ano}"`) usada pelo `__str__`. Gerar `backend/gastos/migrations/0003_mesreferencia.py` (`docker compose run --rm backend python manage.py makemigrations gastos --name mesreferencia`). Confirmar T002 **verde** e as guardas de isolamento da spec 004 verdes (o model novo é coberto sozinho)
-- [ ] T004 Em `backend/gastos/views.py`, extrair o `_salvar` da `CategoriaViewSet` para a função de módulo `salvar_ou_erro_de_unicidade(salvar, erro)` ([research R-07](research.md)): roda `salvar()` dentro de `transaction.atomic()` e, num `IntegrityError`, lança `ValidationError(erro) from erro`. A `CategoriaViewSet` passa `{"nome": [MENSAGEM_NOME_REPETIDO]}`. Sem mudança de comportamento: confirmar `backend/tests/gastos/test_categorias_api.py` **verde**, incluindo o caso de corrida da spec 006
+- [X] T003 Implementar `MesReferencia(OwnedModel)` em `backend/gastos/models.py`: `mes = PositiveSmallIntegerField()`, `ano = PositiveSmallIntegerField()`, `fechado = BooleanField(default=False)`; `Meta.ordering = ["ano", "mes"]`; `Meta.constraints` com `CheckConstraint(condition=Q(mes__gte=1, mes__lte=12), name="gastos_mes_mes_valido")`, `CheckConstraint(condition=Q(ano__gte=2000, ano__lte=2100), name="gastos_mes_ano_valido")` e `UniqueConstraint(fields=["dono", "ano", "mes"], name="gastos_mes_unico_por_dono", violation_error_message="Este mês já foi criado.")`; propriedade `rotulo` (`f"{self.mes:02d}/{self.ano}"`) usada pelo `__str__`. Gerar `backend/gastos/migrations/0003_mesreferencia.py` (`docker compose run --rm backend python manage.py makemigrations gastos --name mesreferencia`). Confirmar T002 **verde** e as guardas de isolamento da spec 004 verdes (o model novo é coberto sozinho)
+- [X] T004 [P] Em `backend/gastos/views.py`, extrair o `_salvar` da `CategoriaViewSet` para a função de módulo `salvar_ou_erro_de_unicidade(salvar, erro)` ([research R-07](research.md)): roda `salvar()` dentro de `transaction.atomic()` e, num `IntegrityError`, lança `ValidationError(erro) from erro`. A `CategoriaViewSet` passa `{"nome": [MENSAGEM_NOME_REPETIDO]}`. Sem mudança de comportamento: confirmar `backend/tests/gastos/test_categorias_api.py` **verde**, incluindo o caso de corrida da spec 006
+
+  > **Resultado (2026-10-07)**: ✅ backend com 231 verdes (219 + 12 do model); interface 85.
+  > - T002 falhou primeiro (`MesReferencia` inexistente, erro na coleta).
+  > - T003: `gastos.0003_mesreferencia` gerada com as duas `CheckConstraint` e a `UniqueConstraint`;
+  >   aplicada na subida (`docker compose restart backend`); `makemigrations --check` sem
+  >   pendências; guardas de isolamento da spec 004 verdes com o model novo.
+  > - T004: `salvar_ou_erro_de_unicidade(salvar, erro)` no módulo `gastos/views.py`; a
+  >   `CategoriaViewSet` usa `ERRO_NOME_REPETIDO`. Suíte de categorias verde, incluindo a corrida.
+  > - Achado **I2** do analyze aplicado: T002 e T004 marcadas `[P]`.
 
 **Checkpoint**: tabela `gastos_mesreferencia` criada na subida (`docker compose restart backend`); `makemigrations --check` sem pendências; suítes verdes.
 

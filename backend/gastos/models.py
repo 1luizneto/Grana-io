@@ -29,3 +29,40 @@ class Categoria(OwnedModel):
 
     def __str__(self):
         return self.nome
+
+
+class MesReferencia(OwnedModel):
+    """Mês de referência de uma pessoa (US-06; specs/007-mes-referencia/data-model.md).
+
+    Mês e ano são definidos na criação e não mudam; a única alteração é fechar ou reabrir.
+    """
+
+    mes = models.PositiveSmallIntegerField()
+    ano = models.PositiveSmallIntegerField()
+    fechado = models.BooleanField(default=False)
+
+    class Meta:
+        # Dois inteiros dão a ordem cronológica direto (research R-01).
+        ordering = ["ano", "mes"]
+        constraints = [
+            # As faixas valem também fora da API (shell, migrations de dados).
+            models.CheckConstraint(
+                condition=models.Q(mes__gte=1, mes__lte=12), name="gastos_mes_mes_valido"
+            ),
+            models.CheckConstraint(
+                condition=models.Q(ano__gte=2000, ano__lte=2100), name="gastos_mes_ano_valido"
+            ),
+            models.UniqueConstraint(
+                fields=["dono", "ano", "mes"],
+                name="gastos_mes_unico_por_dono",
+                violation_error_message="Este mês já foi criado.",
+            ),
+        ]
+
+    @property
+    def rotulo(self):
+        """Forma MM/AAAA exibida na interface (research R-06)."""
+        return f"{self.mes:02d}/{self.ano}"
+
+    def __str__(self):
+        return self.rotulo
