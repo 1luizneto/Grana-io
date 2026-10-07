@@ -86,25 +86,36 @@ com o responsável.
 
 ### Tests for User Story 1 ⚠️
 
-- [ ] T007 [P] [US1] Escrever `backend/tests/gastos/test_categorias_service.py` (parte padrão):
+- [X] T007 [P] [US1] Escrever `backend/tests/gastos/test_categorias_service.py` (parte padrão):
   - `criar_categorias_padrao(usuario)` cria exatamente Moradia (`azul`), Alimentação (`laranja`), Transporte (`roxo`), Saúde (`vermelho`), Lazer (`rosa`), Educação (`ciano`) e Outros (`cinza`) ([research R-03](research.md));
   - chamada de novo, não duplica (continua com 7);
   - para quem já tem qualquer categoria (ex.: só "Pets"), não cria nada;
   - não mexe nas categorias de outra conta.
-- [ ] T008 [P] [US1] Escrever `backend/tests/gastos/test_cadastro_categorias.py`:
+- [X] T008 [P] [US1] Escrever `backend/tests/gastos/test_cadastro_categorias.py`:
   - `POST /api/usuarios/` com dados válidos → 201 e a conta nova tem as 7 categorias;
   - se `criar_categorias_padrao` lançar erro (simular com `monkeypatch` no módulo `accounts.services.cadastro`), o cadastro falha e **nenhuma conta** é criada (atômico, [research R-04](research.md)); o erro **não** vira "Já existe uma conta com este e-mail.";
   - e-mail duplicado continua dando 400 com a mensagem da spec 002.
-- [ ] T009 [P] [US1] Escrever `backend/tests/gastos/test_migration_categorias.py` com `@pytest.mark.django_db(transaction=True)` e `MigrationExecutor` ([research R-05](research.md)): migrar para `("gastos", "0001_initial")`; criar, pelo model histórico, um usuário sem categorias e outro com uma categoria "Pets"; migrar para `("gastos", "0002_categorias_padrao_contas_existentes")`; conferir 7 categorias padrão no primeiro e só "Pets" no segundo. Ao final, migrar de volta para o estado mais recente (`executor.loader.graph.leaf_nodes()`).
+- [X] T009 [P] [US1] Escrever `backend/tests/gastos/test_migration_categorias.py` com `@pytest.mark.django_db(transaction=True)` e `MigrationExecutor` ([research R-05](research.md)): migrar para `("gastos", "0001_initial")`; criar, pelo model histórico, um usuário sem categorias e outro com uma categoria "Pets"; migrar para `("gastos", "0002_categorias_padrao_contas_existentes")`; conferir 7 categorias padrão no primeiro e só "Pets" no segundo. Ao final, migrar de volta para o estado mais recente (`executor.loader.graph.leaf_nodes()`).
 
   Rodar e confirmar a **falha**.
 
 ### Implementation for User Story 1
 
-- [ ] T010 [US1] Implementar `backend/gastos/services/__init__.py` e `backend/gastos/services/categorias.py`: `CATEGORIAS_PADRAO` (7 pares nome/cor do R-03) e `criar_categorias_padrao(usuario)`: se `Categoria.objects.do_dono(usuario).exists()`, não faz nada; senão `bulk_create` das 7. Confirmar T007 **verde**
-- [ ] T011 [US1] Em `backend/accounts/services/cadastro.py`, envolver o cadastro num `transaction.atomic()` externo: dentro dele, um `try` só em volta do `create_user` (o `except IntegrityError` continua virando `EmailJaCadastrado`) e, depois, `criar_categorias_padrao(usuario)`, fora do `try` ([research R-04](research.md)). Trocar o comentário-gancho da spec 002 por uma referência a esta spec. Confirmar T008 **verde** e os testes da spec 002 verdes
-- [ ] T012 [US1] Criar `backend/gastos/migrations/0002_categorias_padrao_contas_existentes.py` (`RunPython(criar_padrao_para_contas_sem_categorias, RunPython.noop)`), com a lista de nomes e cores **copiada** na migration e `apps.get_model` para `Usuario` e `Categoria` ([research R-05](research.md)). Dependência: `("gastos", "0001_initial")` e a última migration de `accounts`. Confirmar T009 **verde**
-- [ ] T013 [US1] Subir (`docker compose up -d --wait`) e validar o S2 do [quickstart.md](quickstart.md): toda conta do banco local com 7 categorias; depois de `docker compose restart backend`, continua 7
+- [X] T010 [US1] Implementar `backend/gastos/services/__init__.py` e `backend/gastos/services/categorias.py`: `CATEGORIAS_PADRAO` (7 pares nome/cor do R-03) e `criar_categorias_padrao(usuario)`: se `Categoria.objects.do_dono(usuario).exists()`, não faz nada; senão `bulk_create` das 7. Confirmar T007 **verde**
+- [X] T011 [US1] Em `backend/accounts/services/cadastro.py`, envolver o cadastro num `transaction.atomic()` externo: dentro dele, um `try` só em volta do `create_user` (o `except IntegrityError` continua virando `EmailJaCadastrado`) e, depois, `criar_categorias_padrao(usuario)`, fora do `try` ([research R-04](research.md)). Trocar o comentário-gancho da spec 002 por uma referência a esta spec. Confirmar T008 **verde** e os testes da spec 002 verdes
+- [X] T012 [US1] Criar `backend/gastos/migrations/0002_categorias_padrao_contas_existentes.py` (`RunPython(criar_padrao_para_contas_sem_categorias, RunPython.noop)`), com a lista de nomes e cores **copiada** na migration e `apps.get_model` para `Usuario` e `Categoria` ([research R-05](research.md)). Dependência: `("gastos", "0001_initial")` e a última migration de `accounts`. Confirmar T009 **verde**
+- [X] T013 [US1] Subir (`docker compose up -d --wait`) e validar o S2 do [quickstart.md](quickstart.md): toda conta do banco local com 7 categorias; depois de `docker compose restart backend`, continua 7
+
+  > **Resultado (2026-10-07)**: ✅ backend com 184 verdes (175 + 4 do service + 4 do cadastro + 1
+  > da migration).
+  > - T007 a T009 falharam primeiro (service, chamada no cadastro e migration inexistentes).
+  > - T008: o teste de falha nas categorias chama o `cadastrar_usuario` direto (pelo cliente HTTP, a
+  >   exceção sobe no próprio teste); confere que nenhuma conta e nenhuma categoria ficam. Acrescentei
+  >   o caso de corrida do e-mail: continua virando `EmailJaCadastrado`, sem categorias a mais.
+  > - T011: `cadastrar_usuario` virou `@transaction.atomic`; o `try` cobre só o `create_user` (com o
+  >   próprio `atomic` interno), e `criar_categorias_padrao` vem depois, fora do `except`.
+  > - T013 (S2): as 8 contas do banco local ficaram com 7 categorias cada; depois de outro `restart`
+  >   do backend, continuam 56 categorias para 8 donos (sem duplicar).
 
 **Checkpoint**: categorias padrão para todas as contas; suítes verdes.
 
