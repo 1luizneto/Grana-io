@@ -74,6 +74,15 @@ describe('layout: menu (US5)', () => {
     expect(inicio).toHaveAttribute('aria-current', 'page')
   })
 
+  it('tem "Categorias" no menu, depois de "Início" (spec 006)', async () => {
+    abrirConectada()
+
+    const menu = await screen.findByRole('navigation', { name: 'Menu principal' })
+    const links = within(menu).getAllByRole('link')
+    expect(links.map((link) => link.textContent)).toEqual(['Início', 'Categorias'])
+    expect(links[1]).toHaveAttribute('href', '/categorias')
+  })
+
   it('a tela de login não mostra o menu nem o botão "Sair"', async () => {
     renderizarComRotas(ROTAS, { rota: '/entrar' })
 

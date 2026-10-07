@@ -235,8 +235,8 @@ confirmação (FR-011 a FR-014; [contrato da tela](contracts/tela-categorias.md)
 
 ### Tests for User Story 5 ⚠️
 
-- [ ] T024 [P] [US5] Escrever `frontend/src/components/SeletorCor.test.jsx`: com a paleta recebida por prop, mostra um `group` com nome "Cor" e um rádio por cor com o nome acessível (ex.: "Verde"); clicar marca a cor e chama `aoMudar("verde")`; com `valor="azul"`, o rádio "Azul" vem marcado; navegação por setas muda a seleção (rádio nativo).
-- [ ] T025 [P] [US5] Escrever `frontend/src/pages/Categorias/Categorias.test.jsx` (com `renderizarComRotas`, sessão gravada e `simularApi` para `/usuarios/eu/`, `/categorias/cores/` e `/categorias/`):
+- [X] T024 [P] [US5] Escrever `frontend/src/components/SeletorCor.test.jsx`: com a paleta recebida por prop, mostra um `group` com nome "Cor" e um rádio por cor com o nome acessível (ex.: "Verde"); clicar marca a cor e chama `aoMudar("verde")`; com `valor="azul"`, o rádio "Azul" vem marcado; navegação por setas muda a seleção (rádio nativo).
+- [X] T025 [P] [US5] Escrever `frontend/src/pages/Categorias/Categorias.test.jsx` (com `renderizarComRotas`, sessão gravada e `simularApi` para `/usuarios/eu/`, `/categorias/cores/` e `/categorias/`):
   - mostra "Carregando categorias…" e depois a lista na ordem da API, com amostra de cor e nome;
   - lista vazia → "Nenhuma categoria. Crie a primeira acima.";
   - criar: digitar "Pets", escolher "Verde", "Adicionar" → `POST` com `{"nome": "Pets", "cor": "verde"}`, recarrega a lista e limpa o formulário; o botão mostra "Adicionando…" e fica desabilitado durante o envio;
@@ -244,18 +244,35 @@ confirmação (FR-011 a FR-014; [contrato da tela](contracts/tela-categorias.md)
   - editar: "Editar Saúde" troca a linha por campo e seletor; mudar o nome e "Salvar" → `PATCH` e lista recarregada; "Cancelar" volta sem chamar a API;
   - excluir: com `window.confirm` simulado devolvendo `false`, não chama a API; com `true`, chama `DELETE` e recarrega; o texto da confirmação é `Excluir a categoria "Saúde"?`;
   - falha de rede ao carregar → "Não foi possível falar com o servidor. Tente novamente.".
-- [ ] T026 [P] [US5] Acrescentar a `frontend/src/components/Layout.test.jsx`: o menu tem "Categorias" com `href="/categorias"`, depois de "Início".
+- [X] T026 [P] [US5] Acrescentar a `frontend/src/components/Layout.test.jsx`: o menu tem "Categorias" com `href="/categorias"`, depois de "Início".
 
   Rodar e confirmar a **falha**.
 
 ### Implementation for User Story 5
 
-- [ ] T027 [P] [US5] Criar `frontend/src/api/categorias.js` com `listarCategorias()`, `listarCores()`, `criarCategoria(dados)`, `atualizarCategoria(id, dados)` (PATCH) e `excluirCategoria(id)`, todas via `requisitarAutenticada`, com `Content-Type: application/json` quando houver corpo
-- [ ] T028 [P] [US5] Criar `frontend/src/components/SeletorCor.jsx` ([research R-09](research.md)): `fieldset` com `legend` "Cor", rádios com `name` único por instância (`useId`), rótulo com o nome da cor e amostra (`span` com `background` do `hex`, `aria-hidden`). Confirmar T024 **verde**
-- [ ] T029 [US5] Criar `frontend/src/hooks/useCategorias.js`: carrega categorias e cores juntas; expõe `{ categorias, cores, carregando, erroCarregar, criar, atualizar, excluir }`, cada ação devolvendo `{ok: true}` ou `{ok: false, erro}` (com `interpretarErro`) e recarregando a lista no sucesso
-- [ ] T030 [US5] Criar `frontend/src/pages/Categorias/Categorias.jsx` conforme o [contrato da tela](contracts/tela-categorias.md), reaproveitando `CampoTexto`, `AvisoFormulario` e `SeletorCor`; botões com nome acessível incluindo a categoria ("Editar Saúde", "Excluir Saúde"); confirmação com `window.confirm`
-- [ ] T031 [US5] Em `frontend/src/App.jsx`, rota `/categorias` como filha do `Layout`; em `frontend/src/components/Layout.jsx`, `NavLink` "Categorias" depois de "Início"; em `frontend/src/estilos.css`, estilos da lista, das amostras de cor, do seletor (amostras que quebram linha) e da edição na linha, sem rolagem horizontal em 360 px. Confirmar T025 e T026 **verdes**
-- [ ] T032 [US5] Validar no navegador S3, S4 (com o tempo, SC-004) e S6 do [quickstart.md](quickstart.md)
+- [X] T027 [P] [US5] Criar `frontend/src/api/categorias.js` com `listarCategorias()`, `listarCores()`, `criarCategoria(dados)`, `atualizarCategoria(id, dados)` (PATCH) e `excluirCategoria(id)`, todas via `requisitarAutenticada`, com `Content-Type: application/json` quando houver corpo
+- [X] T028 [P] [US5] Criar `frontend/src/components/SeletorCor.jsx` ([research R-09](research.md)): `fieldset` com `legend` "Cor", rádios com `name` único por instância (`useId`), rótulo com o nome da cor e amostra (`span` com `background` do `hex`, `aria-hidden`). Confirmar T024 **verde**
+- [X] T029 [US5] Criar `frontend/src/hooks/useCategorias.js`: carrega categorias e cores juntas; expõe `{ categorias, cores, carregando, erroCarregar, criar, atualizar, excluir }`, cada ação devolvendo `{ok: true}` ou `{ok: false, erro}` (com `interpretarErro`) e recarregando a lista no sucesso
+- [X] T030 [US5] Criar `frontend/src/pages/Categorias/Categorias.jsx` conforme o [contrato da tela](contracts/tela-categorias.md), reaproveitando `CampoTexto`, `AvisoFormulario` e `SeletorCor`; botões com nome acessível incluindo a categoria ("Editar Saúde", "Excluir Saúde"); confirmação com `window.confirm`
+- [X] T031 [US5] Em `frontend/src/App.jsx`, rota `/categorias` como filha do `Layout`; em `frontend/src/components/Layout.jsx`, `NavLink` "Categorias" depois de "Início"; em `frontend/src/estilos.css`, estilos da lista, das amostras de cor, do seletor (amostras que quebram linha) e da edição na linha, sem rolagem horizontal em 360 px. Confirmar T025 e T026 **verdes**
+- [X] T032 [US5] Validar no navegador S3, S4 (com o tempo, SC-004) e S6 do [quickstart.md](quickstart.md)
+
+  > **Resultado (2026-10-07)**: ✅ interface com 85 testes verdes (69 + 5 do seletor + 10 da tela + 1
+  > do menu), estáveis em três rodadas seguidas; backend 219.
+  > - T024 a T026 falharam primeiro (componentes inexistentes; menu sem "Categorias").
+  > - Na tela, a cor de cada linha também vai em texto oculto ("Cor: Vermelho") para leitores de
+  >   tela; a amostra visual é `aria-hidden`.
+  > - Navegador, conta nova `teste.s3cat@exemplo.com` criada pelo cadastro:
+  >   - **S3** ✅ as 7 padrão em ordem (Alimentação, Educação, Lazer, Moradia, Outros, Saúde,
+  >     Transporte), cada uma com a cor do R-03;
+  >   - **S4** ✅ "Pets" verde criada na posição certa e o formulário limpo; "pets" recusado com
+  >     "Já existe uma categoria com este nome." no campo e o texto mantido; "Assinaturas" sem cor →
+  >     amarelo (primeira livre); "Lazer" → "Lazer e viagens" mantendo rosa; "Saúde" → Índigo;
+  >     excluir "Pets": confirmação `Excluir a categoria "Pets"?`, cancelar mantém, confirmar exclui
+  >     (o `window.confirm` foi substituído por um simulado, porque o diálogo nativo trava a
+  >     automação). Do início ao fim, **46 s** (SC-004: até 2 min);
+  >   - **S6** ✅ em 360 px, sem rolagem horizontal (lista e edição na linha); "Academia" criada só
+  >     pelo teclado (Tab até as cores, setas até "Roxo", Enter).
 
 **Checkpoint**: categorias gerenciáveis pela tela; suítes verdes.
 

@@ -214,3 +214,91 @@ input:focus-visible {
     padding: 1rem;
   }
 }
+
+/* Categorias (specs/006-categorias-gasto/contracts/tela-categorias.md) */
+.visualmente-oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+button.secundario {
+  background: transparent;
+  color: var(--cor-primaria);
+  border: 1px solid var(--cor-borda);
+}
+
+button.secundario:hover:not(:disabled) {
+  background: var(--cor-info-fundo);
+}
+
+.formulario-categoria {
+  margin-bottom: 1.5rem;
+}
+
+.seletor-cor {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  margin: 0 0 1rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+}
+
+.seletor-cor legend {
+  font-weight: 600;
+  padding: 0 0.25rem;
+}
+
+.opcao-cor {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+}
+
+.amostra {
+  display: inline-block;
+  flex: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  border: 1px solid rgb(0 0 0 / 15%);
+}
+
+.lista-categorias {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.linha-categoria {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--cor-borda);
+}
+
+.linha-categoria.editando,
+.linha-categoria.editando form {
+  display: block;
+  width: 100%;
+}
+
+.nome-categoria {
+  flex: 1 1 10rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
