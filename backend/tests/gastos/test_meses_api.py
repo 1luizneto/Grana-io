@@ -168,3 +168,84 @@ def test_lista_so_os_meses_da_pessoa(usuario, outro_usuario, cliente_autenticado
     _mes(outro_usuario, mes=2)
 
     assert [m["rotulo"] for m in cliente_autenticado.get(URL).json()] == ["01/2026"]
+
+
+# Fechar e reabrir (US3; FR-004 a FR-006)
+
+IMUTAVEL = ["Não é possível alterar o mês ou o ano. Exclua o mês e crie de novo."]
+
+
+def _url(mes):
+    return f"{URL}{mes.pk}/"
+
+
+def test_fechar_e_reabrir(usuario, cliente_autenticado):
+    mes = _mes(usuario)
+
+    fechar = cliente_autenticado.patch(_url(mes), {"fechado": True}, format="json")
+    assert fechar.status_code == 200
+    assert fechar.json()["fechado"] is True
+    assert cliente_autenticado.get(_url(mes)).json()["fechado"] is True
+
+    reabrir = cliente_autenticado.patch(_url(mes), {"fechado": False}, format="json")
+    assert reabrir.status_code == 200
+    assert reabrir.json()["fechado"] is False
+
+
+@pytest.mark.parametrize("fechado", [True, False])
+def test_repetir_o_estado_atual_e_aceito(usuario, cliente_autenticado, fechado):
+    mes = _mes(usuario, fechado=fechado)
+
+    resposta = cliente_autenticado.patch(_url(mes), {"fechado": fechado}, format="json")
+
+    assert resposta.status_code == 200
+    assert resposta.json()["fechado"] is fechado
+
+
+@pytest.mark.parametrize("fechado", [False, True])
+@pytest.mark.parametrize("payload, campo", [({"mes": 11}, "mes"), ({"ano": 2027}, "ano")])
+def test_mes_e_ano_nao_mudam(usuario, cliente_autenticado, payload, campo, fechado):
+    mes = _mes(usuario, fechado=fechado)
+
+    resposta = cliente_autenticado.patch(_url(mes), payload, format="json")
+
+    assert resposta.status_code == 400
+    assert resposta.json() == {campo: IMUTAVEL}
+    mes.refresh_from_db()
+    assert (mes.mes, mes.ano, mes.fechado) == (10, 2026, fechado)
+
+
+def test_mesmos_mes_e_ano_sao_aceitos(usuario, cliente_autenticado):
+    mes = _mes(usuario)
+
+    patch = cliente_autenticado.patch(
+        _url(mes), {"mes": 10, "ano": 2026, "fechado": True}, format="json"
+    )
+    put = cliente_autenticado.put(_url(mes), {"mes": 10, "ano": 2026, "fechado": False}, format="json")
+
+    assert patch.status_code == 200
+    assert patch.json()["fechado"] is True
+    assert put.status_code == 200
+    assert put.json()["fechado"] is False
+
+
+def test_fechado_invalido(usuario, cliente_autenticado):
+    mes = _mes(usuario)
+
+    resposta = cliente_autenticado.patch(_url(mes), {"fechado": "talvez"}, format="json")
+
+    assert resposta.status_code == 400
+    assert "fechado" in resposta.json()
+
+
+def test_mes_fechado_nao_se_exclui(usuario, cliente_autenticado):
+    mes = _mes(usuario, fechado=True)
+
+    resposta = cliente_autenticado.delete(_url(mes))
+
+    assert resposta.status_code == 400
+    assert resposta.json() == {"detail": "Reabra o mês antes de excluí-lo."}
+    assert MesReferencia.objects.filter(pk=mes.pk).exists()
+
+    cliente_autenticado.patch(_url(mes), {"fechado": False}, format="json")
+    assert cliente_autenticado.delete(_url(mes)).status_code == 204

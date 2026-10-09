@@ -175,7 +175,7 @@ FR-007).
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T012 [US3] Acrescentar a `backend/tests/gastos/test_meses_api.py` ([research R-02 e R-05](research.md)):
+- [X] T012 [US3] Acrescentar a `backend/tests/gastos/test_meses_api.py` ([research R-02 e R-05](research.md)):
   - `PATCH {"fechado": true}` → 200 com `"fechado": True`, e o `GET` do mês mostra fechado; `PATCH {"fechado": false}` → 200 aberto;
   - fechar um mês já fechado e reabrir um já aberto → 200, sem erro;
   - `PATCH {"mes": 11}` e `PATCH {"ano": 2027}` → 400 `{"<campo>": ["Não é possível alterar o mês ou o ano. Exclua o mês e crie de novo."]}`, e o mês continua 10/2026; vale também com o mês fechado;
@@ -187,9 +187,25 @@ FR-007).
 
 ### Implementation for User Story 3
 
-- [ ] T013 [US3] Em `MesReferenciaSerializer` (`backend/gastos/serializers.py`): `validate_mes` e `validate_ano` recusam, numa edição (`self.instance is not None`), um valor **diferente** do atual com "Não é possível alterar o mês ou o ano. Exclua o mês e crie de novo."; o mesmo valor é aceito. Conferir que o `fechado` enviado é aplicado na edição
-- [ ] T014 [US3] Em `MesReferenciaViewSet` (`backend/gastos/views.py`), `perform_destroy` recusa mês fechado com `ValidationError({"detail": "Reabra o mês antes de excluí-lo."})` (resposta `400 {"detail": "..."}`, sem lista; conferir o formato exato contra o [contrato](contracts/api-meses.md) e ajustar com `Response` se o DRF embrulhar em lista), deixando um comentário que a US-07 acrescenta aqui a regra de mês com gastos (FR-010). Confirmar T012 **verde**
-- [ ] T015 [US3] Validar o S4 e o S5 do [quickstart.md](quickstart.md) com `curl` e limpar (S6)
+- [X] T013 [US3] Em `MesReferenciaSerializer` (`backend/gastos/serializers.py`): `validate_mes` e `validate_ano` recusam, numa edição (`self.instance is not None`), um valor **diferente** do atual com "Não é possível alterar o mês ou o ano. Exclua o mês e crie de novo."; o mesmo valor é aceito. Conferir que o `fechado` enviado é aplicado na edição
+- [X] T014 [US3] Em `MesReferenciaViewSet` (`backend/gastos/views.py`), `perform_destroy` recusa mês fechado com `ValidationError({"detail": "Reabra o mês antes de excluí-lo."})` (resposta `400 {"detail": "..."}`, sem lista; conferir o formato exato contra o [contrato](contracts/api-meses.md) e ajustar com `Response` se o DRF embrulhar em lista), deixando um comentário que a US-07 acrescenta aqui a regra de mês com gastos (FR-010). Confirmar T012 **verde**
+- [X] T015 [US3] Validar o S4 e o S5 do [quickstart.md](quickstart.md) com `curl` e limpar (S6)
+
+  > **Resultado (2026-10-08)**: ✅ backend com 273 verdes (263 + 10); interface 85.
+  > - T012 falhou primeiro nos 5 casos esperados (4 de mês/ano alteráveis, aberto e fechado, e a
+  >   exclusão de mês fechado); fechar, reabrir e repetir o estado já passavam (o `PATCH` do
+  >   `ModelViewSet` aceita `fechado` desde a US1).
+  > - T013: `validate_mes` e `validate_ano` recusam valor diferente numa edição; o mesmo valor é
+  >   aceito (`PATCH` com `mes`/`ano` iguais e `PUT` completo → 200; ponto de atenção 3).
+  > - T014: `perform_destroy` lança `ValidationError({"detail": ...})`, e o DRF devolve
+  >   `{"detail": "Reabra o mês antes de excluí-lo."}` sem lista, como no contrato. Comentário marca
+  >   onde a US-07 acrescenta a regra de mês com gastos.
+  > - Achado I3 do analyze: com mês e ano imutáveis, o `perform_update` não colide mais; mantido por
+  >   simetria com as categorias (custo zero).
+  > - S4 com `curl`: fechar → 200 `"fechado": true`; excluir → 400 "Reabra o mês antes de
+  >   excluí-lo."; reabrir → 200; excluir → 204. S5: `{"mes": 11}` → 400 com a mensagem de mês e
+  >   ano imutáveis; abrir, fechar e excluir o mês da Bia com a sessão da Ana → 404 "Não
+  >   encontrado.". Meses de teste excluídos (S6): Ana e Bia com `[]`.
 
 **Checkpoint**: fechar e reabrir pela API, com as proteções; suítes verdes.
 

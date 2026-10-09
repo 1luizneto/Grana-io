@@ -8,6 +8,7 @@ from gastos.services.categorias import escolher_cor_livre
 MENSAGEM_NOME_REPETIDO = "Já existe uma categoria com este nome."
 MENSAGEM_MES_REPETIDO = "Este mês já foi criado."
 OBRIGATORIO = "Este campo é obrigatório."
+MENSAGEM_MES_IMUTAVEL = "Não é possível alterar o mês ou o ano. Exclua o mês e crie de novo."
 
 
 class CategoriaSerializer(RegistroComDonoSerializer):
@@ -76,6 +77,18 @@ class MesReferenciaSerializer(RegistroComDonoSerializer):
     class Meta:
         model = MesReferencia
         fields = ["id", "mes", "ano", "rotulo", "fechado", "dono"]
+
+    # Mês e ano só na criação (FR-006). O mesmo valor é aceito, para um PUT completo não falhar.
+    def validate_mes(self, valor):
+        return self._sem_alterar("mes", valor)
+
+    def validate_ano(self, valor):
+        return self._sem_alterar("ano", valor)
+
+    def _sem_alterar(self, campo, valor):
+        if self.instance is not None and valor != getattr(self.instance, campo):
+            raise serializers.ValidationError(MENSAGEM_MES_IMUTAVEL)
+        return valor
 
     def create(self, validated_data):
         # Todo mês nasce aberto (FR-001); "fechado" enviado na criação é ignorado.

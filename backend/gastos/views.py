@@ -74,3 +74,10 @@ class MesReferenciaViewSet(FiltroPorDonoMixin, ModelViewSet):
             lambda: super(MesReferenciaViewSet, self).perform_update(serializer),
             self.ERRO_MES_REPETIDO,
         )
+
+    def perform_destroy(self, instance):
+        # Mês fechado protege o histórico (FR-005; research R-05). A US-07 acrescenta aqui a
+        # recusa de mês com gastos: "Exclua ou mova os gastos antes de excluir o mês." (FR-010).
+        if instance.fechado:
+            raise ValidationError({"detail": "Reabra o mês antes de excluí-lo."})
+        super().perform_destroy(instance)
