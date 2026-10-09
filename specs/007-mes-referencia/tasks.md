@@ -142,7 +142,7 @@ FR-002, FR-008, FR-009).
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T010 [US2] Acrescentar a `backend/tests/gastos/test_meses_api.py`:
+- [X] T010 [US2] Acrescentar a `backend/tests/gastos/test_meses_api.py`:
   - criar 03/2027, 12/2026 e 01/2026, nessa ordem → `GET` devolve os rótulos `["01/2026", "12/2026", "03/2027"]` (atravessando o ano; SC-002);
   - cada item tem exatamente as chaves `{"id", "mes", "ano", "rotulo", "fechado"}` (sem `dono`);
   - conta sem meses → `[]`;
@@ -152,7 +152,15 @@ FR-002, FR-008, FR-009).
 
 ### Implementation for User Story 2
 
-- [ ] T011 [US2] Se a T010 falhar em algum ponto, corrigir em `backend/gastos/serializers.py` ou `backend/gastos/models.py`. Validar o S3 do [quickstart.md](quickstart.md) com `curl` e limpar (S6)
+- [X] T011 [US2] Se a T010 falhar em algum ponto, corrigir em `backend/gastos/serializers.py` ou `backend/gastos/models.py`. Validar o S3 do [quickstart.md](quickstart.md) com `curl` e limpar (S6)
+
+  > **Resultado (2026-10-08)**: ✅ backend com 263 verdes (259 + 4); interface 85.
+  > - Os 4 testes **passaram de primeira**, como previsto: a ordem vem do model (T003). Prova da
+  >   falha: com `ordering = ["-ano", "-mes"]`, falharam o teste da lista e o do model
+  >   (`test_ordem_cronologica`). Código restaurado (`git diff` vazio).
+  > - T011 sem mudança de código.
+  > - S3 com `curl`: criados 10/2026, 03/2027 e 01/2026, nessa ordem → lista 01/2026, 10/2026,
+  >   03/2027. Meses de teste excluídos (S6): Ana com `[]`.
 
 **Checkpoint**: listagem cronológica comprovada; suítes verdes.
 

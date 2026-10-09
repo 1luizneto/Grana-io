@@ -135,3 +135,36 @@ def test_corrida_vira_mes_repetido_e_nao_erro_500(usuario, cliente_autenticado, 
     assert resposta.status_code == 400
     assert resposta.json() == MES_REPETIDO
     assert MesReferencia.objects.do_dono(usuario).count() == 1
+
+
+# Listar (US2; FR-003)
+
+
+def test_lista_em_ordem_cronologica(usuario, cliente_autenticado):
+    for mes, ano in [(3, 2027), (12, 2026), (1, 2026)]:
+        _mes(usuario, mes=mes, ano=ano)
+
+    resposta = cliente_autenticado.get(URL)
+
+    assert resposta.status_code == 200
+    assert [m["rotulo"] for m in resposta.json()] == ["01/2026", "12/2026", "03/2027"]
+
+
+def test_lista_mostra_so_os_campos_do_contrato(usuario, cliente_autenticado):
+    _mes(usuario, fechado=True)
+
+    [item] = cliente_autenticado.get(URL).json()
+
+    assert set(item) == {"id", "mes", "ano", "rotulo", "fechado"}
+    assert item["fechado"] is True
+
+
+def test_lista_vazia(cliente_autenticado):
+    assert cliente_autenticado.get(URL).json() == []
+
+
+def test_lista_so_os_meses_da_pessoa(usuario, outro_usuario, cliente_autenticado):
+    _mes(usuario, mes=1)
+    _mes(outro_usuario, mes=2)
+
+    assert [m["rotulo"] for m in cliente_autenticado.get(URL).json()] == ["01/2026"]
