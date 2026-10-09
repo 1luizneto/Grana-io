@@ -219,10 +219,18 @@ FR-007).
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T016 [US4] Acrescentar a `backend/tests/gastos/test_meses_api.py`: `DELETE` de mês aberto → 204 e ele some da lista; depois de excluir 11/2026, criar 11/2026 de novo → 201 (corrigir é excluir e criar); `DELETE` de mês da Bia → 404 `{"detail": "Não encontrado."}` e ele continua existindo (o kit já cobre; conferir).
+- [X] T016 [US4] Acrescentar a `backend/tests/gastos/test_meses_api.py`: `DELETE` de mês aberto → 204 e ele some da lista; depois de excluir 11/2026, criar 11/2026 de novo → 201 (corrigir é excluir e criar); `DELETE` de mês da Bia → 404 `{"detail": "Não encontrado."}` e ele continua existindo (o kit já cobre; conferir).
 
   Rodar e registrar: é esperado que **passe de primeira** (o `ModelViewSet` já tem `destroy`, e a T014 só recusa mês fechado). Nesse caso, provar a falha tirando temporariamente `"delete"` do `http_method_names` da viewset e restaurar (`git diff` vazio).
-- [ ] T017 [US4] Se a T016 falhar em algum ponto, corrigir em `backend/gastos/views.py`. Rodar a suíte
+- [X] T017 [US4] Se a T016 falhar em algum ponto, corrigir em `backend/gastos/views.py`. Rodar a suíte
+
+  > **Resultado (2026-10-09)**: ✅ backend com 276 verdes (273 + 3); interface 85.
+  > - Os 3 testes **passaram de primeira**, como previsto: o `ModelViewSet` já tem `destroy`, e a
+  >   T014 só recusa mês fechado. Prova da falha: com `DELETE` fora do `http_method_names` da
+  >   viewset, **6** testes falharam (os 3 novos, o de mês fechado da US3 e 2 do kit de
+  >   isolamento). Código restaurado (`git diff` vazio).
+  > - Coberto também: excluir 11/2026 e criar 11/2026 de novo → 201 (corrigir é excluir e criar).
+  > - T017 sem mudança de código.
 
 **Checkpoint**: exclusão coberta por testes; suítes verdes.
 

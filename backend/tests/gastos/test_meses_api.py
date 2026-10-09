@@ -249,3 +249,33 @@ def test_mes_fechado_nao_se_exclui(usuario, cliente_autenticado):
 
     cliente_autenticado.patch(_url(mes), {"fechado": False}, format="json")
     assert cliente_autenticado.delete(_url(mes)).status_code == 204
+
+
+# Excluir (US4; FR-010)
+
+
+def test_excluir_mes_aberto(usuario, cliente_autenticado):
+    mes = _mes(usuario, mes=11)
+
+    assert cliente_autenticado.delete(_url(mes)).status_code == 204
+    assert cliente_autenticado.get(URL).json() == []
+
+
+def test_excluir_e_criar_de_novo(usuario, cliente_autenticado):
+    # Corrigir mês ou ano é excluir e criar de novo (FR-006).
+    mes = _mes(usuario, mes=11)
+    cliente_autenticado.delete(_url(mes))
+
+    resposta = cliente_autenticado.post(URL, {"mes": 11, "ano": 2026}, format="json")
+
+    assert resposta.status_code == 201
+
+
+def test_excluir_mes_de_outra_conta(outro_usuario, cliente_autenticado):
+    da_bia = _mes(outro_usuario)
+
+    resposta = cliente_autenticado.delete(_url(da_bia))
+
+    assert resposta.status_code == 404
+    assert resposta.json() == {"detail": "Não encontrado."}
+    assert MesReferencia.objects.filter(pk=da_bia.pk).exists()
