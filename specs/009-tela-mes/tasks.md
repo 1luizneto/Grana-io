@@ -151,8 +151,14 @@ de IA). Modo autônomo (decisões em `DECISOES-AUTONOMAS.md`).
 
 **Independent Test**: quickstart S7.
 
-- [ ] T017 [US6] Em `frontend/src/pages/Categorias/Categorias.test.jsx`, trocar os testes de exclusão por painel ([R-09](research.md)): "Excluir Saúde" mostra `Excluir a categoria "Saúde"?`, `select` "Mover os gastos para" sem a própria e com "Outros" escolhida quando existir; "Cancelar" fecha sem chamar a API; "Excluir" faz `DELETE /categorias/<id>/?mover_para=<outros>` e recarrega; sem outra categoria → "Não há outra categoria para receber gastos." e `DELETE` sem parâmetro; erro da API → alerta. Confirmar a **falha**
-- [ ] T018 [US6] Painel de exclusão em `frontend/src/pages/Categorias/Categorias.jsx` e `excluir(id, moverPara)` no `useCategorias`. Confirmar T017 **verde**
+- [X] T017 [US6] Em `frontend/src/pages/Categorias/Categorias.test.jsx`, trocar os testes de exclusão por painel ([R-09](research.md)): "Excluir Saúde" mostra `Excluir a categoria "Saúde"?`, `select` "Mover os gastos para" sem a própria e com "Outros" escolhida quando existir; "Cancelar" fecha sem chamar a API; "Excluir" faz `DELETE /categorias/<id>/?mover_para=<outros>` e recarrega; sem outra categoria → "Não há outra categoria para receber gastos." e `DELETE` sem parâmetro; erro da API → alerta. Confirmar a **falha**
+- [X] T018 [US6] Painel de exclusão em `frontend/src/pages/Categorias/Categorias.jsx` e `excluir(id, moverPara)` no `useCategorias`. Confirmar T017 **verde**
+
+  > **Resultado (2026-11-13)**: ✅ interface com 139 verdes (135 − 1 teste antigo de
+  > `window.confirm` + 5 do painel); backend 387.
+  > - T017 falhou primeiro (sem painel).
+  > - O `window.confirm` da spec 006 virou o painel `ConfirmarExclusao` na linha (formulário
+  >   "Excluir <nome>"); erro da API (inclusive `mover_para`) aparece no próprio painel.
 
 **Checkpoint**: categorias com gastos excluíveis pela tela.
 

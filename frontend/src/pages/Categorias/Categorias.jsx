@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import AvisoFormulario from '../../components/AvisoFormulario.jsx'
+import CampoSelecao from '../../components/CampoSelecao.jsx'
 import CampoTexto from '../../components/CampoTexto.jsx'
 import SeletorCor from '../../components/SeletorCor.jsx'
 import { useCategorias } from '../../hooks/useCategorias.js'
@@ -9,20 +10,13 @@ const SEM_ERROS = { campos: {}, geral: null }
 // Tela de categorias (US5; specs/006-categorias-gasto/contracts/tela-categorias.md).
 export default function Categorias() {
   const { categorias, cores, carregando, erroCarregar, criar, atualizar, excluir } = useCategorias()
-  const [erroExcluir, setErroExcluir] = useState(null)
   const porCodigo = Object.fromEntries(cores.map((cor) => [cor.codigo, cor]))
-
-  async function aoExcluir(categoria) {
-    if (!window.confirm(`Excluir a categoria "${categoria.nome}"?`)) return
-    const resultado = await excluir(categoria.id)
-    setErroExcluir(resultado.ok ? null : resultado.erro.geral)
-  }
 
   return (
     <section className="categorias">
       <h1>Categorias</h1>
       <FormularioNova cores={cores} criar={criar} />
-      <AvisoFormulario mensagem={erroCarregar ?? erroExcluir} />
+      <AvisoFormulario mensagem={erroCarregar} />
       {carregando ? (
         <p>Carregando categorias…</p>
       ) : categorias.length === 0 ? (
@@ -35,8 +29,9 @@ export default function Categorias() {
               categoria={categoria}
               cor={porCodigo[categoria.cor]}
               cores={cores}
+              outras={categorias.filter((outra) => outra.id !== categoria.id)}
               atualizar={atualizar}
-              aoExcluir={aoExcluir}
+              excluir={excluir}
             />
           ))}
         </ul>
@@ -80,8 +75,9 @@ function FormularioNova({ cores, criar }) {
   )
 }
 
-function LinhaCategoria({ categoria, cor, cores, atualizar, aoExcluir }) {
+function LinhaCategoria({ categoria, cor, cores, outras, atualizar, excluir }) {
   const [editando, setEditando] = useState(false)
+  const [excluindo, setExcluindo] = useState(false)
   const [nome, setNome] = useState(categoria.nome)
   const [codigoCor, setCodigoCor] = useState(categoria.cor)
   const [erro, setErro] = useState(SEM_ERROS)
@@ -102,6 +98,19 @@ function LinhaCategoria({ categoria, cor, cores, atualizar, aoExcluir }) {
     setEnviando(false)
     if (resultado.ok) setEditando(false)
     else setErro(resultado.erro)
+  }
+
+  if (excluindo) {
+    return (
+      <li className="linha-categoria editando">
+        <ConfirmarExclusao
+          categoria={categoria}
+          outras={outras}
+          excluir={excluir}
+          aoCancelar={() => setExcluindo(false)}
+        />
+      </li>
+    )
   }
 
   if (editando) {
@@ -138,11 +147,62 @@ function LinhaCategoria({ categoria, cor, cores, atualizar, aoExcluir }) {
           type="button"
           className="secundario"
           aria-label={`Excluir ${categoria.nome}`}
-          onClick={() => aoExcluir(categoria)}
+          onClick={() => setExcluindo(true)}
         >
           Excluir
         </button>
       </div>
     </li>
+  )
+}
+
+// Confirmação da exclusão com o destino dos gastos (spec 009, research R-09). A tela não sabe se a
+// categoria tem gastos: o destino vai sempre, e a API o ignora quando não há gastos.
+function ConfirmarExclusao({ categoria, outras, excluir, aoCancelar }) {
+  const sugerida = outras.find((outra) => outra.nome === 'Outros') ?? outras[0]
+  const [destino, setDestino] = useState(sugerida ? String(sugerida.id) : '')
+  const [erro, setErro] = useState(null)
+  const [enviando, setEnviando] = useState(false)
+
+  async function aoConfirmar(evento) {
+    evento.preventDefault()
+    if (enviando) return
+    setEnviando(true)
+    const resultado = await excluir(categoria.id, destino || undefined)
+    // No sucesso a linha some com a lista recarregada.
+    if (!resultado.ok) {
+      setEnviando(false)
+      setErro(
+        [resultado.erro.geral, ...(resultado.erro.campos.mover_para ?? [])]
+          .filter(Boolean)
+          .join(' '),
+      )
+    }
+  }
+
+  return (
+    <form aria-label={`Excluir ${categoria.nome}`} onSubmit={aoConfirmar} noValidate>
+      <p>Excluir a categoria "{categoria.nome}"?</p>
+      <AvisoFormulario mensagem={erro} />
+      {outras.length > 0 ? (
+        <CampoSelecao
+          rotulo="Mover os gastos para"
+          nome="mover_para"
+          valor={destino}
+          aoMudar={setDestino}
+          opcoes={outras.map((outra) => ({ valor: String(outra.id), rotulo: outra.nome }))}
+        />
+      ) : (
+        <p>Não há outra categoria para receber gastos.</p>
+      )}
+      <div className="acoes">
+        <button type="submit" className="perigo" disabled={enviando}>
+          {enviando ? 'Excluindo…' : 'Excluir'}
+        </button>
+        <button type="button" className="secundario" onClick={aoCancelar}>
+          Cancelar
+        </button>
+      </div>
+    </form>
   )
 }

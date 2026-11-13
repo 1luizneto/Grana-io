@@ -2,7 +2,7 @@
 import { screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Route } from 'react-router'
-import { describe, expect, it, vi } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { salvarSessao } from '../../auth/armazenamento.js'
 import { renderizarComRotas } from '../../testes/renderizar.jsx'
 import { json, LOGIN_OK, simularApi, USUARIO_ANA } from '../../testes/respostas.js'
@@ -167,24 +167,88 @@ describe('tela de categorias', () => {
     expect(chamadas(fetch, 'PATCH')).toHaveLength(0)
   })
 
-  it('pede confirmação antes de excluir e só exclui com "OK"', async () => {
-    let lista = LISTA
+  // Exclusão com destino dos gastos (spec 009, US6; research R-09).
+  const COM_OUTROS = [LISTA[0], { id: 7, nome: 'Outros', cor: 'verde' }, LISTA[1]]
+
+  it('"Excluir" abre a confirmação na linha, com o destino dos gastos', async () => {
+    const { fetch, pessoa } = abrir({ '/categorias/': () => json(200, COM_OUTROS) })
+
+    await pessoa.click(await screen.findByRole('button', { name: 'Excluir Saúde' }))
+
+    const painel = screen.getByRole('form', { name: 'Excluir Saúde' })
+    expect(within(painel).getByText('Excluir a categoria "Saúde"?')).toBeInTheDocument()
+    const destino = within(painel).getByRole('combobox', { name: 'Mover os gastos para' })
+    expect(within(destino).getAllByRole('option').map((opcao) => opcao.textContent)).toEqual([
+      'Moradia',
+      'Outros',
+    ])
+    expect(destino).toHaveValue('7')
+    expect(chamadas(fetch, 'DELETE')).toHaveLength(0)
+  })
+
+  it('"Cancelar" fecha a confirmação sem chamar a API', async () => {
+    const { fetch, pessoa } = abrir()
+
+    await pessoa.click(await screen.findByRole('button', { name: 'Excluir Saúde' }))
+    await pessoa.click(screen.getByRole('button', { name: 'Cancelar' }))
+
+    expect(screen.queryByRole('form', { name: 'Excluir Saúde' })).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Excluir Saúde' })).toBeInTheDocument()
+    expect(chamadas(fetch, 'DELETE')).toHaveLength(0)
+  })
+
+  it('exclui levando os gastos para a categoria escolhida', async () => {
+    let lista = COM_OUTROS
     const { fetch, pessoa } = abrir({
-      '/categorias/2/': () => {
-        lista = [LISTA[0]]
+      '/categorias/2/?mover_para=1': () => {
+        lista = COM_OUTROS.filter((categoria) => categoria.id !== 2)
         return json(204)
       },
       '/categorias/': () => json(200, lista),
     })
-    const confirmar = vi.spyOn(window, 'confirm').mockReturnValueOnce(false).mockReturnValueOnce(true)
 
     await pessoa.click(await screen.findByRole('button', { name: 'Excluir Saúde' }))
-    expect(confirmar).toHaveBeenCalledWith('Excluir a categoria "Saúde"?')
-    expect(chamadas(fetch, 'DELETE')).toHaveLength(0)
+    const painel = screen.getByRole('form', { name: 'Excluir Saúde' })
+    await pessoa.selectOptions(
+      within(painel).getByRole('combobox', { name: 'Mover os gastos para' }),
+      '1',
+    )
+    await pessoa.click(within(painel).getByRole('button', { name: 'Excluir' }))
 
-    await pessoa.click(screen.getByRole('button', { name: 'Excluir Saúde' }))
     await waitFor(() => expect(screen.queryByText('Saúde')).not.toBeInTheDocument())
+    expect(chamadas(fetch, 'DELETE')[0][0]).toBe('/api/categorias/2/?mover_para=1')
+  })
+
+  it('sem outra categoria, avisa e exclui sem destino', async () => {
+    const { fetch, pessoa } = abrir({
+      '/categorias/2/': () => json(204),
+      '/categorias/': () => json(200, [LISTA[1]]),
+    })
+
+    await pessoa.click(await screen.findByRole('button', { name: 'Excluir Saúde' }))
+    const painel = screen.getByRole('form', { name: 'Excluir Saúde' })
+    expect(within(painel).getByText('Não há outra categoria para receber gastos.')).toBeInTheDocument()
+
+    await pessoa.click(within(painel).getByRole('button', { name: 'Excluir' }))
+
+    await waitFor(() => expect(chamadas(fetch, 'DELETE')).toHaveLength(1))
     expect(chamadas(fetch, 'DELETE')[0][0]).toBe('/api/categorias/2/')
+  })
+
+  it('erro da API na exclusão aparece no painel', async () => {
+    const { pessoa } = abrir({
+      '/categorias/2/': () =>
+        json(400, { detail: 'Esta categoria tem gastos. Escolha outra categoria para recebê-los.' }),
+      '/categorias/': () => json(200, [LISTA[1]]),
+    })
+
+    await pessoa.click(await screen.findByRole('button', { name: 'Excluir Saúde' }))
+    const painel = screen.getByRole('form', { name: 'Excluir Saúde' })
+    await pessoa.click(within(painel).getByRole('button', { name: 'Excluir' }))
+
+    expect(await within(painel).findByRole('alert')).toHaveTextContent(
+      'Esta categoria tem gastos. Escolha outra categoria para recebê-los.',
+    )
   })
 
   it('mostra a falha de comunicação ao carregar', async () => {
