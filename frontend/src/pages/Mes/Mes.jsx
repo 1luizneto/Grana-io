@@ -8,6 +8,7 @@ import TotaisMes from '../../components/TotaisMes.jsx'
 import { useCategorias } from '../../hooks/useCategorias.js'
 import { useGastosDoMes } from '../../hooks/useGastosDoMes.js'
 import { useMeses } from '../../hooks/useMeses.js'
+import { formatarMoeda } from '../../utils/formatacao.js'
 
 // Mês inicial (FR-003): o de hoje, se existir; senão o mais recente da lista (ordem da API).
 function escolherMesInicial(meses) {
@@ -74,13 +75,31 @@ export default function Mes() {
 
 // Um mês: cabeçalho, totais, formulário e tabela. Remontado ao trocar de mês (key).
 function DetalheMes({ mes, avisar }) {
-  const { gastos, totais, formas, carregando, erroCarregar, criar } = useGastosDoMes(mes.id)
+  const { gastos, totais, formas, carregando, erroCarregar, criar, atualizar, excluir } =
+    useGastosDoMes(mes.id)
   const { categorias, cores } = useCategorias()
+  const [emEdicao, setEmEdicao] = useState(null)
 
-  async function aoLancar(dados) {
-    const resultado = await criar(dados)
-    if (resultado.ok) avisar('sucesso', 'Gasto lançado.')
+  async function aoSalvar(dados) {
+    const resultado = emEdicao ? await atualizar(emEdicao.id, dados) : await criar(dados)
+    if (resultado.ok) {
+      avisar('sucesso', emEdicao ? 'Gasto atualizado.' : 'Gasto lançado.')
+      setEmEdicao(null)
+    }
     return resultado
+  }
+
+  async function aoExcluir(gasto) {
+    if (!window.confirm(`Excluir o gasto "${gasto.descricao}" de ${formatarMoeda(gasto.valor)}?`)) {
+      return
+    }
+    const resultado = await excluir(gasto.id)
+    if (resultado.ok) {
+      avisar('sucesso', 'Gasto excluído.')
+      if (emEdicao?.id === gasto.id) setEmEdicao(null)
+    } else {
+      avisar('erro', resultado.erro.geral)
+    }
   }
 
   return (
@@ -95,10 +114,25 @@ function DetalheMes({ mes, avisar }) {
       ) : (
         <>
           {totais && <TotaisMes totais={totais} cores={cores} />}
-          <FormularioGasto mes={mes} categorias={categorias} formas={formas} salvar={aoLancar} />
+          <FormularioGasto
+            key={emEdicao?.id ?? 'novo'}
+            mes={mes}
+            categorias={categorias}
+            formas={formas}
+            gasto={emEdicao}
+            salvar={aoSalvar}
+            aoCancelar={() => setEmEdicao(null)}
+          />
           <section className="gastos-mes">
             <h2>Gastos</h2>
-            <TabelaGastos mes={mes} gastos={gastos} categorias={categorias} formas={formas} />
+            <TabelaGastos
+              mes={mes}
+              gastos={gastos}
+              categorias={categorias}
+              formas={formas}
+              aoEditar={setEmEdicao}
+              aoExcluir={aoExcluir}
+            />
           </section>
         </>
       )}

@@ -99,8 +99,13 @@ de IA). Modo autônomo (decisões em `DECISOES-AUTONOMAS.md`).
 
 **Independent Test**: quickstart S4.
 
-- [ ] T011 [US3] Acrescentar a `Mes.test.jsx`: "Editar Mercado" carrega o formulário ("Editar gasto", valor "150,30") → salvar faz `PATCH /gastos/<id>/` com os campos e mostra "Gasto atualizado."; "Cancelar edição" volta ao modo lançar sem chamar a API; "Excluir Mercado" pergunta `Excluir o gasto "Mercado" de R$ 150,30?`; `false` não chama a API; `true` faz `DELETE` e mostra "Gasto excluído."; erro de exclusão vira alerta. Confirmar a **falha**
-- [ ] T012 [US3] Modo editar no `FormularioGasto` (valor da API mostrado com vírgula) e ações na `TabelaGastos`; confirmação com `window.confirm`. Confirmar T011 **verde**
+- [X] T011 [US3] Acrescentar a `Mes.test.jsx`: "Editar Mercado" carrega o formulário ("Editar gasto", valor "150,30") → salvar faz `PATCH /gastos/<id>/` com os campos e mostra "Gasto atualizado."; "Cancelar edição" volta ao modo lançar sem chamar a API; "Excluir Mercado" pergunta `Excluir o gasto "Mercado" de R$ 150,30?`; `false` não chama a API; `true` faz `DELETE` e mostra "Gasto excluído."; erro de exclusão vira alerta. Confirmar a **falha**
+- [X] T012 [US3] Modo editar no `FormularioGasto` (valor da API mostrado com vírgula) e ações na `TabelaGastos`; confirmação com `window.confirm`. Confirmar T011 **verde**
+
+  > **Resultado (2026-11-13)**: ✅ interface com 124 verdes (119 + 5); backend 387.
+  > - T011 falhou primeiro nos 5 casos (sem botões de editar e excluir).
+  > - Salvar a edição volta o formulário ao modo "Lançar gasto"; excluir o gasto que está em
+  >   edição também.
 
 **Checkpoint**: corrigir e excluir pela tela.
 

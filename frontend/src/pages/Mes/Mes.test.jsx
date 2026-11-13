@@ -354,3 +354,106 @@ describe('tela do mês: lançar gastos e ver os totais (US2)', () => {
     expect(within(form).getByLabelText('Data')).toHaveValue('2026-09-01')
   })
 })
+
+describe('tela do mês: corrigir e excluir gastos (US3)', () => {
+  it('"Editar" carrega o gasto no formulário e salva com PATCH', async () => {
+    const { fetch, pessoa } = abrir({
+      rota: '/meses/7',
+      rotas: { ...COM_GASTOS, '/gastos/42/': () => json(200, GASTOS[1]) },
+    })
+
+    await pessoa.click(await screen.findByRole('button', { name: 'Editar Mercado' }))
+
+    const form = formularioGasto('Editar gasto')
+    expect(within(form).getByLabelText('Descrição')).toHaveValue('Mercado')
+    expect(within(form).getByLabelText('Valor')).toHaveValue('150,30')
+    expect(within(form).getByLabelText('Data')).toHaveValue('2026-10-05')
+    expect(within(form).getByRole('combobox', { name: 'Categoria' })).toHaveValue('3')
+    expect(within(form).getByRole('combobox', { name: 'Forma de pagamento' })).toHaveValue('pix')
+
+    await pessoa.clear(within(form).getByLabelText('Valor'))
+    await pessoa.type(within(form).getByLabelText('Valor'), '155,00')
+    await pessoa.click(within(form).getByRole('button', { name: 'Salvar alterações' }))
+
+    await esperarSucesso('Gasto atualizado.')
+    const [patch] = chamadas(fetch, 'PATCH', '/gastos/42/')
+    expect(corpo(patch)).toEqual({
+      descricao: 'Mercado',
+      valor: '155.00',
+      data: '2026-10-05',
+      mes: 7,
+      categoria: 3,
+      forma_pagamento: 'pix',
+    })
+    expect(await screen.findByRole('form', { name: 'Lançar gasto' })).toBeInTheDocument()
+  })
+
+  it('"Cancelar edição" volta a lançar sem chamar a API', async () => {
+    const { fetch, pessoa } = abrir({ rota: '/meses/7', rotas: COM_GASTOS })
+
+    await pessoa.click(await screen.findByRole('button', { name: 'Editar Mercado' }))
+    await pessoa.click(screen.getByRole('button', { name: 'Cancelar edição' }))
+
+    expect(screen.getByRole('form', { name: 'Lançar gasto' })).toBeInTheDocument()
+    expect(within(formularioGasto()).getByLabelText('Descrição')).toHaveValue('')
+    expect(chamadas(fetch, 'PATCH')).toHaveLength(0)
+  })
+
+  it('erro ao salvar a edição fica no formulário de edição', async () => {
+    const { pessoa } = abrir({
+      rota: '/meses/7',
+      rotas: {
+        ...COM_GASTOS,
+        '/gastos/42/': () => json(400, { data: ['A data precisa estar dentro de 10/2026.'] }),
+      },
+    })
+
+    await pessoa.click(await screen.findByRole('button', { name: 'Editar Mercado' }))
+    await pessoa.click(screen.getByRole('button', { name: 'Salvar alterações' }))
+
+    const form = formularioGasto('Editar gasto')
+    await waitFor(() =>
+      expect(within(form).getByLabelText('Data')).toHaveAccessibleDescription(
+        'A data precisa estar dentro de 10/2026.',
+      ),
+    )
+  })
+
+  it('excluir pede confirmação e só exclui com "OK"', async () => {
+    const confirmar = vi
+      .spyOn(window, 'confirm')
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(true)
+    const { fetch, pessoa } = abrir({
+      rota: '/meses/7',
+      rotas: { ...COM_GASTOS, '/gastos/42/': () => json(204) },
+    })
+
+    await pessoa.click(await screen.findByRole('button', { name: 'Excluir Mercado' }))
+    expect(confirmar).toHaveBeenCalledWith('Excluir o gasto "Mercado" de R$ 150,30?')
+    expect(chamadas(fetch, 'DELETE')).toHaveLength(0)
+
+    await pessoa.click(screen.getByRole('button', { name: 'Excluir Mercado' }))
+
+    await esperarSucesso('Gasto excluído.')
+    expect(chamadas(fetch, 'DELETE', '/gastos/42/')).toHaveLength(1)
+    confirmar.mockRestore()
+  })
+
+  it('erro ao excluir vira alerta', async () => {
+    const confirmar = vi.spyOn(window, 'confirm').mockReturnValue(true)
+    const { pessoa } = abrir({
+      rota: '/meses/7',
+      rotas: {
+        ...COM_GASTOS,
+        '/gastos/42/': () =>
+          json(400, { detail: 'O mês 10/2026 está fechado. Reabra o mês para alterar os gastos.' }),
+      },
+    })
+
+    await pessoa.click(await screen.findByRole('button', { name: 'Excluir Mercado' }))
+
+    expect(await screen.findByText(/O mês 10\/2026 está fechado/)).toHaveAttribute('role', 'alert')
+    confirmar.mockRestore()
+  })
+})
