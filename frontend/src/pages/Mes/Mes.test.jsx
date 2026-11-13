@@ -347,6 +347,34 @@ describe('tela do mês: lançar gastos e ver os totais (US2)', () => {
     )
   })
 
+  it('uma nova operação apaga a mensagem de sucesso anterior', async () => {
+    let tentativa = 0
+    const { pessoa } = abrir({
+      rota: '/meses/7',
+      rotas: {
+        '/gastos/': () => {
+          tentativa += 1
+          return tentativa === 1
+            ? json(201, { id: 44 })
+            : json(400, { valor: ['Informe um valor maior que zero.'] })
+        },
+      },
+    })
+    await screen.findByText('Nenhum gasto neste mês.')
+    const botao = () => within(formularioGasto()).getByRole('button', { name: 'Lançar' })
+
+    await pessoa.click(botao())
+    await esperarSucesso('Gasto lançado.')
+    await pessoa.click(botao())
+
+    await waitFor(() =>
+      expect(within(formularioGasto()).getByLabelText('Valor')).toHaveAccessibleDescription(
+        'Informe um valor maior que zero.',
+      ),
+    )
+    expect(screen.queryByText('Gasto lançado.')).not.toBeInTheDocument()
+  })
+
   it('a data padrão é hoje quando cai no mês; senão, o dia 1', async () => {
     abrir({ rota: '/meses/6' })
 

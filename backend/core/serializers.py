@@ -24,6 +24,8 @@ class RelacionadoDoDonoField(serializers.PrimaryKeyRelatedField):
     default_error_messages = {
         "does_not_exist": MENSAGEM_REGISTRO_NAO_ENCONTRADO,
         "incorrect_type": MENSAGEM_REGISTRO_NAO_ENCONTRADO,
+        # Referência obrigatória enviada como null: a mesma mensagem de campo ausente.
+        "null": "Este campo é obrigatório.",
     }
 
     def get_queryset(self):

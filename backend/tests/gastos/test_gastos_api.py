@@ -229,6 +229,16 @@ def test_mes_fechado_nao_aceita_gasto(usuario, cliente_autenticado):
     assert not Gasto.objects.exists()
 
 
+def test_mes_e_categoria_nulos_sao_obrigatorios(usuario, cliente_autenticado):
+    # A tela envia null quando nenhuma categoria foi escolhida (achado da validação da spec 009).
+    resposta = cliente_autenticado.post(
+        URL, _payload(usuario, mes=None, categoria=None), format="json"
+    )
+
+    assert resposta.status_code == 400
+    assert resposta.json() == {"mes": OBRIGATORIO, "categoria": OBRIGATORIO}
+
+
 def test_lancar_sem_sessao(cliente):
     assert cliente.post(URL, {}, format="json").status_code == 401
 

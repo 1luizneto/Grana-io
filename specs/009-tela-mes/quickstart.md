@@ -28,7 +28,7 @@ R$ 223,45; Alimentação R$ 200,00 (2 gastos), Transporte R$ 23,45 (1 gasto). La
 ### S4 — Corrigir e excluir (US3)
 
 Editar o Uber para "25,00" → "Gasto atualizado." e total R$ 225,00. Excluir a Feira cancelando
-(fica) e confirmando ("Gasto excluído.", total R$ 175,00).
+(fica) e confirmando ("Gasto excluído.", total R$ 175,30).
 
 ### S5 — Filtrar e ordenar (US4)
 

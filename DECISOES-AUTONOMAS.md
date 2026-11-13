@@ -22,6 +22,7 @@ as que mais valem uma conferida, porque mudam comportamento visível ou escopo.
 |---|---|---|---|
 | 1 | `007-mes-referencia` | US-06 | Pronta para PR na `main` (20/20 tarefas) |
 | 2 | `008-lancar-gastos` | US-07 + US-08 (API) | Pronta para PR depois da 007 (28/28 tarefas) |
+| 3 | `009-tela-mes` | US-27 (tela do mês) | Pronta para PR depois da 008 (22/22 tarefas) |
 
 ---
 
@@ -86,3 +87,55 @@ Fluxo completo em modo autônomo: specify, clarify, plan, tasks, analyze e imple
 
 **Resultado**: backend 387 testes, interface 85. Quickstart S1 a S7 validado com `curl`; banco
 local deixado sem gastos e meses de teste (a categoria Lazer da Ana foi recriada, com outro id).
+
+---
+
+## Spec 009 — Tela do mês (US-27)
+
+Fluxo completo em modo autônomo, com validação no navegador embutido (conta de teste
+`teste.s9@exemplo.com`, criada pela tela de cadastro; os gastos e o mês de teste foram excluídos
+no fim, e a conta ficou).
+
+**Escopo**
+
+- **D-009-1**: a tela entrou com as pendências de tela das specs 007 e 008: confirmação antes de
+  excluir gasto (US-08), destino dos gastos ao excluir categoria (US-05/US-07) e "o frontend não
+  recalcula" (RNF-03).
+- **D-009-2** ⚠️: **recorrentes e parcelados** ainda **não** estão no formulário (as US-07b e US-10
+  não existem na API). O critério da US-27 ficou ☐, com nota. "Copiar do mês anterior" fica com a
+  US-09.
+
+**Comportamento**
+
+- **D-009-3**: a tela abre no **mês de hoje**; se ele não existir, no mais recente. O mês fica no
+  endereço (`/meses/<id>`), então recarregar ou voltar mantém o mês.
+- **D-009-4**: "Novo mês" sugere o **mês seguinte ao mais recente** (ou o de hoje, se não houver
+  meses).
+- **D-009-5** ⚠️: o **valor aceita a escrita brasileira**: "1.234,56" vira "1234.56". Com vírgula,
+  os pontos são milhar; sem vírgula, o ponto é o decimal ("12.50" continua 12,50).
+- **D-009-6**: depois de lançar, o formulário **mantém a data e a categoria** e limpa o resto, para
+  lançar vários seguidos; o foco volta à descrição.
+- **D-009-7**: editar usa o **mesmo formulário** do topo (e não edição na linha da tabela), que
+  cabe melhor no celular.
+- **D-009-8**: filtro e ordenação rodam na tela, sobre a lista do mês; comparar valores usa
+  centavos inteiros (`BigInt`), sem ponto flutuante.
+- **D-009-9** ⚠️: na tela de categorias, o `window.confirm` virou um **painel na linha** com "Mover
+  os gastos para" ("Outros" escolhida quando existe). O destino é enviado sempre; a API o ignora
+  se a categoria não tiver gastos.
+- **D-009-10**: com o mês fechado, o formulário fica desabilitado e a tabela perde os botões de
+  editar e excluir; um aviso fixo explica como reabrir.
+- **D-009-11**: menu "Início", **"Gastos do mês"**, "Categorias"; a página inicial ganhou um link
+  para a tela do mês. Rótulos "Escolher mês" e "Filtrar por categoria", para não repetir os
+  campos "Mês" e "Categoria" dos formulários.
+
+**Achados da validação no navegador (corrigidos, com teste)**
+
+- **D-009-12**: a mensagem de sucesso anterior ("Gasto lançado.") ficava na tela durante um erro
+  novo. Agora cada operação apaga a mensagem da anterior.
+- **D-009-13**: com a categoria vazia, a API respondia "Este campo pode não ser nulo." (texto
+  padrão do DRF). O `RelacionadoDoDonoField` (spec 004) agora responde "Este campo é
+  obrigatório." para `null`. É uma mudança pequena no backend dentro de uma spec de tela.
+
+**Resultado**: backend 388 testes, interface 140. Navegador: S2 a S8 conferidos, inclusive
+lançamento em 8,9 s com automação (SC-001: até 30 s), 360 px sem rolagem horizontal (tabela em
+cartões) e lançamento só pelo teclado.

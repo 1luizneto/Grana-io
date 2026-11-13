@@ -190,7 +190,8 @@ button:disabled {
 
 a:focus-visible,
 button:focus-visible,
-input:focus-visible {
+input:focus-visible,
+select:focus-visible {
   outline: 3px solid var(--cor-primaria);
   outline-offset: 2px;
 }
@@ -301,4 +302,240 @@ button.secundario:hover:not(:disabled) {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+}
+
+/* Tela do mês (specs/009-tela-mes/contracts/tela-mes.md) */
+.aviso-sucesso {
+  color: var(--cor-primaria-escura);
+  background: var(--cor-info-fundo);
+}
+
+.campo select {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  font: inherit;
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+}
+
+.campo select[aria-invalid='true'] {
+  border-color: var(--cor-erro);
+}
+
+button.perigo {
+  background: var(--cor-erro);
+}
+
+button.perigo:hover:not(:disabled) {
+  background: #8f1c13;
+}
+
+.seletor-mes {
+  display: grid;
+  grid-template-columns: minmax(12rem, 1fr) 2fr;
+  gap: 1rem;
+  align-items: start;
+  margin-bottom: 1.5rem;
+}
+
+.formulario-novo-mes {
+  display: grid;
+  grid-template-columns: 1fr 7rem auto;
+  gap: 0 0.75rem;
+  align-items: end;
+  padding: 1rem;
+}
+
+.formulario-novo-mes .aviso {
+  grid-column: 1 / -1;
+}
+
+.formulario-novo-mes button[type='submit'],
+.formulario-gasto button[type='submit'] {
+  width: auto;
+}
+
+.formulario-novo-mes button[type='submit'] {
+  margin-bottom: 1rem;
+}
+
+.cabecalho-mes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.cabecalho-mes h2 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.cabecalho-mes .acoes {
+  margin-left: auto;
+}
+
+.situacao-mes {
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: var(--cor-info-fundo);
+  color: var(--cor-primaria-escura);
+}
+
+.situacao-mes.fechado {
+  background: var(--cor-erro-fundo);
+  color: var(--cor-erro);
+}
+
+.totais-mes,
+.formulario-gasto {
+  margin-bottom: 1.5rem;
+}
+
+.totais-mes h2,
+.formulario-gasto h2,
+.gastos-mes h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.15rem;
+}
+
+.total-mes {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 0 0.75rem;
+  font-size: 1.15rem;
+}
+
+.totais-categorias {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.totais-categorias li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.6rem;
+  padding: 0.4rem 0;
+  border-top: 1px solid var(--cor-borda);
+}
+
+.totais-categorias .quantidade {
+  color: var(--cor-texto-suave);
+  font-size: 0.9rem;
+}
+
+.totais-categorias strong {
+  margin-left: auto;
+}
+
+.formulario-gasto fieldset {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 0 0.75rem;
+  margin: 0;
+  padding: 0;
+  border: none;
+  min-width: 0;
+}
+
+.formulario-gasto .acoes {
+  grid-column: 1 / -1;
+}
+
+.controles-tabela {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 0.75rem;
+}
+
+.tabela-gastos {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--cor-superficie);
+}
+
+.tabela-gastos th,
+.tabela-gastos td {
+  padding: 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid var(--cor-borda);
+  overflow-wrap: anywhere;
+}
+
+.tabela-gastos .valor {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.tabela-gastos td.acoes {
+  display: table-cell;
+}
+
+.tabela-gastos td.acoes button {
+  margin: 0.15rem;
+  padding: 0.35rem 0.6rem;
+}
+
+/* Tela do mês em telas estreitas: tudo em coluna e a tabela vira cartões (R-10). */
+@media (max-width: 640px) {
+  .seletor-mes,
+  .formulario-novo-mes,
+  .formulario-gasto fieldset,
+  .controles-tabela {
+    grid-template-columns: 1fr;
+  }
+
+  .cabecalho-mes .acoes {
+    margin-left: 0;
+  }
+
+  .tabela-gastos thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .tabela-gastos,
+  .tabela-gastos tbody,
+  .tabela-gastos tr,
+  .tabela-gastos td {
+    display: block;
+    width: 100%;
+  }
+
+  .tabela-gastos tr {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    margin-bottom: 0.75rem;
+  }
+
+  .tabela-gastos td {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.25rem 0;
+    border: none;
+    text-align: right;
+  }
+
+  .tabela-gastos td[data-rotulo]::before {
+    content: attr(data-rotulo);
+    font-weight: 600;
+    text-align: left;
+  }
+
+  .tabela-gastos td.acoes {
+    display: flex;
+    justify-content: flex-end;
+  }
 }

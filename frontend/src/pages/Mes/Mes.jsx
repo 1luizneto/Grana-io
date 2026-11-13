@@ -31,11 +31,13 @@ export default function Mes() {
     navegar(`/meses/${escolherMesInicial(meses).id}`, { replace: true })
   }, [carregando, id, meses, navegar])
 
+  // Sem argumentos, apaga a mensagem: cada operação começa sem o retorno da anterior.
   function avisar(tipo, mensagem) {
-    setAviso({ tipo, mensagem })
+    setAviso(mensagem ? { tipo, mensagem } : null)
   }
 
   async function aoCriarMes(dados) {
+    avisar()
     const resultado = await criar(dados)
     if (resultado.ok) {
       avisar('sucesso', 'Mês criado.')
@@ -45,6 +47,7 @@ export default function Mes() {
   }
 
   async function aoDefinirFechado(alvo, fechado) {
+    avisar()
     const resultado = await definirFechado(alvo.id, fechado)
     if (resultado.ok) avisar('sucesso', fechado ? 'Mês fechado.' : 'Mês reaberto.')
     else avisar('erro', resultado.erro.geral)
@@ -52,6 +55,7 @@ export default function Mes() {
 
   async function aoExcluirMes(alvo) {
     if (!window.confirm(`Excluir o mês ${alvo.rotulo}?`)) return
+    avisar()
     const resultado = await excluir(alvo.id)
     if (resultado.ok) {
       avisar('sucesso', 'Mês excluído.')
@@ -109,6 +113,7 @@ function DetalheMes({ mes, avisar, aoDefinirFechado, aoExcluirMes }) {
   if (mes.fechado && emEdicao) setEmEdicao(null)
 
   async function aoSalvar(dados) {
+    avisar()
     const resultado = emEdicao ? await atualizar(emEdicao.id, dados) : await criar(dados)
     if (resultado.ok) {
       avisar('sucesso', emEdicao ? 'Gasto atualizado.' : 'Gasto lançado.')
@@ -121,6 +126,7 @@ function DetalheMes({ mes, avisar, aoDefinirFechado, aoExcluirMes }) {
     if (!window.confirm(`Excluir o gasto "${gasto.descricao}" de ${formatarMoeda(gasto.valor)}?`)) {
       return
     }
+    avisar()
     const resultado = await excluir(gasto.id)
     if (resultado.ok) {
       avisar('sucesso', 'Gasto excluído.')
@@ -151,7 +157,9 @@ function DetalheMes({ mes, avisar, aoDefinirFechado, aoExcluirMes }) {
         </div>
       </header>
       {mes.fechado && (
-        <p className="aviso aviso-info">Mês fechado. Reabra o mês para lançar ou alterar gastos.</p>
+        <p className="aviso aviso-informacao">
+          Mês fechado. Reabra o mês para lançar ou alterar gastos.
+        </p>
       )}
       <AvisoFormulario mensagem={erroCarregar} />
       {carregando ? (

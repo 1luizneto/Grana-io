@@ -13,11 +13,10 @@ O sistema tem três partes, todas em containers Docker:
 | Banco de dados | PostgreSQL 17 | não fica acessível fora do Docker |
 
 > Estado atual: Sprint 2 em andamento. Pela interface já dá para criar conta, entrar, continuar
-> conectado, sair e gerenciar as **categorias de gasto** (toda conta começa com 7 categorias
-> padrão, cada uma com uma cor). A API tem verificação de saúde, cadastro, sessão, categorias,
-> **meses de referência**, **gastos** (com os totais do mês) e a base de isolamento por usuário
-> que todos os dados financeiros seguem; a tela do mês chega na próxima entrega (ver
-> [BACKLOG.md](BACKLOG.md)).
+> conectado, sair, gerenciar as **categorias de gasto** (toda conta começa com 7 categorias
+> padrão, cada uma com uma cor) e usar a tela **Gastos do mês**: criar meses, lançar, corrigir e
+> excluir gastos, ver os totais por categoria e fechar o mês revisado. Tudo isso também existe
+> na API, que segue a base de isolamento por usuário (ver [BACKLOG.md](BACKLOG.md)).
 
 ---
 
@@ -68,6 +67,7 @@ Isso não afeta os dados do banco. Alterações no código Python (`backend/`) e
 |---|---|
 | Interface (login) | http://localhost:5173/entrar |
 | Interface (criar conta) | http://localhost:5173/cadastro |
+| Interface (gastos do mês, exige login) | http://localhost:5173/meses |
 | Interface (categorias, exige login) | http://localhost:5173/categorias |
 | Verificação de saúde da API | http://localhost:8000/api/health/ |
 | Cadastro de usuário (API) | `POST` http://localhost:8000/api/usuarios/ |
@@ -134,6 +134,13 @@ maiúsculas ("Pets" e "pets" são o mesmo nome). Detalhes em
 novo). `PATCH` com `{"fechado": true}` fecha o mês e `{"fechado": false}` reabre; mês fechado não
 pode ser excluído. Por enquanto só pela API (a tela é a US-27). Detalhes em
 [specs/007-mes-referencia/contracts/api-meses.md](specs/007-mes-referencia/contracts/api-meses.md).
+
+**Tela "Gastos do mês".** Abre no mês de hoje (ou no mais recente) e tem um seletor para trocar
+de mês ou criar outro. Nela ficam os totais (do mês e por categoria, calculados pela API), o
+formulário rápido para lançar e editar (o valor aceita "1.234,56"), a tabela com filtro por
+categoria e ordenação por data ou valor, e os botões para fechar, reabrir e excluir o mês. Na
+tela "Categorias", excluir uma categoria pergunta para qual categoria vão os gastos dela. Telas e
+textos em [specs/009-tela-mes/contracts/tela-mes.md](specs/009-tela-mes/contracts/tela-mes.md).
 
 **Gastos.** Um gasto tem descrição, valor, data, categoria, mês e, se quiser, forma de pagamento
 (dinheiro, débito, crédito ou Pix). O valor vai com **ponto** (`"150.30"`), maior que zero e com

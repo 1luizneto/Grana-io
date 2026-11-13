@@ -166,10 +166,28 @@ de IA). Modo autônomo (decisões em `DECISOES-AUTONOMAS.md`).
 
 ## Phase 9: Polish & Cross-Cutting Concerns
 
-- [ ] T019 [P] Estilos em `frontend/src/estilos.css` (seletor, cabeçalho do mês, totais, formulário em grade, tabela e cartões abaixo de 640 px, aviso de sucesso) e link "Gastos do mês" no `frontend/src/pages/Inicio/Inicio.jsx`
-- [ ] T020 Validar no navegador o [quickstart.md](quickstart.md) S2 a S8 (com o tempo do SC-001 e 360 px) e limpar (S9)
-- [ ] T021 [P] Atualizar o `README.md` (estado atual; rota `/meses` da interface)
-- [ ] T022 Fechar a Definition of Done: suítes verdes, tarefas marcadas; `BACKLOG.md` (US-27: critérios atendidos ☑, recorrentes/parcelados anotados; US-08 "confirmação antes de excluir" ☑; RNF-03 3º critério ☑; US-05 nota da tela); `DECISOES-AUTONOMAS.md`
+- [X] T019 [P] Estilos em `frontend/src/estilos.css` (seletor, cabeçalho do mês, totais, formulário em grade, tabela e cartões abaixo de 640 px, aviso de sucesso) e link "Gastos do mês" no `frontend/src/pages/Inicio/Inicio.jsx`
+- [X] T020 Validar no navegador o [quickstart.md](quickstart.md) S2 a S8 (com o tempo do SC-001 e 360 px) e limpar (S9)
+- [X] T021 [P] Atualizar o `README.md` (estado atual; rota `/meses` da interface)
+- [X] T022 Fechar a Definition of Done: suítes verdes, tarefas marcadas; `BACKLOG.md` (US-27: critérios atendidos ☑, recorrentes/parcelados anotados; US-08 "confirmação antes de excluir" ☑; RNF-03 3º critério ☑; US-05 nota da tela); `DECISOES-AUTONOMAS.md`
+
+  > **Resultado (2026-11-13)**: ✅ backend 388 e interface 140 verdes; 22/22 tarefas.
+  > - T019: estilos da tela (seletor, cabeçalho, totais, formulário em grade, tabela que vira
+  >   cartões abaixo de 640 px, aviso de sucesso, botão de perigo) e link na página inicial.
+  > - T020 (navegador, conta nova `teste.s9@exemplo.com`): S2 estado vazio e "Mês criado."; S3
+  >   três lançamentos, totais R$ 223,45 / R$ 200,00 (2) / R$ 23,45 (1) e erro do valor zero no
+  >   campo, um lançamento em 8,9 s (SC-001); S4 edição para R$ 25,00 e exclusão com confirmação
+  >   (cancelar mantém; total R$ 175,30); S5 filtro e "Maior valor"; S6 fechar (formulário
+  >   desabilitado, sem ações), reabrir, mês com gastos recusado, mês vazio excluído; S7 Lazer
+  >   excluída com destino Outros e o gasto aparecendo em Outros; S8 360 px sem rolagem
+  >   horizontal e lançamento só pelo teclado. O `window.confirm` foi substituído por JS durante a
+  >   validação (o diálogo nativo trava a automação). Limpeza (S9): gastos e meses excluídos.
+  > - Achados corrigidos com teste: mensagem de sucesso antiga ficava na tela durante um erro
+  >   novo; categoria vazia (`null`) recebia "Este campo pode não ser nulo." (agora "Este campo é
+  >   obrigatório.", no `RelacionadoDoDonoField`).
+  > - T021: README com o estado atual, a rota `/meses` e um parágrafo sobre a tela.
+  > - T022: BACKLOG (US-27 com 4 de 5 critérios ☑; US-08 completa; RNF-03 com 3 ☑) e decisões
+  >   D-009-*.
 
 **Checkpoint**: feature pronta para PR (depois da 008).
 
