@@ -15,7 +15,8 @@ O sistema tem três partes, todas em containers Docker:
 > Estado atual: Sprint 2 em andamento. Pela interface já dá para criar conta, entrar, continuar
 > conectado, sair, gerenciar as **categorias de gasto** (toda conta começa com 7 categorias
 > padrão, cada uma com uma cor) e usar a tela **Gastos do mês**: criar meses, lançar, corrigir e
-> excluir gastos, ver os totais por categoria e fechar o mês revisado. Tudo isso também existe
+> excluir gastos, ver os totais por categoria e fechar o mês revisado; e cadastrar **gastos
+> fixos**, que entram sozinhos em cada mês novo. Tudo isso também existe
 > na API, que segue a base de isolamento por usuário (ver [BACKLOG.md](BACKLOG.md)).
 
 ---
@@ -68,6 +69,7 @@ Isso não afeta os dados do banco. Alterações no código Python (`backend/`) e
 | Interface (login) | http://localhost:5173/entrar |
 | Interface (criar conta) | http://localhost:5173/cadastro |
 | Interface (gastos do mês, exige login) | http://localhost:5173/meses |
+| Interface (gastos fixos, exige login) | http://localhost:5173/fixos |
 | Interface (categorias, exige login) | http://localhost:5173/categorias |
 | Verificação de saúde da API | http://localhost:8000/api/health/ |
 | Cadastro de usuário (API) | `POST` http://localhost:8000/api/usuarios/ |
@@ -79,6 +81,7 @@ Isso não afeta os dados do banco. Alterações no código Python (`backend/`) e
 | Totais do mês (API, exige login) | `GET` http://localhost:8000/api/meses/<id>/totais/ |
 | Gastos (API, exige login) | `GET`/`POST` http://localhost:8000/api/gastos/ (filtros `?mes=<id>` e `?categoria=<id>`), `GET`/`PATCH`/`DELETE` `.../gastos/<id>/` |
 | Formas de pagamento (API, exige login) | `GET` http://localhost:8000/api/gastos/formas-pagamento/ |
+| Gastos fixos (API, exige login) | `GET`/`POST` http://localhost:8000/api/fixos/, `GET`/`PATCH`/`DELETE` `.../fixos/<id>/` |
 
 Todas as rotas da API ficam sob `http://localhost:8000/api/`. O endereço base sozinho responde
 404, porque não é uma rota. Só saúde, cadastro, entrar e renovar funcionam sem login; **todas as
@@ -141,6 +144,13 @@ formulário rápido para lançar e editar (o valor aceita "1.234,56"), a tabela 
 categoria e ordenação por data ou valor, e os botões para fechar, reabrir e excluir o mês. Na
 tela "Categorias", excluir uma categoria pergunta para qual categoria vão os gastos dela. Telas e
 textos em [specs/009-tela-mes/contracts/tela-mes.md](specs/009-tela-mes/contracts/tela-mes.md).
+
+**Gastos fixos.** Aluguel, internet e assinaturas podem virar gastos fixos: na tela "Gastos
+fixos" (descrição, valor, categoria, dia de vencimento, mês de início e, se quiser, de fim) ou
+marcando "Repetir todo mês" ao lançar um gasto. Cada mês **criado** depois já nasce com os fixos
+ativos do período, no dia do vencimento (dia 31 em novembro vira 30). Mudar ou excluir um fixo
+nunca altera meses que já existem. Detalhes em
+[specs/010-gastos-fixos/contracts/api-fixos.md](specs/010-gastos-fixos/contracts/api-fixos.md).
 
 **Gastos.** Um gasto tem descrição, valor, data, categoria, mês e, se quiser, forma de pagamento
 (dinheiro, débito, crédito ou Pix). O valor vai com **ponto** (`"150.30"`), maior que zero e com

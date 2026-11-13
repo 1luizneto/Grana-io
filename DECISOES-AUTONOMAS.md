@@ -23,6 +23,7 @@ as que mais valem uma conferida, porque mudam comportamento visível ou escopo.
 | 1 | `007-mes-referencia` | US-06 | Pronta para PR na `main` (20/20 tarefas) |
 | 2 | `008-lancar-gastos` | US-07 + US-08 (API) | Pronta para PR depois da 007 (28/28 tarefas) |
 | 3 | `009-tela-mes` | US-27 (tela do mês) | Pronta para PR depois da 008 (22/22 tarefas) |
+| 4 | `010-gastos-fixos` | US-07b (gastos fixos) | Pronta para PR depois da 009 (19/19 tarefas) |
 
 ---
 
@@ -139,3 +140,42 @@ no fim, e a conta ficou).
 **Resultado**: backend 388 testes, interface 140. Navegador: S2 a S8 conferidos, inclusive
 lançamento em 8,9 s com automação (SC-001: até 30 s), 360 px sem rolagem horizontal (tabela em
 cartões) e lançamento só pelo teclado.
+
+---
+
+## Spec 010 — Gastos fixos (US-07b)
+
+Fluxo completo em modo autônomo, com validação no navegador (conta `teste.s9@exemplo.com`; dados
+de teste excluídos no fim).
+
+**Comportamento**
+
+- **D-010-1** ⚠️: "marcar um gasto como recorrente" virou **dois caminhos**: a caixa **"Repetir
+  todo mês"** ao lançar (o vencimento é o dia da data; começa no mês do gasto) e a tela própria
+  **"Gastos fixos"** (menu entre "Gastos do mês" e "Categorias"), onde se cadastra, altera,
+  encerra, desativa e exclui.
+- **D-010-2** ⚠️: os fixos só entram em meses **criados depois**. Criar ou mudar um fixo não mexe
+  em meses existentes (é o critério "só nos meses seguintes"). Se você quiser o fixo num mês que
+  já existe, lance o gasto nele (pode ser com "Repetir todo mês").
+- **D-010-3**: vencimento que não existe no mês (31 em novembro, 30 em fevereiro) cai no **último
+  dia** do mês.
+- **D-010-4**: excluir um fixo **mantém** os gastos já lançados (viram gastos comuns, sem a marca
+  "fixo").
+- **D-010-5**: excluir uma categoria trata os fixos como gastos: exige o destino e move os dois.
+- **D-010-6**: os gastos gerados mostram a marca **"fixo"** na tabela do mês; editar ou excluir
+  esse gasto não muda o fixo.
+
+**Técnicas**
+
+- **D-010-7**: model próprio `GastoFixo` (não um campo no gasto) e `Gasto.fixo` como origem
+  (`SET_NULL`). A US-09 (copiar mês) vai usar essa origem para não duplicar os fixos.
+- **D-010-8**: meses de início e de fim como texto `AAAA-MM` na API (o formato do
+  `<input type="month">`), gravados como o dia 1.
+- **D-010-9**: o mês é criado com os gastos fixos **na mesma transação**; "Repetir todo mês" cria
+  gasto e fixo também numa transação só (testado com falhas simuladas).
+- **D-010-10**: campos e mensagens comuns de gasto e fixo numa base de serializer, para os dois
+  responderem igual.
+
+**Resultado**: backend 449 testes, interface 152. Navegador: cadastro com erros de dia e de fim;
+mês novo com o Aluguel; "Repetir todo mês"; 12/2026 e 02/2027 gerados (dia 30 → 28/02); reajuste
+só para frente; desativar; excluir mantendo os gastos; 360 px sem rolagem; Bia → 404.

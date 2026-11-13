@@ -118,9 +118,19 @@ IA). Modo autônomo (`DECISOES-AUTONOMAS.md`).
 
 ## Phase 7: Polish
 
-- [ ] T017 Validar no navegador o [quickstart.md](quickstart.md) S2 a S6 (inclusive 360 px na tela nova) e limpar
-- [ ] T018 [P] README (estado atual, rota `/fixos` e `/api/fixos/`, parágrafo sobre fixos)
-- [ ] T019 BACKLOG (US-07b ☑; nota na US-27 sobre recorrentes) e `DECISOES-AUTONOMAS.md`
+- [X] T017 Validar no navegador o [quickstart.md](quickstart.md) S2 a S6 (inclusive 360 px na tela nova) e limpar
+- [X] T018 [P] README (estado atual, rota `/fixos` e `/api/fixos/`, parágrafo sobre fixos)
+- [X] T019 BACKLOG (US-07b ☑; nota na US-27 sobre recorrentes) e `DECISOES-AUTONOMAS.md`
+
+  > **Resultado (2026-11-13)**: ✅ backend 449 e interface 152 verdes; 19/19 tarefas.
+  > - T017 (navegador): S2 cadastro de Aluguel (dia 32 e fim antes do início recusados no campo);
+  >   S3 11/2026 criado já com o Aluguel ("fixo") e Internet lançada com "Repetir todo mês"; S4
+  >   12/2026 e 02/2027 com os dois fixos (Internet em 30/12 e 28/02; total R$ 1.599,90); S5
+  >   reajuste para R$ 1.600,00 só em 01/2027 e 03/2027, Internet desativada fora deles, Aluguel
+  >   excluído com a confirmação e o gasto de 12/2026 mantido sem origem; tela de fixos em 360 px
+  >   sem rolagem horizontal; S6 Bia → 404 no fixo. Limpeza: 0 gastos, 0 meses, 0 fixos.
+  > - T018 README e T019 BACKLOG (US-07b toda ☑; US-27 com recorrentes ☑ e só parcelados
+  >   pendentes) e decisões D-010-*.
 
 ---
 
