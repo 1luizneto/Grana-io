@@ -87,7 +87,10 @@ export default function TabelaGastos({ mes, gastos, categorias, formas, aoEditar
             {visiveis.map((gasto) => (
               <tr key={gasto.id}>
                 <td data-rotulo="Data">{formatarData(gasto.data)}</td>
-                <td data-rotulo="Descrição">{gasto.descricao}</td>
+                <td data-rotulo="Descrição">
+                  {gasto.descricao}
+                  {gasto.fixo && <span className="marca-fixo">fixo</span>}
+                </td>
                 <td data-rotulo="Categoria">{nomeCategoria[gasto.categoria] ?? '—'}</td>
                 <td data-rotulo="Pagamento">{nomeForma[gasto.forma_pagamento] ?? '—'}</td>
                 <td data-rotulo="Valor" className="valor">

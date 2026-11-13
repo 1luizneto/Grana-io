@@ -74,7 +74,7 @@ describe('layout: menu (US5)', () => {
     expect(inicio).toHaveAttribute('aria-current', 'page')
   })
 
-  it('tem "Gastos do mês" e "Categorias" no menu, depois de "Início" (specs 006 e 009)', async () => {
+  it('tem os itens do menu na ordem (specs 006, 009 e 010)', async () => {
     abrirConectada()
 
     const menu = await screen.findByRole('navigation', { name: 'Menu principal' })
@@ -82,10 +82,12 @@ describe('layout: menu (US5)', () => {
     expect(links.map((link) => link.textContent)).toEqual([
       'Início',
       'Gastos do mês',
+      'Gastos fixos',
       'Categorias',
     ])
     expect(links[1]).toHaveAttribute('href', '/meses')
-    expect(links[2]).toHaveAttribute('href', '/categorias')
+    expect(links[2]).toHaveAttribute('href', '/fixos')
+    expect(links[3]).toHaveAttribute('href', '/categorias')
   })
 
   it('a tela de login não mostra o menu nem o botão "Sair"', async () => {

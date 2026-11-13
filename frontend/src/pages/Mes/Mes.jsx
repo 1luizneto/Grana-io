@@ -116,7 +116,8 @@ function DetalheMes({ mes, avisar, aoDefinirFechado, aoExcluirMes }) {
     avisar()
     const resultado = emEdicao ? await atualizar(emEdicao.id, dados) : await criar(dados)
     if (resultado.ok) {
-      avisar('sucesso', emEdicao ? 'Gasto atualizado.' : 'Gasto lançado.')
+      const lancado = dados.repetir ? 'Gasto lançado e cadastrado como fixo.' : 'Gasto lançado.'
+      avisar('sucesso', emEdicao ? 'Gasto atualizado.' : lancado)
       setEmEdicao(null)
     }
     return resultado

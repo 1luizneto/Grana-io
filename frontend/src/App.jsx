@@ -6,6 +6,7 @@ import Rodape from './components/Rodape.jsx'
 import Cadastro from './pages/Cadastro/Cadastro.jsx'
 import Categorias from './pages/Categorias/Categorias.jsx'
 import Entrar from './pages/Entrar/Entrar.jsx'
+import Fixos from './pages/Fixos/Fixos.jsx'
 import Inicio from './pages/Inicio/Inicio.jsx'
 import Mes from './pages/Mes/Mes.jsx'
 import NaoEncontrada from './pages/NaoEncontrada/NaoEncontrada.jsx'
@@ -21,6 +22,7 @@ export default function App() {
             <Route path="/" element={<Inicio />} />
             <Route path="/meses" element={<Mes />} />
             <Route path="/meses/:id" element={<Mes />} />
+            <Route path="/fixos" element={<Fixos />} />
             <Route path="/categorias" element={<Categorias />} />
           </Route>
         </Route>

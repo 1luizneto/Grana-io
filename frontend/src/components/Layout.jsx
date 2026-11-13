@@ -26,6 +26,7 @@ export default function Layout() {
           Início
         </NavLink>
         <NavLink to="/meses">Gastos do mês</NavLink>
+        <NavLink to="/fixos">Gastos fixos</NavLink>
         <NavLink to="/categorias">Categorias</NavLink>
       </nav>
       <main className="conteudo">

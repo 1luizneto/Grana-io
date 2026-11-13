@@ -652,3 +652,52 @@ describe('tela do mês: filtrar e ordenar (US4)', () => {
     ])
   })
 })
+
+describe('tela do mês: gastos fixos (spec 010)', () => {
+  it('"Repetir todo mês" envia repetir e avisa que virou fixo', async () => {
+    const { fetch, pessoa } = abrir({
+      rota: '/meses/7',
+      rotas: { '/gastos/': () => json(201, { id: 44, fixo: 9 }) },
+    })
+    await screen.findByText('Nenhum gasto neste mês.')
+    const form = formularioGasto()
+
+    await pessoa.type(within(form).getByLabelText('Descrição'), 'Internet')
+    await pessoa.type(within(form).getByLabelText('Valor'), '99,90')
+    await pessoa.selectOptions(within(form).getByRole('combobox', { name: 'Categoria' }), '3')
+    await pessoa.click(within(form).getByRole('checkbox', { name: 'Repetir todo mês' }))
+    await pessoa.click(within(form).getByRole('button', { name: 'Lançar' }))
+
+    await esperarSucesso('Gasto lançado e cadastrado como fixo.')
+    expect(corpo(chamadas(fetch, 'POST', '/gastos/')[0])).toMatchObject({
+      descricao: 'Internet',
+      repetir: true,
+    })
+    expect(within(form).getByRole('checkbox', { name: 'Repetir todo mês' })).not.toBeChecked()
+  })
+
+  it('a caixa não aparece ao editar', async () => {
+    const { pessoa } = abrir({ rota: '/meses/7', rotas: COM_GASTOS })
+
+    await pessoa.click(await screen.findByRole('button', { name: 'Editar Mercado' }))
+
+    expect(
+      within(formularioGasto('Editar gasto')).queryByRole('checkbox', { name: 'Repetir todo mês' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('gasto gerado por um fixo tem a marca "fixo"', async () => {
+    abrir({
+      rota: '/meses/7',
+      rotas: {
+        '/gastos/?mes=7': () => json(200, [{ ...GASTOS[0], descricao: 'Aluguel', fixo: 9 }]),
+        '/meses/7/totais/': () => json(200, TOTAIS),
+      },
+    })
+
+    await screen.findByRole('table')
+    const [linha] = linhasDaTabela()
+    const descricao = within(linha).getAllByRole('cell')[1]
+    expect(within(descricao).getByText('fixo')).toBeInTheDocument()
+  })
+})

@@ -539,3 +539,62 @@ button.perigo:hover:not(:disabled) {
     justify-content: flex-end;
   }
 }
+
+/* Gastos fixos (specs/010-gastos-fixos/contracts/tela-fixos.md) */
+.opcao-repetir {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  grid-column: 1 / -1;
+}
+
+.marca-fixo,
+.marca-inativo {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0 0.45rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--cor-info-fundo);
+  color: var(--cor-primaria-escura);
+}
+
+.marca-inativo {
+  background: var(--cor-erro-fundo);
+  color: var(--cor-erro);
+}
+
+.lista-fixos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.linha-fixo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--cor-borda);
+}
+
+.linha-fixo.inativo .dados-fixo {
+  color: var(--cor-texto-suave);
+}
+
+.dados-fixo {
+  display: flex;
+  flex: 1 1 18rem;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.9rem;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.pagina-fixos .formulario-gasto {
+  margin-bottom: 1.5rem;
+}

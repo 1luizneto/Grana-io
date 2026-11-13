@@ -99,10 +99,18 @@ IA). Modo autônomo (`DECISOES-AUTONOMAS.md`).
 
 ## Phase 6: Telas
 
-- [ ] T013 [P] Escrever `frontend/src/pages/Fixos/Fixos.test.jsx` ([contrato da tela](contracts/tela-fixos.md)): carregando e vazio; lista com valor em R$, "dia 5", categoria, "desde 11/2026" / "de 11/2026 a 01/2027", "Inativo"; cadastrar (valor "1.500,00" → `"1500.00"`, início padrão = mês de hoje, fim vazio → `null`) com "Gasto fixo cadastrado."; erro de campo ligado ao campo; editar com PATCH e "Gasto fixo atualizado."; desativar/reativar (`{"ativo": false/true}`); excluir com a confirmação do contrato. Atualizar `Layout.test.jsx` (menu com "Gastos fixos" antes de "Categorias")
-- [ ] T014 [P] Acrescentar a `frontend/src/pages/Mes/Mes.test.jsx`: "Repetir todo mês" envia `"repetir": true` e mostra "Gasto lançado e cadastrado como fixo."; sem marcar, o corpo não tem a chave `repetir`; a caixa não aparece ao editar; gasto com `fixo` mostra a marca "fixo" na tabela. Confirmar a **falha** de T013 e T014
-- [ ] T015 Criar `frontend/src/api/fixos.js`, `frontend/src/hooks/useFixos.js` e `frontend/src/pages/Fixos/Fixos.jsx` (formulário e lista); rota `/fixos` em `App.jsx`; menu em `Layout.jsx`
-- [ ] T016 "Repetir todo mês" no `FormularioGasto` e a marca "fixo" na `TabelaGastos`; estilos. Confirmar T013 e T014 **verdes**
+- [X] T013 [P] Escrever `frontend/src/pages/Fixos/Fixos.test.jsx` ([contrato da tela](contracts/tela-fixos.md)): carregando e vazio; lista com valor em R$, "dia 5", categoria, "desde 11/2026" / "de 11/2026 a 01/2027", "Inativo"; cadastrar (valor "1.500,00" → `"1500.00"`, início padrão = mês de hoje, fim vazio → `null`) com "Gasto fixo cadastrado."; erro de campo ligado ao campo; editar com PATCH e "Gasto fixo atualizado."; desativar/reativar (`{"ativo": false/true}`); excluir com a confirmação do contrato. Atualizar `Layout.test.jsx` (menu com "Gastos fixos" antes de "Categorias")
+- [X] T014 [P] Acrescentar a `frontend/src/pages/Mes/Mes.test.jsx`: "Repetir todo mês" envia `"repetir": true` e mostra "Gasto lançado e cadastrado como fixo."; sem marcar, o corpo não tem a chave `repetir`; a caixa não aparece ao editar; gasto com `fixo` mostra a marca "fixo" na tabela. Confirmar a **falha** de T013 e T014
+- [X] T015 Criar `frontend/src/api/fixos.js`, `frontend/src/hooks/useFixos.js` e `frontend/src/pages/Fixos/Fixos.jsx` (formulário e lista); rota `/fixos` em `App.jsx`; menu em `Layout.jsx`
+- [X] T016 "Repetir todo mês" no `FormularioGasto` e a marca "fixo" na `TabelaGastos`; estilos. Confirmar T013 e T014 **verdes**
+
+  > **Resultado (2026-11-13)**: ✅ interface com 152 verdes (140 + 9 da tela de fixos + 3 da tela
+  > do mês); backend 449.
+  > - T013 e T014 falharam primeiro (tela inexistente; sem caixa nem marca; menu sem "Gastos
+  >   fixos").
+  > - Depois de cadastrar, o formulário de fixos volta ao vazio (o primeiro teste pegou que ele
+  >   mantinha os valores).
+  > - Os campos de mês usam `<input type="month">`, cujo valor já é `AAAA-MM`, o formato da API.
 
 **Checkpoint**: telas prontas.
 

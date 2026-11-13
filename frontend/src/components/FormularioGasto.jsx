@@ -41,6 +41,7 @@ export default function FormularioGasto({
   const [data, setData] = useState(gasto?.data ?? dataPadrao(mes))
   const [categoria, setCategoria] = useState(gasto ? String(gasto.categoria) : '')
   const [forma, setForma] = useState(gasto?.forma_pagamento ?? '')
+  const [repetir, setRepetir] = useState(false)
   const [erro, setErro] = useState(SEM_ERROS)
   const [enviando, setEnviando] = useState(false)
   const campoDescricao = useRef(null)
@@ -58,6 +59,8 @@ export default function FormularioGasto({
       mes: mes.id,
       categoria: categoria ? Number(categoria) : null,
       forma_pagamento: forma,
+      // "Repetir todo mês" (spec 010): só ao lançar, e só quando marcado.
+      ...(repetir ? { repetir: true } : {}),
     })
     setEnviando(false)
     if (!resultado.ok) {
@@ -69,6 +72,7 @@ export default function FormularioGasto({
       setDescricao('')
       setValor('')
       setForma('')
+      setRepetir(false)
       campoDescricao.current?.focus()
     }
   }
@@ -138,6 +142,16 @@ export default function FormularioGasto({
           ]}
           erros={erro.campos.forma_pagamento}
         />
+        {!editando && (
+          <label className="opcao-repetir">
+            <input
+              type="checkbox"
+              checked={repetir}
+              onChange={(evento) => setRepetir(evento.target.checked)}
+            />
+            Repetir todo mês
+          </label>
+        )}
         <div className="acoes">
           <button type="submit" disabled={enviando}>
             {rotuloBotao}
