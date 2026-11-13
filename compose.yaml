@@ -23,7 +23,10 @@ services:
     # Sem "ports": o banco só é acessível pela rede interna do Compose (FR-019).
 
   backend:
-    build: ./backend
+    # Alvo dev do Dockerfile; o modo de uso (compose.uso.yaml) troca para o alvo uso.
+    build:
+      context: ./backend
+      target: dev
     # Migra e sobe o servidor. "docker compose run --rm backend pytest" substitui este comando
     # e por isso não migra o banco real.
     command: ["sh", "scripts/start-dev.sh"]
@@ -55,7 +58,9 @@ services:
       start_period: 30s
 
   frontend:
-    build: ./frontend
+    build:
+      context: ./frontend
+      target: dev
     environment:
       # Destino do proxy /api na rede interna (sem prefixo VITE_: não vai para o navegador).
       API_PROXY_TARGET: http://backend:8000

@@ -1,0 +1,38 @@
+# Modo de uso (RNF-09; specs/011-modo-de-uso/contracts/modos.md). Sobrepõe o compose.yaml:
+#
+#   docker compose -f compose.yaml -f compose.uso.yaml up -d --build --wait
+#
+# Mesmo projeto e mesmo volume de dados do modo de desenvolvimento: trocar de modo não perde
+# nada. Exige DJANGO_SECRET_KEY própria no .env (veja o README).
+
+services:
+  backend:
+    build:
+      target: uso
+    image: grana-backend-uso
+    command: ["sh", "scripts/start-uso.sh"]
+    environment:
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Defina DJANGO_SECRET_KEY no .env (veja o README) para usar o modo de uso.}
+      DJANGO_DEBUG: "0"
+      # O Nginx sempre envia Host: backend; localhost é o healthcheck (research R-04).
+      DJANGO_ALLOWED_HOSTS: backend,localhost
+    # Código dentro da imagem e API sem porta no computador: só a interface fica exposta.
+    volumes: !reset []
+    ports: !reset []
+
+  frontend:
+    build:
+      target: uso
+    image: grana-frontend-uso
+    environment: !reset {}
+    ports: !override
+      - "${FRONTEND_PORT:-5173}:8080"
+    volumes: !reset []
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

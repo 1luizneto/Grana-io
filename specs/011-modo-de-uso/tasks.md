@@ -25,10 +25,19 @@ description: "Lista de tarefas da feature 011-modo-de-uso (RNF-09)"
 
 ## Phase 2: User Story 1 - Subir no modo de uso (Priority: P1) 🎯 MVP
 
-- [ ] T002 [US1] `backend/Dockerfile` com estágios `dev` (o atual) e `uso` ([R-02](research.md)); `gunicorn==23.0.0` em `backend/requirements.txt`; `backend/scripts/start-uso.sh`
-- [ ] T003 [US1] `frontend/Dockerfile` com estágios `dev`, `build` e `uso`; `frontend/nginx.conf` ([R-03](research.md)); conferir `frontend/.dockerignore`
-- [ ] T004 [US1] `compose.yaml` com `target: dev` nos dois builds; `compose.uso.yaml` ([R-01](research.md), [R-04](research.md), [R-05](research.md))
+- [X] T002 [US1] `backend/Dockerfile` com estágios `dev` (o atual) e `uso` ([R-02](research.md)); `gunicorn==23.0.0` em `backend/requirements.txt`; `backend/scripts/start-uso.sh`
+- [X] T003 [US1] `frontend/Dockerfile` com estágios `dev`, `build` e `uso`; `frontend/nginx.conf` ([R-03](research.md)); conferir `frontend/.dockerignore`
+- [X] T004 [US1] `compose.yaml` com `target: dev` nos dois builds; `compose.uso.yaml` ([R-01](research.md), [R-04](research.md), [R-05](research.md))
 - [ ] T005 [US1] Validar S3 do [quickstart.md](quickstart.md) e S1 (suítes no modo de desenvolvimento)
+
+  > **Parcial (2026-11-13, limite de uso atingido)**: S2 ✅ (Compose recusa sem chave, com a
+  > mensagem). S3 parcial ✅: modo de uso saudável; interface 200 em :5173; `/api/health/` pela
+  > interface 200; porta 8000 fechada; API com Gunicorn como `grana`; o gasto criado no modo de
+  > desenvolvimento apareceu no modo de uso. Corrigido: `ports: !reset` com valor zerava a porta
+  > da interface; agora `!override`. **Achado para a T006**: a página 404 do Nginx ainda diz
+  > "nginx" no cabeçalho `Server` (sem versão, ok) e o 404 de `/api/nao-existe/` veio em HTML
+  > genérico do Django, sem detalhes. Falta: S1 (suítes), contagem de pedidos (SC-004), S4/S5,
+  > `check --deploy` e a volta ao dev conferida com contagens (ambiente já voltou ao dev).
 
 **Checkpoint**: modo de uso sobe e funciona.
 
