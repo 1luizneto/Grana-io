@@ -18,7 +18,7 @@ from gastos.serializers import (
     MesReferenciaSerializer,
     TotaisDoMesSerializer,
 )
-from gastos.services.fixos import criar_fixo_do_gasto
+from gastos.services.fixos import criar_fixo_do_gasto, gerar_gastos_fixos
 from gastos.services.gastos import (
     RegraViolada,
     excluir_categoria,
@@ -106,10 +106,12 @@ class MesReferenciaViewSet(FiltroPorDonoMixin, ModelViewSet):
     ERRO_MES_REPETIDO = {"non_field_errors": [MENSAGEM_MES_REPETIDO]}
 
     def perform_create(self, serializer):
-        salvar_ou_erro_de_unicidade(
-            lambda: super(MesReferenciaViewSet, self).perform_create(serializer),
-            self.ERRO_MES_REPETIDO,
-        )
+        # O mês nasce com os gastos fixos do período, na mesma transação (spec 010, R-03).
+        def criar_mes():
+            super(MesReferenciaViewSet, self).perform_create(serializer)
+            gerar_gastos_fixos(serializer.instance)
+
+        salvar_ou_erro_de_unicidade(criar_mes, self.ERRO_MES_REPETIDO)
 
     def perform_update(self, serializer):
         salvar_ou_erro_de_unicidade(

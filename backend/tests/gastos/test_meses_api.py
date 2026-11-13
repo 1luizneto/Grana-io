@@ -1,8 +1,11 @@
 """API de meses de referência (specs/007-mes-referencia/contracts/api-meses.md)."""
 
+from datetime import date
+from decimal import Decimal
+
 import pytest
 
-from gastos.models import MesReferencia
+from gastos.models import Categoria, Gasto, GastoFixo, MesReferencia
 from gastos.serializers import MesReferenciaSerializer
 from tests.isolamento import CasosDeIsolamento
 
@@ -279,3 +282,61 @@ def test_excluir_mes_de_outra_conta(outro_usuario, cliente_autenticado):
     assert resposta.status_code == 404
     assert resposta.json() == {"detail": "Não encontrado."}
     assert MesReferencia.objects.filter(pk=da_bia.pk).exists()
+
+
+# Criar o mês gera os gastos fixos (spec 010, US2; research R-03)
+
+
+def _fixo(dono, **mudancas):
+    categoria = Categoria.objects.get_or_create(
+        dono=dono, nome="Moradia", defaults={"cor": "azul"}
+    )[0]
+    dados = {
+        "descricao": "Aluguel",
+        "valor": Decimal("1500.00"),
+        "categoria": categoria,
+        "dia_vencimento": 5,
+        "inicio": date(2026, 11, 1),
+        **mudancas,
+    }
+    return GastoFixo.objects.create(dono=dono, **dados)
+
+
+def test_criar_mes_gera_os_gastos_fixos(usuario, cliente_autenticado):
+    fixo = _fixo(usuario)
+
+    resposta = cliente_autenticado.post(URL, {"mes": 12, "ano": 2026}, format="json")
+
+    assert resposta.status_code == 201
+    mes_id = resposta.json()["id"]
+    gastos = cliente_autenticado.get("/api/gastos/", {"mes": mes_id}).json()
+    assert [(g["descricao"], g["valor"], g["data"], g["fixo"]) for g in gastos] == [
+        ("Aluguel", "1500.00", "2026-12-05", fixo.pk)
+    ]
+    totais = cliente_autenticado.get(f"{URL}{mes_id}/totais/").json()
+    assert totais["total"] == "1500.00"
+
+
+def test_criar_mes_e_gerar_e_tudo_ou_nada(usuario, cliente_autenticado, monkeypatch):
+    import gastos.views
+
+    def falhar(mes):
+        raise RuntimeError("falha simulada")
+
+    _fixo(usuario)
+    monkeypatch.setattr(gastos.views, "gerar_gastos_fixos", falhar)
+    cliente_autenticado.raise_request_exception = False
+
+    resposta = cliente_autenticado.post(URL, {"mes": 12, "ano": 2026}, format="json")
+
+    assert resposta.status_code == 500
+    assert not MesReferencia.objects.exists()
+    assert not Gasto.objects.exists()
+
+
+def test_fixos_nao_mudam_meses_existentes(usuario, cliente_autenticado):
+    cliente_autenticado.post(URL, {"mes": 12, "ano": 2026}, format="json")
+
+    _fixo(usuario)
+
+    assert not Gasto.objects.exists()

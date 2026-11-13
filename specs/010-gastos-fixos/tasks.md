@@ -52,8 +52,8 @@ IA). Modo autônomo (`DECISOES-AUTONOMAS.md`).
 - [X] T006 [US1] Implementar `MesAnoField` e `GastoFixoSerializer` em `backend/gastos/serializers.py` ([R-02](research.md), [R-06](research.md)); `GastoSerializer` com `fixo` só leitura e `repetir` só escrita; `GastoFixoViewSet` e a rota `fixos`
 - [X] T007 [US1] Criar `backend/gastos/services/fixos.py` com `criar_fixo_do_gasto(gasto)` e usá-lo no `GastoViewSet.perform_create` quando `repetir` (numa transação, [R-04](research.md)). Confirmar T004 e T005 **verdes**
 
-  > **Resultado (2026-11-13)**: ✅ backend com 431 verdes (402 + 29); interface 140.
-  > - T004 e T005 falharam primeiro (29 casos: rota inexistente, chave `fixo`, `repetir`).
+  > **Resultado (2026-11-13)**: ✅ backend com 432 verdes (402 + 30); interface 140.
+  > - T004 e T005 falharam primeiro (29 dos 30 casos: rota inexistente, chave `fixo`, `repetir`).
   > - Campos comuns de gasto e fixo numa base (`CamposDeGastoSerializer`), com as mesmas
   >   mensagens; `MesAnoField` para `AAAA-MM`; `dia_vencimento` reaproveita o
   >   `InteiroNaFaixaField` da spec 007.
@@ -66,9 +66,15 @@ IA). Modo autônomo (`DECISOES-AUTONOMAS.md`).
 
 ## Phase 4: User Story 2 - Gerar os fixos ao criar um mês (Priority: P1)
 
-- [ ] T008 [P] [US2] Escrever `backend/tests/gastos/test_fixos_service.py` (`gerar_gastos_fixos`): gera um gasto por fixo ativo do período, com descrição, valor, categoria, forma, `fixo` e data do vencimento; dia 31 em novembro → 30; em fevereiro de 2027 → 28 e de 2028 → 29; não gera desativado, antes do início, depois do fim; gera no mês do fim e no do início; não usa fixos de outra conta; mês sem fixos → nada
-- [ ] T009 [P] [US2] Acrescentar a `backend/tests/gastos/test_meses_api.py`: `POST /api/meses/` gera os gastos fixos (aparecem em `GET /api/gastos/?mes=` e nos totais); falha simulada na geração → 500 sem mês criado (atômico, ponto de atenção 3); criar mês sem fixos continua como na spec 007. Confirmar a **falha**
-- [ ] T010 [US2] Implementar `gerar_gastos_fixos(mes)` em `backend/gastos/services/fixos.py` e chamá-lo no `MesReferenciaViewSet.perform_create`, dentro da mesma transação ([R-03](research.md)). Confirmar T008 e T009 **verdes**
+- [X] T008 [P] [US2] Escrever `backend/tests/gastos/test_fixos_service.py` (`gerar_gastos_fixos`): gera um gasto por fixo ativo do período, com descrição, valor, categoria, forma, `fixo` e data do vencimento; dia 31 em novembro → 30; em fevereiro de 2027 → 28 e de 2028 → 29; não gera desativado, antes do início, depois do fim; gera no mês do fim e no do início; não usa fixos de outra conta; mês sem fixos → nada
+- [X] T009 [P] [US2] Acrescentar a `backend/tests/gastos/test_meses_api.py`: `POST /api/meses/` gera os gastos fixos (aparecem em `GET /api/gastos/?mes=` e nos totais); falha simulada na geração → 500 sem mês criado (atômico, ponto de atenção 3); criar mês sem fixos continua como na spec 007. Confirmar a **falha**
+- [X] T010 [US2] Implementar `gerar_gastos_fixos(mes)` em `backend/gastos/services/fixos.py` e chamá-lo no `MesReferenciaViewSet.perform_create`, dentro da mesma transação ([R-03](research.md)). Confirmar T008 e T009 **verdes**
+
+  > **Resultado (2026-11-13)**: ✅ backend com 444 verdes (432 + 9 do service + 3 da API de
+  > meses); interface 140.
+  > - T008 e T009 falharam primeiro (`gerar_gastos_fixos` inexistente).
+  > - Dia 31: novembro → 30; fevereiro de 2027 → 28; de 2028 → 29 (`calendar.monthrange`).
+  > - Mês e gastos na mesma transação: com falha simulada na geração, nenhum mês fica.
 
 **Checkpoint**: meses novos já vêm com os fixos.
 
