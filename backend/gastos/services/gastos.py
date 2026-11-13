@@ -40,15 +40,17 @@ def excluir_categoria(categoria, destino):
     """Exclui a categoria; os gastos dela passam antes para ``destino`` (FR-010; research R-07).
 
     ``destino`` já vem conferido pela view (da mesma pessoa e diferente de ``categoria``). Gastos
-    de meses fechados também mudam de categoria: o total do mês não muda (Clarifications).
+    de meses fechados também mudam de categoria: o total do mês não muda (Clarifications). Os
+    gastos fixos da categoria contam como gastos e vão junto (spec 010, R-05).
     """
-    gastos = categoria.gastos.all()
-    if gastos.exists():
+    gastos, fixos = categoria.gastos.all(), categoria.fixos.all()
+    if gastos.exists() or fixos.exists():
         if destino is None:
             raise RegraViolada(
                 "Esta categoria tem gastos. Escolha outra categoria para recebê-los."
             )
         gastos.update(categoria=destino)
+        fixos.update(categoria=destino)
     categoria.delete()
 
 

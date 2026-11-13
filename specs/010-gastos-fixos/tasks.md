@@ -82,8 +82,16 @@ IA). Modo autônomo (`DECISOES-AUTONOMAS.md`).
 
 ## Phase 5: User Story 3 - Alterar, encerrar, desativar e excluir (Priority: P2)
 
-- [ ] T011 [US3] Acrescentar testes: mudar o valor do fixo não altera gastos já gerados e o mês criado depois usa o valor novo; `PATCH {"ativo": false}` → mês criado depois sem ele; `fim` encerra; `DELETE` do fixo → 204 e os gastos ficam com `"fixo": null`; excluir categoria só com fixos e sem destino → recusa; com destino → fixos movidos ([R-05](research.md)) — em `test_fixos_api.py` e `test_gastos_service.py`. Confirmar a **falha** do caso de categoria
-- [ ] T012 [US3] Atualizar `excluir_categoria` em `backend/gastos/services/gastos.py`. Confirmar T011 **verde**
+- [X] T011 [US3] Acrescentar testes: mudar o valor do fixo não altera gastos já gerados e o mês criado depois usa o valor novo; `PATCH {"ativo": false}` → mês criado depois sem ele; `fim` encerra; `DELETE` do fixo → 204 e os gastos ficam com `"fixo": null`; excluir categoria só com fixos e sem destino → recusa; com destino → fixos movidos ([R-05](research.md)) — em `test_fixos_api.py` e `test_gastos_service.py`. Confirmar a **falha** do caso de categoria
+- [X] T012 [US3] Atualizar `excluir_categoria` em `backend/gastos/services/gastos.py`. Confirmar T011 **verde**
+
+  > **Resultado (2026-11-13)**: ✅ backend com 449 verdes (444 + 5); interface 140.
+  > - Como previsto, só o caso da categoria falhou primeiro: valor novo só para frente,
+  >   desativar, encerrar e excluir mantendo os gastos já valiam pelo desenho (os gastos gerados
+  >   são cópias, e a origem é `SET_NULL`).
+  > - `excluir_categoria` trata fixos como gastos: exige destino e os move junto.
+  > - Os testes ficaram todos em `test_fixos_api.py` (pela API, de ponta a ponta), em vez de
+  >   divididos com o `test_gastos_service.py`.
 
 **Checkpoint**: backend completo.
 

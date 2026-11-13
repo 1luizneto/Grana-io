@@ -5,7 +5,7 @@ from decimal import Decimal
 
 import pytest
 
-from gastos.models import Categoria, GastoFixo
+from gastos.models import Categoria, Gasto, GastoFixo
 from tests.isolamento import CasosDeIsolamento
 
 pytestmark = pytest.mark.django_db
@@ -173,3 +173,79 @@ def test_desativar_e_reativar(usuario, cliente_autenticado):
 
 def test_sem_sessao(cliente):
     assert cliente.get(URL).status_code == 401
+
+
+# Alterar, encerrar, desativar e excluir (US3; FR-005, FR-006)
+
+
+def _criar_mes(cliente, mes, ano):
+    return cliente.post("/api/meses/", {"mes": mes, "ano": ano}, format="json").json()["id"]
+
+
+def _valores_do_mes(cliente, mes_id):
+    return [g["valor"] for g in cliente.get("/api/gastos/", {"mes": mes_id}).json()]
+
+
+def test_mudar_o_valor_so_vale_para_os_meses_seguintes(usuario, cliente_autenticado):
+    fixo = _fixo(usuario)
+    dezembro = _criar_mes(cliente_autenticado, 12, 2026)
+
+    cliente_autenticado.patch(_url(fixo), {"valor": "1600.00"}, format="json")
+    janeiro = _criar_mes(cliente_autenticado, 1, 2027)
+
+    assert _valores_do_mes(cliente_autenticado, dezembro) == ["1500.00"]
+    assert _valores_do_mes(cliente_autenticado, janeiro) == ["1600.00"]
+
+
+def test_desativado_nao_entra_nos_meses_seguintes(usuario, cliente_autenticado):
+    fixo = _fixo(usuario)
+    cliente_autenticado.patch(_url(fixo), {"ativo": False}, format="json")
+
+    assert _valores_do_mes(cliente_autenticado, _criar_mes(cliente_autenticado, 12, 2026)) == []
+
+    cliente_autenticado.patch(_url(fixo), {"ativo": True}, format="json")
+
+    assert _valores_do_mes(cliente_autenticado, _criar_mes(cliente_autenticado, 1, 2027)) == [
+        "1500.00"
+    ]
+
+
+def test_fim_encerra(usuario, cliente_autenticado):
+    fixo = _fixo(usuario)
+    cliente_autenticado.patch(_url(fixo), {"fim": "2026-12"}, format="json")
+
+    dezembro = _criar_mes(cliente_autenticado, 12, 2026)
+
+    assert len(_valores_do_mes(cliente_autenticado, dezembro)) == 1
+    assert _valores_do_mes(cliente_autenticado, _criar_mes(cliente_autenticado, 1, 2027)) == []
+
+
+def test_excluir_mantem_os_gastos_gerados(usuario, cliente_autenticado):
+    fixo = _fixo(usuario)
+    dezembro = _criar_mes(cliente_autenticado, 12, 2026)
+
+    resposta = cliente_autenticado.delete(_url(fixo))
+
+    assert resposta.status_code == 204
+    [gasto] = cliente_autenticado.get("/api/gastos/", {"mes": dezembro}).json()
+    assert gasto["descricao"] == "Aluguel"
+    assert gasto["fixo"] is None
+    assert Gasto.objects.count() == 1
+
+
+def test_categoria_so_com_fixos_exige_destino(usuario, cliente_autenticado):
+    fixo = _fixo(usuario)
+    outros = _categoria(usuario, "Outros", "cinza")
+
+    sem_destino = cliente_autenticado.delete(f"/api/categorias/{fixo.categoria_id}/")
+    com_destino = cliente_autenticado.delete(
+        f"/api/categorias/{fixo.categoria_id}/?mover_para={outros.pk}"
+    )
+
+    assert sem_destino.status_code == 400
+    assert sem_destino.json() == {
+        "detail": "Esta categoria tem gastos. Escolha outra categoria para recebê-los."
+    }
+    assert com_destino.status_code == 204
+    fixo.refresh_from_db()
+    assert fixo.categoria == outros
