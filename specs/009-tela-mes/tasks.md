@@ -40,11 +40,18 @@ de IA). Modo autônomo (decisões em `DECISOES-AUTONOMAS.md`).
 
 **Purpose**: formatação, módulos de API, hooks e o aviso de sucesso.
 
-- [ ] T002 [P] Escrever **primeiro** `frontend/src/utils/formatacao.test.js` ([R-03](research.md)): `formatarMoeda` ("0.00" → "R$ 0,00", "150.30" → "R$ 150,30", "1234.50" → "R$ 1.234,50", "9999999999.99" → "R$ 9.999.999.999,99", "-5.00" → "-R$ 5,00"); `formatarData("2026-10-05")` → "05/10/2026"; `paraValorDaApi` ("1.234,56" → "1234.56", "12,5" → "12.5", "12.50" → "12.50", " 7 " → "7", "" → ""); `emCentavos("150.30")` → `15030n`, `emCentavos("0.05")` → `5n`. Confirmar a **falha**
-- [ ] T003 Implementar `frontend/src/utils/formatacao.js` sem `Number`/`parseFloat`. Confirmar T002 **verde**
-- [ ] T004 [P] Criar `frontend/src/api/meses.js` e `frontend/src/api/gastos.js` ([R-02](research.md)) e mudar `excluirCategoria(id, moverPara)` em `frontend/src/api/categorias.js` (acrescenta `?mover_para=` quando informado)
-- [ ] T005 [P] Em `frontend/src/components/AvisoFormulario.jsx`, `tipo="sucesso"` com `role="status"` e classe `aviso-sucesso` ([R-07](research.md))
-- [ ] T006 Criar `frontend/src/hooks/useMeses.js` e `frontend/src/hooks/useGastosDoMes.js` no padrão do `useCategorias` (estado `carregando`/`erroCarregar`, ações devolvendo `{ok}`/`{ok:false, erro}` e recarregando)
+- [X] T002 [P] Escrever **primeiro** `frontend/src/utils/formatacao.test.js` ([R-03](research.md)): `formatarMoeda` ("0.00" → "R$ 0,00", "150.30" → "R$ 150,30", "1234.50" → "R$ 1.234,50", "9999999999.99" → "R$ 9.999.999.999,99", "-5.00" → "-R$ 5,00"); `formatarData("2026-10-05")` → "05/10/2026"; `paraValorDaApi` ("1.234,56" → "1234.56", "12,5" → "12.5", "12.50" → "12.50", " 7 " → "7", "" → ""); `emCentavos("150.30")` → `15030n`, `emCentavos("0.05")` → `5n`. Confirmar a **falha**
+- [X] T003 Implementar `frontend/src/utils/formatacao.js` sem `Number`/`parseFloat`. Confirmar T002 **verde**
+- [X] T004 [P] Criar `frontend/src/api/meses.js` e `frontend/src/api/gastos.js` ([R-02](research.md)) e mudar `excluirCategoria(id, moverPara)` em `frontend/src/api/categorias.js` (acrescenta `?mover_para=` quando informado)
+- [X] T005 [P] Em `frontend/src/components/AvisoFormulario.jsx`, `tipo="sucesso"` com `role="status"` e classe `aviso-sucesso` ([R-07](research.md))
+- [X] T006 Criar `frontend/src/hooks/useMeses.js` e `frontend/src/hooks/useGastosDoMes.js` no padrão do `useCategorias` (estado `carregando`/`erroCarregar`, ações devolvendo `{ok}`/`{ok:false, erro}` e recarregando)
+
+  > **Resultado (2026-11-13)**: ✅ interface com 102 verdes (85 + 17 de formatação); backend 387.
+  > - T002 falhou primeiro (módulo inexistente).
+  > - `formatacao.js` só manipula texto (e `BigInt` para ordenar); acrescentei `paraValorDigitado`
+  >   ("1234.56" → "1234,56"), usado na edição.
+  > - Hooks sem teste próprio: são cobertos pelos testes de página das fases seguintes, como o
+  >   `useCategorias` na spec 006.
 
 **Checkpoint**: base pronta; suítes verdes.
 

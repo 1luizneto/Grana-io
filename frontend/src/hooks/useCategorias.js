@@ -55,7 +55,10 @@ export function useCategorias() {
     (id, dados) => executar(() => api.atualizarCategoria(id, dados)),
     [executar],
   )
-  const excluir = useCallback((id) => executar(() => api.excluirCategoria(id)), [executar])
+  const excluir = useCallback(
+    (id, moverPara) => executar(() => api.excluirCategoria(id, moverPara)),
+    [executar],
+  )
 
   return { categorias, cores, carregando, erroCarregar, criar, atualizar, excluir }
 }

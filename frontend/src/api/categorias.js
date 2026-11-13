@@ -28,6 +28,8 @@ export function atualizarCategoria(id, dados) {
   })
 }
 
-export function excluirCategoria(id) {
-  return requisitarAutenticada(`/categorias/${id}/`, { method: 'DELETE' })
+// moverPara: categoria que recebe os gastos da excluída (specs/008-lancar-gastos, R-07).
+export function excluirCategoria(id, moverPara) {
+  const consulta = moverPara ? `?mover_para=${moverPara}` : ''
+  return requisitarAutenticada(`/categorias/${id}/${consulta}`, { method: 'DELETE' })
 }
