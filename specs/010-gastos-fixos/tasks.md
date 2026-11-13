@@ -34,8 +34,12 @@ IA). Modo autônomo (`DECISOES-AUTONOMAS.md`).
 
 ## Phase 2: Foundational
 
-- [ ] T002 Escrever **primeiro** `backend/tests/gastos/test_fixos_models.py` ([data-model.md](data-model.md)): `GastoFixo` herda de `OwnedModel`; campos e tipos (`descricao` 100, `valor` 12/2, `forma_pagamento` com as choices do gasto, `dia_vencimento`, `inicio`, `fim` nulo, `ativo` padrão `True`); `valor` ≤ 0 → `IntegrityError` (`gastos_fixo_valor_positivo`); dia 0 e 32 → `gastos_fixo_dia_valido`; `fim` antes de `inicio` → `gastos_fixo_fim_depois_do_inicio`; categoria com fixo → `RestrictedError`; excluir a conta apaga os fixos; `Gasto.fixo` nulo por padrão e `SET_NULL` ao excluir o fixo; ordem por dia de vencimento e cadastro. Confirmar a **falha**
-- [ ] T003 Implementar `GastoFixo` e `Gasto.fixo` em `backend/gastos/models.py` e gerar `backend/gastos/migrations/0005_*.py`. Confirmar T002 **verde** e as guardas de isolamento
+- [X] T002 Escrever **primeiro** `backend/tests/gastos/test_fixos_models.py` ([data-model.md](data-model.md)): `GastoFixo` herda de `OwnedModel`; campos e tipos (`descricao` 100, `valor` 12/2, `forma_pagamento` com as choices do gasto, `dia_vencimento`, `inicio`, `fim` nulo, `ativo` padrão `True`); `valor` ≤ 0 → `IntegrityError` (`gastos_fixo_valor_positivo`); dia 0 e 32 → `gastos_fixo_dia_valido`; `fim` antes de `inicio` → `gastos_fixo_fim_depois_do_inicio`; categoria com fixo → `RestrictedError`; excluir a conta apaga os fixos; `Gasto.fixo` nulo por padrão e `SET_NULL` ao excluir o fixo; ordem por dia de vencimento e cadastro. Confirmar a **falha**
+- [X] T003 Implementar `GastoFixo` e `Gasto.fixo` em `backend/gastos/models.py` e gerar `backend/gastos/migrations/0005_*.py`. Confirmar T002 **verde** e as guardas de isolamento
+
+  > **Resultado (2026-11-13)**: ✅ backend com 402 verdes (388 + 14 do model); interface 140.
+  > T002 falhou primeiro (`GastoFixo` inexistente). Migration `gastos.0005_gasto_fixo` aplicada
+  > na subida.
 
 **Checkpoint**: tabelas criadas; suítes verdes.
 

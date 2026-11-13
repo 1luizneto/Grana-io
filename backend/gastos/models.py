@@ -77,6 +77,43 @@ FORMAS_PAGAMENTO = [
 ]
 
 
+class GastoFixo(OwnedModel):
+    """Gasto fixo: modelo que gera um gasto em cada mês novo (US-07b;
+    specs/010-gastos-fixos/data-model.md). Meses já existentes nunca mudam por causa dele.
+    """
+
+    descricao = models.CharField(max_length=100)
+    valor = models.DecimalField(max_digits=12, decimal_places=2)
+    forma_pagamento = models.CharField(
+        max_length=10, choices=FORMAS_PAGAMENTO, blank=True, default=""
+    )
+    categoria = models.ForeignKey(Categoria, on_delete=models.RESTRICT, related_name="fixos")
+    dia_vencimento = models.PositiveSmallIntegerField()
+    # Meses guardados como o dia 1; fim nulo = sem fim.
+    inicio = models.DateField()
+    fim = models.DateField(null=True, blank=True)
+    ativo = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ["dia_vencimento", "id"]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(valor__gt=0), name="gastos_fixo_valor_positivo"
+            ),
+            models.CheckConstraint(
+                condition=models.Q(dia_vencimento__gte=1, dia_vencimento__lte=31),
+                name="gastos_fixo_dia_valido",
+            ),
+            models.CheckConstraint(
+                condition=models.Q(fim__isnull=True) | models.Q(fim__gte=models.F("inicio")),
+                name="gastos_fixo_fim_depois_do_inicio",
+            ),
+        ]
+
+    def __str__(self):
+        return self.descricao
+
+
 class Gasto(OwnedModel):
     """Gasto de uma pessoa num mês de referência (US-07; specs/008-lancar-gastos/data-model.md).
 
@@ -92,6 +129,14 @@ class Gasto(OwnedModel):
     )
     mes = models.ForeignKey(MesReferencia, on_delete=models.RESTRICT, related_name="gastos")
     categoria = models.ForeignKey(Categoria, on_delete=models.RESTRICT, related_name="gastos")
+    # Gasto fixo de origem (US-07b): excluir o fixo mantém o gasto, como gasto comum.
+    fixo = models.ForeignKey(
+        GastoFixo,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="gastos_gerados",
+    )
 
     class Meta:
         ordering = ["data", "id"]
