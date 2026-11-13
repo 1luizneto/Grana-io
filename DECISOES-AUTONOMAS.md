@@ -21,6 +21,7 @@ as que mais valem uma conferida, porque mudam comportamento visível ou escopo.
 | Ordem | Branch | US | Situação |
 |---|---|---|---|
 | 1 | `007-mes-referencia` | US-06 | Pronta para PR na `main` (20/20 tarefas) |
+| 2 | `008-lancar-gastos` | US-07 + US-08 (API) | Pronta para PR depois da 007 (28/28 tarefas) |
 
 ---
 
@@ -34,3 +35,54 @@ autônomo, só a Phase 7 (Polish).
   US-08.
 - **D-007-2**: a US-07 ganhou dois critérios herdados: "mês fechado não aceita novos gastos" e
   "mês com gastos não pode ser excluído".
+
+---
+
+## Spec 008 — Lançar, editar e excluir gastos (US-07 + US-08)
+
+Fluxo completo em modo autônomo: specify, clarify, plan, tasks, analyze e implement.
+
+**Escopo**
+
+- **D-008-1** ⚠️: a US-07 e a US-08 ficaram **numa spec só**. O kit de isolamento já exige abrir,
+  alterar e excluir todo registro novo, e a regra do mês fechado vale para as três operações;
+  separar duplicaria quase tudo.
+- **D-008-2**: **só API**, como na 007. A tela do mês (formulário, lista, confirmação antes de
+  excluir) e a escolha do destino na tela de categorias ficam para a próxima spec (US-27). Por
+  isso o critério "há confirmação antes de excluir" da US-08 continua ☐.
+- **D-008-3**: os dois primeiros critérios do RNF-03 (Decimal; regra de arredondamento) entraram
+  aqui, porque é a primeira spec com dinheiro. O 3º (frontend não recalcula) fica com a US-27.
+
+**Regras de negócio**
+
+- **D-008-4** ⚠️: valor com **mais de 2 casas é recusado** ("Use no máximo 2 casas decimais."),
+  não arredondado. Arredondar mudaria o valor digitado sem avisar.
+- **D-008-5**: a **API usa ponto** decimal (`"150.30"`); "12,50" é recusado como não numérico. A
+  tela da US-27 vai aceitar vírgula e converter.
+- **D-008-6**: limite do valor em 9.999.999.999,99 (12 dígitos).
+- **D-008-7** ⚠️: ao excluir uma categoria com gastos, os gastos de **meses fechados também são
+  movidos** para a categoria destino. O total do mês não muda; exigir reabrir cada mês fechado
+  tornaria a exclusão impraticável.
+- **D-008-8**: o destino vai como parâmetro de consulta, `DELETE /api/categorias/<id>/?mover_para=<id>`
+  (DELETE com corpo é mal suportado por clientes HTTP).
+- **D-008-9**: o mês fechado bloqueia também **mover** um gasto para ele ou para fora dele.
+- **D-008-10**: forma de pagamento sem valor é `""` (aceita ausente, `""` ou `null`); a lista de
+  formas vem da API em `/api/gastos/formas-pagamento/`, como a paleta de cores.
+- **D-008-11**: erros de campo aparecem antes do erro de mês fechado (o mês fechado é conferido
+  depois da validação). Mantém o serializer sem regra de dois modelos.
+
+**Técnicas**
+
+- **D-008-12**: `RESTRICT` (não `PROTECT`) nas chaves de mês e categoria: impede apagar mês ou
+  categoria com gastos, mas deixa a exclusão da conta apagar tudo. Testado.
+- **D-008-13**: regras que cruzam modelos em `gastos/services/gastos.py` (`RegraViolada`), como
+  manda o `docs/arquitetura.md`; a regra de mês fechado da spec 007 foi para lá também.
+- **D-008-14**: totais em `GET /api/meses/<id>/totais/` (maior total primeiro; empate em ordem
+  alfabética). Lista de gastos com filtros `?mes=` e `?categoria=`, sem paginação.
+- **D-008-15**: o kit de isolamento ganhou o gancho `montar_payload_criacao(usuario)`, porque o
+  payload de um gasto precisa do mês e da categoria da própria pessoa.
+- **D-008-16**: `core/dinheiro.py` com `arredondar` (ROUND_HALF_UP, 2 casas), no `core` porque
+  cenários e parcelas vão usar a mesma regra.
+
+**Resultado**: backend 387 testes, interface 85. Quickstart S1 a S7 validado com `curl`; banco
+local deixado sem gastos e meses de teste (a categoria Lazer da Ana foi recriada, com outro id).

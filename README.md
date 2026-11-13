@@ -15,8 +15,9 @@ O sistema tem três partes, todas em containers Docker:
 > Estado atual: Sprint 2 em andamento. Pela interface já dá para criar conta, entrar, continuar
 > conectado, sair e gerenciar as **categorias de gasto** (toda conta começa com 7 categorias
 > padrão, cada uma com uma cor). A API tem verificação de saúde, cadastro, sessão, categorias,
-> **meses de referência** e a base de isolamento por usuário que todos os dados financeiros
-> seguem; a tela do mês e os gastos chegam nas próximas entregas (ver [BACKLOG.md](BACKLOG.md)).
+> **meses de referência**, **gastos** (com os totais do mês) e a base de isolamento por usuário
+> que todos os dados financeiros seguem; a tela do mês chega na próxima entrega (ver
+> [BACKLOG.md](BACKLOG.md)).
 
 ---
 
@@ -75,6 +76,9 @@ Isso não afeta os dados do banco. Alterações no código Python (`backend/`) e
 | Categorias (API, exige login) | `GET`/`POST` http://localhost:8000/api/categorias/, `GET`/`PATCH`/`DELETE` `.../categorias/<id>/` |
 | Paleta de cores (API, exige login) | `GET` http://localhost:8000/api/categorias/cores/ |
 | Meses de referência (API, exige login) | `GET`/`POST` http://localhost:8000/api/meses/, `GET`/`PATCH`/`DELETE` `.../meses/<id>/` |
+| Totais do mês (API, exige login) | `GET` http://localhost:8000/api/meses/<id>/totais/ |
+| Gastos (API, exige login) | `GET`/`POST` http://localhost:8000/api/gastos/ (filtros `?mes=<id>` e `?categoria=<id>`), `GET`/`PATCH`/`DELETE` `.../gastos/<id>/` |
+| Formas de pagamento (API, exige login) | `GET` http://localhost:8000/api/gastos/formas-pagamento/ |
 
 Todas as rotas da API ficam sob `http://localhost:8000/api/`. O endereço base sozinho responde
 404, porque não é uma rota. Só saúde, cadastro, entrar e renovar funcionam sem login; **todas as
@@ -130,6 +134,15 @@ maiúsculas ("Pets" e "pets" são o mesmo nome). Detalhes em
 novo). `PATCH` com `{"fechado": true}` fecha o mês e `{"fechado": false}` reabre; mês fechado não
 pode ser excluído. Por enquanto só pela API (a tela é a US-27). Detalhes em
 [specs/007-mes-referencia/contracts/api-meses.md](specs/007-mes-referencia/contracts/api-meses.md).
+
+**Gastos.** Um gasto tem descrição, valor, data, categoria, mês e, se quiser, forma de pagamento
+(dinheiro, débito, crédito ou Pix). O valor vai com **ponto** (`"150.30"`), maior que zero e com
+até 2 casas; a data precisa estar dentro do mês. Mês fechado não aceita lançar, alterar nem
+excluir gastos. `GET /api/meses/<id>/totais/` devolve o total do mês e o de cada categoria, já
+calculados (o sistema usa decimais exatos, nunca ponto flutuante). Mês com gastos não pode ser
+excluído, e para excluir uma categoria com gastos é preciso dizer qual categoria os recebe:
+`DELETE /api/categorias/<id>/?mover_para=<id>`. Detalhes em
+[specs/008-lancar-gastos/contracts/api-gastos.md](specs/008-lancar-gastos/contracts/api-gastos.md).
 
 A verificação de saúde responde `{"status": "ok", "database": "ok"}` quando tudo está no ar,
 ou HTTP 503 com `{"status": "error", "database": "unavailable"}` quando o banco não responde. O

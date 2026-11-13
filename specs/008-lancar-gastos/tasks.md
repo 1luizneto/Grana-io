@@ -223,9 +223,17 @@ FR-008).
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T026 [P] Atualizar o `README.md`: estado atual, rotas `/api/gastos/`, `/api/gastos/formas-pagamento/`, `/api/meses/<id>/totais/` e `?mover_para=`, e um parágrafo sobre gastos com link para o [contrato](contracts/api-gastos.md)
-- [ ] T027 Executar o [quickstart.md](quickstart.md) completo (S1 a S7), deixar o banco local como antes e registrar
-- [ ] T028 Fechar a Definition of Done: suítes verdes, tarefas marcadas, `makemigrations --check`; no `BACKLOG.md`: US-07 (critérios atendidos ☑, com nota de API), US-08 (3 critérios ☑; "confirmação antes de excluir" anotado para a US-27), US-05 (4º critério ☑ pela API; a escolha do destino na tela vai para a US-27), RNF-03 (2 primeiros critérios ☑); atualizar `DECISOES-AUTONOMAS.md`
+- [X] T026 [P] Atualizar o `README.md`: estado atual, rotas `/api/gastos/`, `/api/gastos/formas-pagamento/`, `/api/meses/<id>/totais/` e `?mover_para=`, e um parágrafo sobre gastos com link para o [contrato](contracts/api-gastos.md)
+- [X] T027 Executar o [quickstart.md](quickstart.md) completo (S1 a S7), deixar o banco local como antes e registrar
+- [X] T028 Fechar a Definition of Done: suítes verdes, tarefas marcadas, `makemigrations --check`; no `BACKLOG.md`: US-07 (critérios atendidos ☑, com nota de API), US-08 (3 critérios ☑; "confirmação antes de excluir" anotado para a US-27), US-05 (4º critério ☑ pela API; a escolha do destino na tela vai para a US-27), RNF-03 (2 primeiros critérios ☑); atualizar `DECISOES-AUTONOMAS.md`
+
+  > **Resultado (2026-11-13)**: ✅ backend 387 e interface 85 verdes; 28/28 tarefas;
+  > `makemigrations --check` sem pendências.
+  > - T026: README com estado atual, 3 rotas novas e um parágrafo sobre gastos.
+  > - T027: quickstart S1 a S7 numa rodada só, todas as respostas iguais ao contrato; banco local
+  >   com 0 gastos e 0 meses no fim (Lazer da Ana recriada).
+  > - T028: BACKLOG com US-07 toda ☑, US-08 com 3 ☑ (confirmação de tela para a US-27), 4º critério
+  >   da US-05 ☑ e 2 critérios do RNF-03 ☑; decisões em `DECISOES-AUTONOMAS.md` (D-008-*).
 
 **Checkpoint**: feature pronta para PR (depois da 007).
 
