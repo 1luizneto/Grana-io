@@ -123,8 +123,8 @@ function DetalheMes({ mes, avisar }) {
             salvar={aoSalvar}
             aoCancelar={() => setEmEdicao(null)}
           />
-          <section className="gastos-mes">
-            <h2>Gastos</h2>
+          <section className="gastos-mes" aria-labelledby={`gastos-${mes.id}`}>
+            <h2 id={`gastos-${mes.id}`}>Gastos</h2>
             <TabelaGastos
               mes={mes}
               gastos={gastos}

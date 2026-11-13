@@ -457,3 +457,74 @@ describe('tela do mês: corrigir e excluir gastos (US3)', () => {
     confirmar.mockRestore()
   })
 })
+
+describe('tela do mês: filtrar e ordenar (US4)', () => {
+  const PARA_ORDENAR = [
+    gasto(51, 'A', '999.99', '2026-10-01', '', 3),
+    gasto(52, 'B', '1234.56', '2026-10-02', '', 5),
+    gasto(53, 'C', '10.00', '2026-10-03', '', 3),
+    gasto(54, 'D', '10.00', '2026-10-04', '', 5),
+  ]
+  const abrirParaOrdenar = (lista = PARA_ORDENAR) =>
+    abrir({ rota: '/meses/7', rotas: { '/gastos/?mes=7': () => json(200, lista) } })
+  const descricoes = () =>
+    linhasDaTabela().map((linha) => within(linha).getAllByRole('cell')[1].textContent)
+  const regiaoGastos = () => screen.getByRole('region', { name: 'Gastos' })
+
+  it('filtra por categoria e volta a mostrar todas', async () => {
+    const { pessoa } = abrirParaOrdenar()
+    await screen.findByRole('table')
+    const filtro = within(regiaoGastos()).getByRole('combobox', { name: 'Filtrar por categoria' })
+    expect(within(filtro).getAllByRole('option').map((opcao) => opcao.textContent)).toEqual([
+      'Todas as categorias',
+      'Alimentação',
+      'Transporte',
+    ])
+
+    await pessoa.selectOptions(filtro, '5')
+    expect(descricoes()).toEqual(['B', 'D'])
+
+    await pessoa.selectOptions(filtro, '')
+    expect(descricoes()).toEqual(['A', 'B', 'C', 'D'])
+  })
+
+  it('filtro sem gastos: "Nenhum gasto nesta categoria."', async () => {
+    const { pessoa } = abrirParaOrdenar([PARA_ORDENAR[0]])
+    await screen.findByRole('table')
+
+    await pessoa.selectOptions(
+      within(regiaoGastos()).getByRole('combobox', { name: 'Filtrar por categoria' }),
+      '5',
+    )
+
+    expect(screen.getByText('Nenhum gasto nesta categoria.')).toBeInTheDocument()
+  })
+
+  it.each([
+    ['maior-valor', ['B', 'A', 'C', 'D']],
+    ['menor-valor', ['C', 'D', 'A', 'B']],
+    ['data-recente', ['D', 'C', 'B', 'A']],
+    ['data-antiga', ['A', 'B', 'C', 'D']],
+  ])('ordena por %s (empates na ordem da API)', async (ordem, esperado) => {
+    const { pessoa } = abrirParaOrdenar()
+    await screen.findByRole('table')
+    const ordenar = within(regiaoGastos()).getByRole('combobox', { name: 'Ordenar por' })
+
+    await pessoa.selectOptions(ordenar, ordem)
+
+    expect(descricoes()).toEqual(esperado)
+  })
+
+  it('as opções de ordem têm nomes claros', async () => {
+    abrirParaOrdenar()
+    await screen.findByRole('table')
+    const ordenar = within(regiaoGastos()).getByRole('combobox', { name: 'Ordenar por' })
+
+    expect(within(ordenar).getAllByRole('option').map((opcao) => opcao.textContent)).toEqual([
+      'Data (mais antigo)',
+      'Data (mais recente)',
+      'Maior valor',
+      'Menor valor',
+    ])
+  })
+})

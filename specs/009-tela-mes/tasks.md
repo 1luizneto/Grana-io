@@ -115,8 +115,16 @@ de IA). Modo autônomo (decisões em `DECISOES-AUTONOMAS.md`).
 
 **Independent Test**: quickstart S5.
 
-- [ ] T013 [US4] Acrescentar a `Mes.test.jsx`: filtro "Categoria" com "Todas as categorias" + categorias; escolher Transporte mostra só os dele; filtro sem gastos → "Nenhum gasto nesta categoria."; "Ordenar por": "Maior valor" (inclusive "1234.56" antes de "999.99" e empate mantendo a ordem da API), "Menor valor", "Data (mais recente)" (inverte a da API). Confirmar a **falha**
-- [ ] T014 [US4] Filtro e ordenação na `TabelaGastos` ([R-04](research.md)), com `emCentavos`. Confirmar T013 **verde**
+- [X] T013 [US4] Acrescentar a `Mes.test.jsx`: filtro "Categoria" com "Todas as categorias" + categorias; escolher Transporte mostra só os dele; filtro sem gastos → "Nenhum gasto nesta categoria."; "Ordenar por": "Maior valor" (inclusive "1234.56" antes de "999.99" e empate mantendo a ordem da API), "Menor valor", "Data (mais recente)" (inverte a da API). Confirmar a **falha**
+- [X] T014 [US4] Filtro e ordenação na `TabelaGastos` ([R-04](research.md)), com `emCentavos`. Confirmar T013 **verde**
+
+  > **Resultado (2026-11-13)**: ✅ interface com 131 verdes (124 + 7); backend 387.
+  > - T013 falhou primeiro (sem filtro nem ordenação).
+  > - O filtro ficou com o rótulo **"Filtrar por categoria"** (o formulário já tem "Categoria");
+  >   contrato ajustado. A seção "Gastos" virou região com nome, para os controles serem achados
+  >   por leitor de tela.
+  > - "Maior valor" compara centavos com `BigInt` ("1234.56" antes de "999.99"); empates mantêm a
+  >   ordem da API (sort estável).
 
 **Checkpoint**: filtrar e ordenar.
 

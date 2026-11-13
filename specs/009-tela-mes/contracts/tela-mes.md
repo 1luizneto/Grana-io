@@ -27,7 +27,7 @@ Menu: "Início", **"Gastos do mês"**, "Categorias".
 5. **Formulário** (`form` "Lançar gasto" ou "Editar gasto"): "Descrição", "Valor", "Data",
    "Categoria", "Forma de pagamento"; botões "Lançar" ("Lançando…") ou "Salvar alterações"
    ("Salvando…") e "Cancelar edição".
-6. **Gastos** (`h2` "Gastos"): `select` "Categoria" do filtro ("Todas as categorias" + categorias)
+6. **Gastos** (`h2` "Gastos"): `select` "Filtrar por categoria" ("Todas as categorias" + categorias)
    e `select` "Ordenar por" ("Data (mais antigo)", "Data (mais recente)", "Maior valor", "Menor
    valor"); tabela com Data, Descrição, Categoria, Pagamento, Valor e Ações ("Editar <descrição>",
    "Excluir <descrição>").
