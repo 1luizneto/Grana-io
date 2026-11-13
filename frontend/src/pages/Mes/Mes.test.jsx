@@ -458,6 +458,102 @@ describe('tela do mês: corrigir e excluir gastos (US3)', () => {
   })
 })
 
+describe('tela do mês: fechar, reabrir e excluir o mês (US5)', () => {
+  // Meses com estado: o PATCH muda o "fechado" que o GET seguinte devolve.
+  function abrirComEstado(rotasExtras = {}) {
+    let meses = MESES.map((mes) => ({ ...mes }))
+    return abrir({
+      rota: '/meses/7',
+      rotas: {
+        ...COM_GASTOS,
+        '/meses/': () => json(200, meses),
+        '/meses/7/': (opcoes) => {
+          if (opcoes?.method === 'PATCH') {
+            const { fechado } = JSON.parse(opcoes.body)
+            meses = meses.map((mes) => (mes.id === 7 ? { ...mes, fechado } : mes))
+            return json(200, meses.find((mes) => mes.id === 7))
+          }
+          meses = meses.filter((mes) => mes.id !== 7)
+          return json(204)
+        },
+        ...rotasExtras,
+      },
+    })
+  }
+
+  it('fechar desabilita lançar, editar e excluir gastos; reabrir devolve', async () => {
+    const { fetch, pessoa } = abrirComEstado()
+    await screen.findByRole('table')
+
+    await pessoa.click(screen.getByRole('button', { name: 'Fechar mês' }))
+
+    await esperarSucesso('Mês fechado.')
+    expect(corpo(chamadas(fetch, 'PATCH', '/meses/7/')[0])).toEqual({ fechado: true })
+    expect(
+      await screen.findByText('Mês fechado. Reabra o mês para lançar ou alterar gastos.'),
+    ).toBeInTheDocument()
+    expect(screen.getByText('Fechado')).toBeInTheDocument()
+    expect(within(formularioGasto()).getByLabelText('Descrição')).toBeDisabled()
+    expect(screen.queryByRole('button', { name: 'Editar Mercado' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Excluir Mercado' })).not.toBeInTheDocument()
+
+    await pessoa.click(screen.getByRole('button', { name: 'Reabrir mês' }))
+
+    await esperarSucesso('Mês reaberto.')
+    expect(corpo(chamadas(fetch, 'PATCH', '/meses/7/')[1])).toEqual({ fechado: false })
+    expect(await screen.findByRole('button', { name: 'Editar Mercado' })).toBeInTheDocument()
+    expect(within(formularioGasto()).getByLabelText('Descrição')).toBeEnabled()
+  })
+
+  it('excluir o mês pede confirmação e vai para outro mês', async () => {
+    const confirmar = vi
+      .spyOn(window, 'confirm')
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(true)
+    const { fetch, pessoa } = abrirComEstado()
+    await screen.findByRole('table')
+
+    await pessoa.click(screen.getByRole('button', { name: 'Excluir mês' }))
+    expect(confirmar).toHaveBeenCalledWith('Excluir o mês 10/2026?')
+    expect(chamadas(fetch, 'DELETE')).toHaveLength(0)
+
+    await pessoa.click(screen.getByRole('button', { name: 'Excluir mês' }))
+
+    await esperarSucesso('Mês excluído.')
+    await waitFor(() => expect(local()).toHaveTextContent('/meses/6'))
+    confirmar.mockRestore()
+  })
+
+  it('erro ao excluir o mês (com gastos) vira alerta', async () => {
+    const confirmar = vi.spyOn(window, 'confirm').mockReturnValue(true)
+    const { pessoa } = abrirComEstado({
+      '/meses/7/': () => json(400, { detail: 'Exclua ou mova os gastos antes de excluir o mês.' }),
+    })
+    await screen.findByRole('table')
+
+    await pessoa.click(screen.getByRole('button', { name: 'Excluir mês' }))
+
+    expect(
+      await screen.findByText('Exclua ou mova os gastos antes de excluir o mês.'),
+    ).toHaveAttribute('role', 'alert')
+    expect(local()).toHaveTextContent('/meses/7')
+    confirmar.mockRestore()
+  })
+
+  it('mês já fechado abre com o aviso e sem ações nos gastos', async () => {
+    abrir({
+      rota: '/meses/6',
+      rotas: { '/gastos/?mes=6': () => json(200, [{ ...GASTOS[0], mes: 6, data: '2026-09-02' }]) },
+    })
+
+    expect(
+      await screen.findByText('Mês fechado. Reabra o mês para lançar ou alterar gastos.'),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Reabrir mês' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Editar Feira' })).not.toBeInTheDocument()
+  })
+})
+
 describe('tela do mês: filtrar e ordenar (US4)', () => {
   const PARA_ORDENAR = [
     gasto(51, 'A', '999.99', '2026-10-01', '', 3),

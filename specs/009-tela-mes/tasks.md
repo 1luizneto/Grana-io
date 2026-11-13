@@ -134,8 +134,14 @@ de IA). Modo autônomo (decisões em `DECISOES-AUTONOMAS.md`).
 
 **Independent Test**: quickstart S6.
 
-- [ ] T015 [US5] Acrescentar a `Mes.test.jsx`: "Fechar mês" → `PATCH /meses/<id>/` `{"fechado": true}`, "Mês fechado.", aviso de mês fechado, formulário desabilitado e sem "Editar"/"Excluir" nas linhas, situação "Fechado"; "Reabrir mês" → `{"fechado": false}` e "Mês reaberto."; "Excluir mês" pergunta `Excluir o mês 11/2026?`; confirmando → `DELETE`, "Mês excluído." e volta a `/meses` (escolhe outro); erro (mês com gastos) → alerta com a mensagem da API. Confirmar a **falha**
-- [ ] T016 [US5] Ações do mês em `Mes.jsx` (com o `useMeses`) e `desabilitado` no formulário e na tabela. Confirmar T015 **verde**
+- [X] T015 [US5] Acrescentar a `Mes.test.jsx`: "Fechar mês" → `PATCH /meses/<id>/` `{"fechado": true}`, "Mês fechado.", aviso de mês fechado, formulário desabilitado e sem "Editar"/"Excluir" nas linhas, situação "Fechado"; "Reabrir mês" → `{"fechado": false}` e "Mês reaberto."; "Excluir mês" pergunta `Excluir o mês 11/2026?`; confirmando → `DELETE`, "Mês excluído." e volta a `/meses` (escolhe outro); erro (mês com gastos) → alerta com a mensagem da API. Confirmar a **falha**
+- [X] T016 [US5] Ações do mês em `Mes.jsx` (com o `useMeses`) e `desabilitado` no formulário e na tabela. Confirmar T015 **verde**
+
+  > **Resultado (2026-11-13)**: ✅ interface com 135 verdes (131 + 4); backend 387.
+  > - T015 falhou primeiro (sem botões do mês).
+  > - Com o mês fechado: aviso fixo, `fieldset` do formulário desabilitado e tabela sem a coluna
+  >   de ações; uma edição aberta é abandonada ao fechar.
+  > - Excluir o mês volta para `/meses`, que escolhe outro mês pela regra da US1.
 
 **Checkpoint**: ciclo do mês pela tela.
 
