@@ -7,6 +7,7 @@ views traduzem para a resposta HTTP.
 from dataclasses import dataclass, field
 from decimal import Decimal
 
+from django.db import transaction
 from django.db.models import Count, Sum
 from django.db.models.functions import Collate, Lower
 
@@ -24,6 +25,31 @@ def exigir_mes_aberto(*meses):
             raise RegraViolada(
                 f"O mês {mes.rotulo} está fechado. Reabra o mês para alterar os gastos."
             )
+
+
+def verificar_exclusao_do_mes(mes):
+    """Mês fechado (spec 007) e mês com gastos (FR-009) não se excluem."""
+    if mes.fechado:
+        raise RegraViolada("Reabra o mês antes de excluí-lo.")
+    if mes.gastos.exists():
+        raise RegraViolada("Exclua ou mova os gastos antes de excluir o mês.")
+
+
+@transaction.atomic
+def excluir_categoria(categoria, destino):
+    """Exclui a categoria; os gastos dela passam antes para ``destino`` (FR-010; research R-07).
+
+    ``destino`` já vem conferido pela view (da mesma pessoa e diferente de ``categoria``). Gastos
+    de meses fechados também mudam de categoria: o total do mês não muda (Clarifications).
+    """
+    gastos = categoria.gastos.all()
+    if gastos.exists():
+        if destino is None:
+            raise RegraViolada(
+                "Esta categoria tem gastos. Escolha outra categoria para recebê-los."
+            )
+        gastos.update(categoria=destino)
+    categoria.delete()
 
 
 @dataclass

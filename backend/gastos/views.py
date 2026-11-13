@@ -17,7 +17,13 @@ from gastos.serializers import (
     MesReferenciaSerializer,
     TotaisDoMesSerializer,
 )
-from gastos.services.gastos import RegraViolada, exigir_mes_aberto, totais_do_mes
+from gastos.services.gastos import (
+    RegraViolada,
+    excluir_categoria,
+    exigir_mes_aberto,
+    totais_do_mes,
+    verificar_exclusao_do_mes,
+)
 
 
 def salvar_ou_erro_de_unicidade(salvar, erro):
@@ -62,6 +68,26 @@ class CategoriaViewSet(FiltroPorDonoMixin, ModelViewSet):
             lambda: super(CategoriaViewSet, self).perform_update(serializer), self.ERRO_NOME_REPETIDO
         )
 
+    DESTINO_INVALIDO = {"mover_para": ["Escolha outra categoria sua para receber os gastos."]}
+
+    def perform_destroy(self, instance):
+        # ?mover_para=<id>: categoria que recebe os gastos da excluída (spec 008, research R-07).
+        with regras_como_erro_400():
+            excluir_categoria(instance, self._destino(instance))
+
+    def _destino(self, categoria):
+        valor = self.request.query_params.get("mover_para")
+        if valor is None:
+            return None
+        destino = (
+            self.get_queryset().exclude(pk=categoria.pk).filter(pk=valor).first()
+            if valor.isdigit()
+            else None
+        )
+        if destino is None:
+            raise ValidationError(self.DESTINO_INVALIDO)
+        return destino
+
     @action(detail=False)
     def cores(self, request):
         """Paleta de cores aceitas, na ordem de exibição (FR-013; contracts/api-categorias.md)."""
@@ -95,10 +121,9 @@ class MesReferenciaViewSet(FiltroPorDonoMixin, ModelViewSet):
         return Response(TotaisDoMesSerializer(totais_do_mes(self.get_object())).data)
 
     def perform_destroy(self, instance):
-        # Mês fechado protege o histórico (FR-005; research R-05). A US-07 acrescenta aqui a
-        # recusa de mês com gastos: "Exclua ou mova os gastos antes de excluir o mês." (FR-010).
-        if instance.fechado:
-            raise ValidationError({"detail": "Reabra o mês antes de excluí-lo."})
+        # Mês fechado e mês com gastos não se excluem (spec 007 FR-005; spec 008 FR-009).
+        with regras_como_erro_400():
+            verificar_exclusao_do_mes(instance)
         super().perform_destroy(instance)
 
 

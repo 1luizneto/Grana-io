@@ -496,3 +496,73 @@ def test_tirar_de_mes_fechado(usuario, cliente_autenticado):
 
     assert resposta.status_code == 400
     assert resposta.json() == MES_FECHADO
+
+
+# Excluir mês e categoria sem perder gastos (US4; FR-009, FR-010)
+
+DESTINO_INVALIDO = {"mover_para": ["Escolha outra categoria sua para receber os gastos."]}
+
+
+def test_mes_com_gastos_nao_se_exclui(usuario, cliente_autenticado):
+    gasto = _gasto(usuario)
+
+    resposta = cliente_autenticado.delete(f"/api/meses/{gasto.mes.pk}/")
+
+    assert resposta.status_code == 400
+    assert resposta.json() == {"detail": "Exclua ou mova os gastos antes de excluir o mês."}
+    assert MesReferencia.objects.filter(pk=gasto.mes.pk).exists()
+
+
+def _url_categoria(categoria, **params):
+    consulta = "".join(f"?{chave}={valor}" for chave, valor in params.items())
+    return f"/api/categorias/{categoria.pk}/{consulta}"
+
+
+def test_categoria_com_gastos_sem_destino(usuario, cliente_autenticado):
+    gasto = _gasto(usuario)
+
+    resposta = cliente_autenticado.delete(_url_categoria(gasto.categoria))
+
+    assert resposta.status_code == 400
+    assert resposta.json() == {
+        "detail": "Esta categoria tem gastos. Escolha outra categoria para recebê-los."
+    }
+    assert Categoria.objects.filter(pk=gasto.categoria.pk).exists()
+
+
+@pytest.mark.parametrize("destino", ["propria", "inexistente", "da_bia", "abc"])
+def test_destino_invalido(usuario, outro_usuario, cliente_autenticado, destino):
+    gasto = _gasto(usuario)
+    valores = {
+        "propria": gasto.categoria.pk,
+        "inexistente": 999999,
+        "da_bia": _categoria(outro_usuario).pk,
+        "abc": "abc",
+    }
+
+    resposta = cliente_autenticado.delete(
+        _url_categoria(gasto.categoria, mover_para=valores[destino])
+    )
+
+    assert resposta.status_code == 400
+    assert resposta.json() == DESTINO_INVALIDO
+    gasto.refresh_from_db()
+    assert Categoria.objects.filter(pk=gasto.categoria.pk).exists()
+
+
+def test_excluir_categoria_movendo_os_gastos(usuario, cliente_autenticado):
+    gasto = _gasto(usuario)
+    outros = _categoria(usuario, "Outros", "cinza")
+
+    resposta = cliente_autenticado.delete(_url_categoria(gasto.categoria, mover_para=outros.pk))
+
+    assert resposta.status_code == 204
+    gasto.refresh_from_db()
+    assert gasto.categoria == outros
+    assert not Categoria.objects.filter(nome="Alimentação").exists()
+
+
+def test_categoria_sem_gastos_continua_excluivel(usuario, cliente_autenticado):
+    lazer = _categoria(usuario, "Lazer", "rosa")
+
+    assert cliente_autenticado.delete(_url_categoria(lazer)).status_code == 204

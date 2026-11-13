@@ -6,7 +6,13 @@ from decimal import Decimal
 import pytest
 
 from gastos.models import Categoria, Gasto, MesReferencia
-from gastos.services.gastos import RegraViolada, exigir_mes_aberto, totais_do_mes
+from gastos.services.gastos import (
+    RegraViolada,
+    excluir_categoria,
+    exigir_mes_aberto,
+    totais_do_mes,
+    verificar_exclusao_do_mes,
+)
 
 pytestmark = pytest.mark.django_db
 
@@ -116,3 +122,80 @@ def test_totais_com_duas_casas(usuario):
 
     assert str(totais.total) == "10.00"
     assert str(totais.por_categoria[0].total) == "10.00"
+
+
+# Excluir mês e categoria sem perder gastos (FR-009, FR-010)
+
+CATEGORIA_COM_GASTOS = "Esta categoria tem gastos. Escolha outra categoria para recebê-los."
+
+
+def test_mes_aberto_e_vazio_pode_ser_excluido(usuario):
+    verificar_exclusao_do_mes(MesReferencia.objects.create(dono=usuario, mes=10, ano=2026))
+
+
+def test_mes_fechado_nao_pode_ser_excluido(usuario):
+    mes = MesReferencia.objects.create(dono=usuario, mes=10, ano=2026, fechado=True)
+
+    with pytest.raises(RegraViolada, match="^Reabra o mês antes de excluí-lo.$"):
+        verificar_exclusao_do_mes(mes)
+
+
+def test_mes_com_gastos_nao_pode_ser_excluido(usuario):
+    mes = MesReferencia.objects.create(dono=usuario, mes=10, ano=2026)
+    _gasto(mes, _categoria(usuario, "Outros"), "10.00")
+
+    with pytest.raises(RegraViolada, match="^Exclua ou mova os gastos antes de excluir o mês.$"):
+        verificar_exclusao_do_mes(mes)
+
+
+def test_excluir_categoria_sem_gastos(usuario):
+    lazer = _categoria(usuario, "Lazer")
+
+    excluir_categoria(lazer, None)
+
+    assert not Categoria.objects.filter(pk=lazer.pk).exists()
+
+
+def test_categoria_com_gastos_exige_destino(usuario):
+    mes = MesReferencia.objects.create(dono=usuario, mes=10, ano=2026)
+    lazer = _categoria(usuario, "Lazer")
+    gasto = _gasto(mes, lazer, "10.00")
+
+    with pytest.raises(RegraViolada, match=f"^{CATEGORIA_COM_GASTOS}$"):
+        excluir_categoria(lazer, None)
+
+    gasto.refresh_from_db()
+    assert gasto.categoria == lazer
+
+
+def test_move_os_gastos_e_exclui(usuario):
+    outubro = MesReferencia.objects.create(dono=usuario, mes=10, ano=2026)
+    novembro = MesReferencia.objects.create(dono=usuario, mes=11, ano=2026, fechado=True)
+    lazer = _categoria(usuario, "Lazer")
+    outros = _categoria(usuario, "Outros")
+    gastos = [_gasto(outubro, lazer, "10.00"), _gasto(novembro, lazer, "20.00")]
+
+    excluir_categoria(lazer, outros)
+
+    assert not Categoria.objects.filter(pk=lazer.pk).exists()
+    for gasto in gastos:
+        gasto.refresh_from_db()
+        assert gasto.categoria == outros  # inclusive o do mês fechado (Clarifications)
+
+
+def test_exclusao_da_categoria_e_tudo_ou_nada(usuario, monkeypatch):
+    mes = MesReferencia.objects.create(dono=usuario, mes=10, ano=2026)
+    lazer = _categoria(usuario, "Lazer")
+    outros = _categoria(usuario, "Outros")
+    gasto = _gasto(mes, lazer, "10.00")
+
+    def falhar(self, *args, **kwargs):
+        raise RuntimeError("falha simulada")
+
+    monkeypatch.setattr(Categoria, "delete", falhar)
+
+    with pytest.raises(RuntimeError):
+        excluir_categoria(lazer, outros)
+
+    gasto.refresh_from_db()
+    assert gasto.categoria == lazer

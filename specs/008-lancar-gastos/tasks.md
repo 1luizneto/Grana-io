@@ -192,16 +192,30 @@ FR-008).
 
 ### Tests for User Story 4 ⚠️
 
-- [ ] T021 [P] [US4] Acrescentar a `backend/tests/gastos/test_gastos_service.py`: `verificar_exclusao_do_mes` lança `RegraViolada` com "Reabra o mês antes de excluí-lo." (fechado) e "Exclua ou mova os gastos antes de excluir o mês." (com gastos); aberto e vazio passa. `excluir_categoria(categoria, None)` sem gastos exclui; com gastos lança "Esta categoria tem gastos. Escolha outra categoria para recebê-los." e nada muda; com destino move todos os gastos (inclusive de mês fechado) e exclui; se a exclusão falhar depois de mover (simular com `monkeypatch`), nenhum gasto muda de categoria (atômico).
-- [ ] T022 [P] [US4] Acrescentar a `backend/tests/gastos/test_gastos_api.py` e `backend/tests/gastos/test_meses_api.py`: `DELETE` de mês com gastos → 400 com a mensagem; mês fechado continua com "Reabra o mês antes de excluí-lo."; `DELETE` de categoria com gastos sem `mover_para` → 400 `detail`; `?mover_para=` com a própria, inexistente, de outra conta ou `abc` → `400 {"mover_para": ["Escolha outra categoria sua para receber os gastos."]}`; válido → 204 e gastos na categoria destino; categoria sem gastos continua excluível (spec 006).
+- [X] T021 [P] [US4] Acrescentar a `backend/tests/gastos/test_gastos_service.py`: `verificar_exclusao_do_mes` lança `RegraViolada` com "Reabra o mês antes de excluí-lo." (fechado) e "Exclua ou mova os gastos antes de excluir o mês." (com gastos); aberto e vazio passa. `excluir_categoria(categoria, None)` sem gastos exclui; com gastos lança "Esta categoria tem gastos. Escolha outra categoria para recebê-los." e nada muda; com destino move todos os gastos (inclusive de mês fechado) e exclui; se a exclusão falhar depois de mover (simular com `monkeypatch`), nenhum gasto muda de categoria (atômico).
+- [X] T022 [P] [US4] Acrescentar a `backend/tests/gastos/test_gastos_api.py` e `backend/tests/gastos/test_meses_api.py`: `DELETE` de mês com gastos → 400 com a mensagem; mês fechado continua com "Reabra o mês antes de excluí-lo."; `DELETE` de categoria com gastos sem `mover_para` → 400 `detail`; `?mover_para=` com a própria, inexistente, de outra conta ou `abc` → `400 {"mover_para": ["Escolha outra categoria sua para receber os gastos."]}`; válido → 204 e gastos na categoria destino; categoria sem gastos continua excluível (spec 006).
 
   Rodar e confirmar a **falha**.
 
 ### Implementation for User Story 4
 
-- [ ] T023 [US4] Implementar `verificar_exclusao_do_mes(mes)` e `excluir_categoria(categoria, destino)` (`transaction.atomic()`) em `backend/gastos/services/gastos.py`. Confirmar T021 **verde**
-- [ ] T024 [US4] Em `backend/gastos/views.py`: `MesReferenciaViewSet.perform_destroy` passa a chamar `verificar_exclusao_do_mes` (ponto de atenção 5); `CategoriaViewSet.destroy` resolve `mover_para` entre as categorias da pessoa (diferente da própria) e chama `excluir_categoria`. Confirmar T022 **verde** e as suítes de meses e categorias
-- [ ] T025 [US4] Validar o S5 e o S6 do [quickstart.md](quickstart.md) com `curl`
+- [X] T023 [US4] Implementar `verificar_exclusao_do_mes(mes)` e `excluir_categoria(categoria, destino)` (`transaction.atomic()`) em `backend/gastos/services/gastos.py`. Confirmar T021 **verde**
+- [X] T024 [US4] Em `backend/gastos/views.py`: `MesReferenciaViewSet.perform_destroy` passa a chamar `verificar_exclusao_do_mes` (ponto de atenção 5); `CategoriaViewSet.destroy` resolve `mover_para` entre as categorias da pessoa (diferente da própria) e chama `excluir_categoria`. Confirmar T022 **verde** e as suítes de meses e categorias
+- [X] T025 [US4] Validar o S5 e o S6 do [quickstart.md](quickstart.md) com `curl`
+
+  > **Resultado (2026-11-13)**: ✅ backend com 387 verdes (372 + 7 do service + 8 da API);
+  > interface 85.
+  > - T021 falhou primeiro (funções inexistentes); T022 falhou nos 7 casos novos (o banco
+  >   recusava com `RestrictedError`, que virava erro 500).
+  > - T023: `verificar_exclusao_do_mes` (fechado, depois com gastos) e `excluir_categoria`
+  >   (`@transaction.atomic`; com falha simulada na exclusão, os gastos voltam à categoria
+  >   original).
+  > - T024: a regra de mês fechado da spec 007 saiu da view para o service, com a mesma resposta
+  >   (suíte de meses verde); `CategoriaViewSet.perform_destroy` resolve `mover_para` entre as
+  >   categorias da pessoa, excluindo a própria.
+  > - S5 com `curl`: mês com gastos → 400; categoria com gastos → 400 `detail`; destino = a própria
+  >   → 400 `mover_para`; destino Outros → 204 e o gasto aparece em Outros. S6: Bia → 404, `[]`,
+  >   404. Limpeza (S7): gasto e mês excluídos; Lazer (rosa) recriada para a Ana.
 
 **Checkpoint**: histórico protegido; suítes verdes.
 
