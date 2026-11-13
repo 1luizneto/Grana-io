@@ -44,8 +44,8 @@ Executado em **modo autônomo** (decisões em `DECISOES-AUTONOMAS.md`).
 
 **Purpose**: regra de dinheiro, model `Gasto` e o gancho do kit de isolamento.
 
-- [ ] T002 [P] Escrever **primeiro** `backend/tests/core/test_dinheiro.py` ([research R-02](research.md)): `CENTAVO == Decimal("0.01")`; `arredondar(Decimal("2.345")) == Decimal("2.35")` e `arredondar(Decimal("2.344")) == Decimal("2.34")` (ROUND_HALF_UP); `arredondar(Decimal("-2.345")) == Decimal("-2.35")`; `arredondar(Decimal("5")) == Decimal("5.00")` com expoente de 2 casas; `arredondar(0)` aceita inteiro.
-- [ ] T003 [P] Escrever **primeiro** `backend/tests/gastos/test_gastos_models.py` ([data-model.md](data-model.md)):
+- [X] T002 [P] Escrever **primeiro** `backend/tests/core/test_dinheiro.py` ([research R-02](research.md)): `CENTAVO == Decimal("0.01")`; `arredondar(Decimal("2.345")) == Decimal("2.35")` e `arredondar(Decimal("2.344")) == Decimal("2.34")` (ROUND_HALF_UP); `arredondar(Decimal("-2.345")) == Decimal("-2.35")`; `arredondar(Decimal("5")) == Decimal("5.00")` com expoente de 2 casas; `arredondar(0)` aceita inteiro.
+- [X] T003 [P] Escrever **primeiro** `backend/tests/gastos/test_gastos_models.py` ([data-model.md](data-model.md)):
   - `Gasto` herda de `OwnedModel`; `descricao` é `CharField(max_length=100)`; `valor` é `DecimalField(max_digits=12, decimal_places=2)`; `forma_pagamento` é `CharField(max_length=10)` com `choices` = `FORMAS_PAGAMENTO` (`dinheiro`, `debito`, `credito`, `pix`), `blank=True`, `default=""`;
   - `valor` 0 e negativo → `IntegrityError` pela `gastos_gasto_valor_positivo`;
   - excluir mês ou categoria com gasto → `RestrictedError`, e nada é apagado;
@@ -54,9 +54,18 @@ Executado em **modo autônomo** (decisões em `DECISOES-AUTONOMAS.md`).
   - `str(gasto)` devolve a descrição.
 
   Rodar e confirmar a **falha**.
-- [ ] T004 Implementar `backend/core/dinheiro.py`: `CENTAVO`, `arredondar(valor)` (`Decimal(valor).quantize(CENTAVO, ROUND_HALF_UP)`), com docstring citando o Princípio III. Confirmar T002 **verde**
-- [ ] T005 Implementar em `backend/gastos/models.py` `FORMAS_PAGAMENTO` e `Gasto(OwnedModel)` conforme o [data-model](data-model.md) (`mes` e `categoria` com `on_delete=models.RESTRICT, related_name="gastos"`; `ordering = ["data", "id"]`; `CheckConstraint(condition=Q(valor__gt=0), name="gastos_gasto_valor_positivo")`). Gerar `backend/gastos/migrations/0004_gasto.py`. Confirmar T003 **verde** e as guardas de isolamento
-- [ ] T006 Em `backend/tests/isolamento.py`, acrescentar o gancho `montar_payload_criacao(self, usuario)` que devolve `self.payload_criacao`, usado por `test_dono_do_payload_ignorado_na_criacao` ([research R-09](research.md)); atualizar a docstring. Confirmar as subclasses existentes verdes
+- [X] T004 Implementar `backend/core/dinheiro.py`: `CENTAVO`, `arredondar(valor)` (`Decimal(valor).quantize(CENTAVO, ROUND_HALF_UP)`), com docstring citando o Princípio III. Confirmar T002 **verde**
+- [X] T005 Implementar em `backend/gastos/models.py` `FORMAS_PAGAMENTO` e `Gasto(OwnedModel)` conforme o [data-model](data-model.md) (`mes` e `categoria` com `on_delete=models.RESTRICT, related_name="gastos"`; `ordering = ["data", "id"]`; `CheckConstraint(condition=Q(valor__gt=0), name="gastos_gasto_valor_positivo")`). Gerar `backend/gastos/migrations/0004_gasto.py`. Confirmar T003 **verde** e as guardas de isolamento
+- [X] T006 Em `backend/tests/isolamento.py`, acrescentar o gancho `montar_payload_criacao(self, usuario)` que devolve `self.payload_criacao`, usado por `test_dono_do_payload_ignorado_na_criacao` ([research R-09](research.md)); atualizar a docstring. Confirmar as subclasses existentes verdes
+
+  > **Resultado (2026-11-13)**: ✅ backend com 290 verdes (276 + 5 de dinheiro + 9 do model);
+  > interface 85.
+  > - T002 e T003 falharam primeiro (`core.dinheiro` e `Gasto` inexistentes).
+  > - Ponto de atenção 1 confirmado: com `RESTRICT`, excluir mês ou categoria com gasto lança
+  >   `RestrictedError`, e excluir a conta apaga categorias, meses e gastos dela sem erro (os da
+  >   Bia ficam).
+  > - `gastos.0004_gasto` aplicada na subida; `makemigrations --check` sem pendências.
+  > - T006: gancho `montar_payload_criacao(usuario)` no kit; as 4 subclasses existentes verdes.
 
 **Checkpoint**: tabela `gastos_gasto` criada; suítes verdes.
 

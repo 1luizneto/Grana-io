@@ -66,3 +66,40 @@ class MesReferencia(OwnedModel):
 
     def __str__(self):
         return self.rotulo
+
+
+# Formas de pagamento aceitas (US-07; specs/008-lancar-gastos/research.md, R-08).
+FORMAS_PAGAMENTO = [
+    ("dinheiro", "Dinheiro"),
+    ("debito", "Débito"),
+    ("credito", "Crédito"),
+    ("pix", "Pix"),
+]
+
+
+class Gasto(OwnedModel):
+    """Gasto de uma pessoa num mês de referência (US-07; specs/008-lancar-gastos/data-model.md).
+
+    ``RESTRICT`` em mês e categoria: nenhum dos dois se exclui com gastos, mas a exclusão da conta
+    apaga tudo em cascata (o RESTRICT libera quando o gasto também está sendo apagado).
+    """
+
+    descricao = models.CharField(max_length=100)
+    valor = models.DecimalField(max_digits=12, decimal_places=2)
+    data = models.DateField()
+    forma_pagamento = models.CharField(
+        max_length=10, choices=FORMAS_PAGAMENTO, blank=True, default=""
+    )
+    mes = models.ForeignKey(MesReferencia, on_delete=models.RESTRICT, related_name="gastos")
+    categoria = models.ForeignKey(Categoria, on_delete=models.RESTRICT, related_name="gastos")
+
+    class Meta:
+        ordering = ["data", "id"]
+        constraints = [
+            models.CheckConstraint(
+                condition=models.Q(valor__gt=0), name="gastos_gasto_valor_positivo"
+            ),
+        ]
+
+    def __str__(self):
+        return self.descricao

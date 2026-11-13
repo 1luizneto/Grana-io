@@ -15,6 +15,9 @@ casos mínimos da FR-011 (contracts/isolamento.md, "Testes obrigatórios por rec
                 dono=usuario, nome=f"Categoria {Categoria.objects.count() + 1}", cor="azul"
             )
 
+Quando a criação precisa de registros da própria Ana (ex.: o mês e a categoria de um gasto),
+sobrescreva ``montar_payload_criacao(usuario)`` em vez de ``payload_criacao``.
+
 O módulo da subclasse precisa do marcador ``pytest.mark.django_db``. Ana é ``usuario``
 (``cliente_autenticado``) e Bia é ``outro_usuario`` (``cliente_da_bia``), de ``tests/conftest.py``.
 """
@@ -51,6 +54,10 @@ class CasosDeIsolamento:
     def criar(self, usuario):
         """Cria e devolve um registro que pertence a ``usuario``."""
         raise NotImplementedError
+
+    def montar_payload_criacao(self, usuario):
+        """Payload de criação válido para ``usuario`` (padrão: ``payload_criacao``)."""
+        return self.payload_criacao
 
     # Listas (US1; FR-004)
 
@@ -128,7 +135,9 @@ class CasosDeIsolamento:
 
     def test_dono_do_payload_ignorado_na_criacao(self, usuario, outro_usuario, cliente_autenticado):
         resposta = cliente_autenticado.post(
-            self.url_lista, {**self.payload_criacao, "dono": outro_usuario.pk}, format="json"
+            self.url_lista,
+            {**self.montar_payload_criacao(usuario), "dono": outro_usuario.pk},
+            format="json",
         )
 
         assert resposta.status_code == 201
