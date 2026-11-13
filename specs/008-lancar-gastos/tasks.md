@@ -158,7 +158,7 @@ FR-008).
 
 ### Tests for User Story 3 ⚠️
 
-- [ ] T018 [US3] Acrescentar a `backend/tests/gastos/test_gastos_api.py`:
+- [X] T018 [US3] Acrescentar a `backend/tests/gastos/test_gastos_api.py`:
   - `PATCH` de cada campo (descrição, valor, data, forma, categoria) → 200; `PUT` completo → 200;
   - `PATCH {"valor": "0"}` e `PATCH {"data": "2026-11-05"}` → mesmas mensagens do lançamento, nada muda;
   - mover para 11/2026 com data de novembro → 200; mover sem trocar a data → mensagem de data fora de 11/2026;
@@ -169,8 +169,16 @@ FR-008).
 
 ### Implementation for User Story 3
 
-- [ ] T019 [US3] Em `GastoViewSet`: `perform_update` chama `exigir_mes_aberto(instance.mes, validated_data.get("mes"))`; `perform_destroy` chama `exigir_mes_aberto(instance.mes)`. Confirmar T018 **verde**
-- [ ] T020 [US3] Validar o S4 do [quickstart.md](quickstart.md) com `curl` e limpar
+- [X] T019 [US3] Em `GastoViewSet`: `perform_update` chama `exigir_mes_aberto(instance.mes, validated_data.get("mes"))`; `perform_destroy` chama `exigir_mes_aberto(instance.mes)`. Confirmar T018 **verde**
+- [X] T020 [US3] Validar o S4 do [quickstart.md](quickstart.md) com `curl` e limpar
+
+  > **Resultado (2026-11-13)**: ✅ backend com 372 verdes (354 + 18); interface 85.
+  > - T018: falharam primeiro só os 4 casos de mês fechado (alterar, excluir, mover para fechado
+  >   e tirar de fechado), como previsto; os 14 de edição já passavam com o `ModelViewSet` e o
+  >   `validate` da T010 (inclusive mover sem trocar a data → data fora de 11/2026).
+  > - T019: `perform_update` confere o mês atual e o de destino; `perform_destroy`, o atual.
+  > - S4 com `curl`: 200 `"25.00"`; fechar 200; alterar e excluir → 400 de mês fechado; reabrir
+  >   200; excluir 204. Dados de teste excluídos.
 
 **Checkpoint**: corrigir e excluir gastos; suítes verdes.
 

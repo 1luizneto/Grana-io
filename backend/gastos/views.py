@@ -129,6 +129,17 @@ class GastoViewSet(FiltroPorDonoMixin, ModelViewSet):
             exigir_mes_aberto(serializer.validated_data["mes"])
         super().perform_create(serializer)
 
+    def perform_update(self, serializer):
+        # Vale para o mês de origem e para o de destino, ao mover o gasto (FR-008).
+        with regras_como_erro_400():
+            exigir_mes_aberto(serializer.instance.mes, serializer.validated_data.get("mes"))
+        super().perform_update(serializer)
+
+    def perform_destroy(self, instance):
+        with regras_como_erro_400():
+            exigir_mes_aberto(instance.mes)
+        super().perform_destroy(instance)
+
     @action(detail=False, url_path="formas-pagamento")
     def formas_pagamento(self, request):
         """Formas de pagamento aceitas, na ordem de exibição (research R-08)."""

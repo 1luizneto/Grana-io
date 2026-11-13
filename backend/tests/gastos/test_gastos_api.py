@@ -357,3 +357,142 @@ def test_totais_acompanham_as_mudancas(usuario, cliente_autenticado):
 
     cliente_autenticado.delete(_url(gasto))
     assert _totais(cliente_autenticado, mes).json()["total"] == "0.00"
+
+
+# Corrigir e excluir (US3; FR-007, FR-008)
+
+
+@pytest.mark.parametrize(
+    "mudanca, esperado",
+    [
+        ({"descricao": "Feira"}, {"descricao": "Feira"}),
+        ({"valor": "12.50"}, {"valor": "12.50"}),
+        ({"data": "2026-10-20"}, {"data": "2026-10-20"}),
+        ({"forma_pagamento": "credito"}, {"forma_pagamento": "credito"}),
+        ({"forma_pagamento": None}, {"forma_pagamento": ""}),
+    ],
+)
+def test_alterar_cada_campo(usuario, cliente_autenticado, mudanca, esperado):
+    gasto = _gasto(usuario, forma_pagamento="pix")
+
+    resposta = cliente_autenticado.patch(_url(gasto), mudanca, format="json")
+
+    assert resposta.status_code == 200
+    assert resposta.json().items() >= esperado.items()
+
+
+def test_alterar_categoria(usuario, cliente_autenticado):
+    gasto = _gasto(usuario)
+    transporte = _categoria(usuario, "Transporte", "roxo")
+
+    resposta = cliente_autenticado.patch(_url(gasto), {"categoria": transporte.pk}, format="json")
+
+    assert resposta.status_code == 200
+    assert resposta.json()["categoria"] == transporte.pk
+
+
+def test_put_completo(usuario, cliente_autenticado):
+    gasto = _gasto(usuario)
+
+    resposta = cliente_autenticado.put(
+        _url(gasto), _payload(usuario, descricao="Feira", valor="9.90"), format="json"
+    )
+
+    assert resposta.status_code == 200
+    assert resposta.json()["valor"] == "9.90"
+
+
+@pytest.mark.parametrize(
+    "mudanca, erro",
+    [
+        ({"valor": "0"}, {"valor": ["Informe um valor maior que zero."]}),
+        ({"data": "2026-11-05"}, {"data": ["A data precisa estar dentro de 10/2026."]}),
+        ({"descricao": ""}, {"descricao": OBRIGATORIO}),
+    ],
+)
+def test_alterar_com_as_validacoes_do_lancamento(usuario, cliente_autenticado, mudanca, erro):
+    gasto = _gasto(usuario)
+
+    resposta = cliente_autenticado.patch(_url(gasto), mudanca, format="json")
+
+    assert resposta.status_code == 400
+    assert resposta.json() == erro
+    gasto.refresh_from_db()
+    assert (gasto.descricao, gasto.valor, gasto.data) == ("Mercado", Decimal("150.30"), date(2026, 10, 5))
+
+
+def test_mover_de_mes(usuario, cliente_autenticado):
+    gasto = _gasto(usuario)
+    novembro = _mes(usuario, mes=11)
+
+    resposta = cliente_autenticado.patch(
+        _url(gasto), {"mes": novembro.pk, "data": "2026-11-03"}, format="json"
+    )
+
+    assert resposta.status_code == 200
+    assert resposta.json()["mes"] == novembro.pk
+
+
+def test_mover_de_mes_sem_trocar_a_data(usuario, cliente_autenticado):
+    gasto = _gasto(usuario)
+
+    resposta = cliente_autenticado.patch(_url(gasto), {"mes": _mes(usuario, mes=11).pk}, format="json")
+
+    assert resposta.status_code == 400
+    assert resposta.json() == {"data": ["A data precisa estar dentro de 11/2026."]}
+
+
+def test_mover_para_mes_de_outra_conta(usuario, outro_usuario, cliente_autenticado):
+    gasto = _gasto(usuario)
+
+    resposta = cliente_autenticado.patch(_url(gasto), {"mes": _mes(outro_usuario).pk}, format="json")
+
+    assert resposta.status_code == 400
+    assert resposta.json() == {"mes": NAO_ENCONTRADO}
+
+
+def test_excluir(usuario, cliente_autenticado):
+    gasto = _gasto(usuario)
+
+    assert cliente_autenticado.delete(_url(gasto)).status_code == 204
+    assert not Gasto.objects.exists()
+
+
+@pytest.mark.parametrize("metodo", ["patch", "delete"])
+def test_mes_fechado_bloqueia_alterar_e_excluir(usuario, cliente_autenticado, metodo):
+    gasto = _gasto(usuario, mes=_mes(usuario, fechado=True))
+
+    resposta = getattr(cliente_autenticado, metodo)(_url(gasto), {"valor": "1.00"}, format="json")
+
+    assert resposta.status_code == 400
+    assert resposta.json() == MES_FECHADO
+    gasto.refresh_from_db()
+    assert gasto.valor == Decimal("150.30")
+
+
+def test_mover_para_mes_fechado(usuario, cliente_autenticado):
+    gasto = _gasto(usuario)
+    novembro = _mes(usuario, mes=11, fechado=True)
+
+    resposta = cliente_autenticado.patch(
+        _url(gasto), {"mes": novembro.pk, "data": "2026-11-03"}, format="json"
+    )
+
+    assert resposta.status_code == 400
+    assert resposta.json() == {
+        "detail": "O mês 11/2026 está fechado. Reabra o mês para alterar os gastos."
+    }
+    gasto.refresh_from_db()
+    assert gasto.mes == _mes(usuario)
+
+
+def test_tirar_de_mes_fechado(usuario, cliente_autenticado):
+    gasto = _gasto(usuario, mes=_mes(usuario, fechado=True))
+    novembro = _mes(usuario, mes=11)
+
+    resposta = cliente_autenticado.patch(
+        _url(gasto), {"mes": novembro.pk, "data": "2026-11-03"}, format="json"
+    )
+
+    assert resposta.status_code == 400
+    assert resposta.json() == MES_FECHADO
