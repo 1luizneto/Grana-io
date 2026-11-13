@@ -61,8 +61,18 @@ de IA). Modo autônomo (decisões em `DECISOES-AUTONOMAS.md`).
 
 **Independent Test**: quickstart S2.
 
-- [ ] T007 [US1] Escrever `frontend/src/pages/Mes/Mes.test.jsx` (com `renderizarComRotas` nas rotas `/meses` e `/meses/:id`, `simularApi` e data fixada, ponto de atenção 3): `/meses` com o mês de hoje na lista → vai para `/meses/<id dele>`; sem o de hoje → vai para o último; sem meses → "Nenhum mês criado. Crie o primeiro abaixo."; `/meses/999` → "Mês não encontrado."; trocar no `select` "Mês" → endereço muda; criar mês (Novo mês: Novembro, 2026) → `POST /meses/` com `{"mes": 11, "ano": 2026}`, "Mês criado." e endereço do mês novo; padrão do formulário = mês seguinte ao último; mês repetido → "Este mês já foi criado."; fechados aparecem com " (fechado)". Atualizar `frontend/src/components/Layout.test.jsx`: menu com "Gastos do mês" (`/meses`) entre "Início" e "Categorias". Confirmar a **falha**
-- [ ] T008 [US1] Criar `frontend/src/components/SeletorMes.jsx` ([R-06](research.md)) e `frontend/src/pages/Mes/Mes.jsx` com a escolha do mês inicial ([R-01](research.md)), o cabeçalho do mês e o estado vazio; rotas em `frontend/src/App.jsx`; menu em `frontend/src/components/Layout.jsx`. Confirmar T007 **verde**
+- [X] T007 [US1] Escrever `frontend/src/pages/Mes/Mes.test.jsx` (com `renderizarComRotas` nas rotas `/meses` e `/meses/:id`, `simularApi` e data fixada, ponto de atenção 3): `/meses` com o mês de hoje na lista → vai para `/meses/<id dele>`; sem o de hoje → vai para o último; sem meses → "Nenhum mês criado. Crie o primeiro abaixo."; `/meses/999` → "Mês não encontrado."; trocar no `select` "Mês" → endereço muda; criar mês (Novo mês: Novembro, 2026) → `POST /meses/` com `{"mes": 11, "ano": 2026}`, "Mês criado." e endereço do mês novo; padrão do formulário = mês seguinte ao último; mês repetido → "Este mês já foi criado."; fechados aparecem com " (fechado)". Atualizar `frontend/src/components/Layout.test.jsx`: menu com "Gastos do mês" (`/meses`) entre "Início" e "Categorias". Confirmar a **falha**
+- [X] T008 [US1] Criar `frontend/src/components/SeletorMes.jsx` ([R-06](research.md)) e `frontend/src/pages/Mes/Mes.jsx` com a escolha do mês inicial ([R-01](research.md)), o cabeçalho do mês e o estado vazio; rotas em `frontend/src/App.jsx`; menu em `frontend/src/components/Layout.jsx`. Confirmar T007 **verde**
+
+  > **Resultado (2026-11-13)**: ✅ interface com 111 verdes (102 + 9 da tela + menu atualizado);
+  > backend 387.
+  > - T007 falhou primeiro (página inexistente; menu sem "Gastos do mês").
+  > - O seletor do topo ficou com o rótulo **"Escolher mês"** (o formulário "Novo mês" já tem um
+  >   campo "Mês"); contrato ajustado.
+  > - Componente novo `CampoSelecao` (como o `CampoTexto`, para `select`), usado também no
+  >   formulário de gasto.
+  > - Nos testes, a mensagem de sucesso é buscada pelo texto: o `<output>` do auxiliar de rotas
+  >   também tem papel "status".
 
 **Checkpoint**: escolher e criar meses pela tela.
 

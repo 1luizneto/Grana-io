@@ -18,7 +18,7 @@ Menu: "Início", **"Gastos do mês"**, "Categorias".
 ## Estrutura da tela
 
 1. Título "Gastos do mês".
-2. **Seletor**: `select` "Mês" (rótulos MM/AAAA; fechados com " (fechado)") e o formulário "Novo
+2. **Seletor**: `select` "Escolher mês" (rótulos MM/AAAA; fechados com " (fechado)") e o formulário "Novo
    mês" (`select` "Mês" com os nomes dos meses, campo "Ano", botão "Criar mês" / "Criando…").
 3. **Cabeçalho do mês** (`h2` com o rótulo, ex.: "10/2026") com a situação ("Aberto" ou "Fechado")
    e os botões "Fechar mês" / "Reabrir mês" e "Excluir mês".
