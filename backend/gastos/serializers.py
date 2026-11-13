@@ -175,3 +175,18 @@ class GastoSerializer(RegistroComDonoSerializer):
                 {"data": [f"A data precisa estar dentro de {mes.rotulo}."]}
             )
         return attrs
+
+
+class TotalDaCategoriaSerializer(serializers.Serializer):
+    categoria = serializers.IntegerField()
+    nome = serializers.CharField()
+    cor = serializers.CharField()
+    total = serializers.DecimalField(max_digits=14, decimal_places=2)
+    quantidade = serializers.IntegerField()
+
+
+class TotaisDoMesSerializer(serializers.Serializer):
+    """Saída de ``GET /api/meses/{id}/totais/``: valores em texto com 2 casas (research R-06)."""
+
+    total = serializers.DecimalField(max_digits=14, decimal_places=2)
+    por_categoria = TotalDaCategoriaSerializer(many=True)

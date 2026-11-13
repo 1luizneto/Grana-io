@@ -4,6 +4,14 @@ As funções recebem e devolvem objetos Python e sinalizam regra violada com ``R
 views traduzem para a resposta HTTP.
 """
 
+from dataclasses import dataclass, field
+from decimal import Decimal
+
+from django.db.models import Count, Sum
+from django.db.models.functions import Collate, Lower
+
+from core.dinheiro import arredondar
+
 
 class RegraViolada(Exception):
     """Regra de negócio violada; a mensagem é exibida para a pessoa como está."""
@@ -16,3 +24,42 @@ def exigir_mes_aberto(*meses):
             raise RegraViolada(
                 f"O mês {mes.rotulo} está fechado. Reabra o mês para alterar os gastos."
             )
+
+
+@dataclass
+class TotalDaCategoria:
+    categoria: int
+    nome: str
+    cor: str
+    total: Decimal
+    quantidade: int
+
+
+@dataclass
+class TotaisDoMes:
+    total: Decimal
+    por_categoria: list[TotalDaCategoria] = field(default_factory=list)
+
+
+def totais_do_mes(mes):
+    """Total do mês e de cada categoria com gastos nele (FR-006; research R-06).
+
+    Soma em ``Decimal`` no banco; maior total primeiro e, empatando, ordem alfabética com acentos.
+    """
+    linhas = (
+        mes.gastos.values("categoria", "categoria__nome", "categoria__cor")
+        .annotate(total=Sum("valor"), quantidade=Count("id"))
+        .order_by("-total", Collate(Lower("categoria__nome"), "und-x-icu"))
+    )
+    por_categoria = [
+        TotalDaCategoria(
+            categoria=linha["categoria"],
+            nome=linha["categoria__nome"],
+            cor=linha["categoria__cor"],
+            total=arredondar(linha["total"]),
+            quantidade=linha["quantidade"],
+        )
+        for linha in linhas
+    ]
+    total = sum((item.total for item in por_categoria), Decimal(0))
+    return TotaisDoMes(total=arredondar(total), por_categoria=por_categoria)

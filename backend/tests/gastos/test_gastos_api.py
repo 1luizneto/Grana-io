@@ -250,3 +250,110 @@ def test_formas_de_pagamento(cliente_autenticado):
 
 def test_formas_de_pagamento_sem_sessao(cliente):
     assert cliente.get(f"{URL}formas-pagamento/").status_code == 401
+
+
+# Lista e totais (US2; FR-005, FR-006)
+
+
+def _descricoes(resposta):
+    return [g["descricao"] for g in resposta.json()]
+
+
+def test_lista_do_mes_por_data_e_lancamento(usuario, cliente_autenticado):
+    outubro = _mes(usuario)
+    novembro = _mes(usuario, mes=11)
+    _gasto(usuario, descricao="Uber", data=date(2026, 10, 5))
+    _gasto(usuario, descricao="Feira", data=date(2026, 10, 2))
+    _gasto(usuario, descricao="Mercado", data=date(2026, 10, 5))
+    _gasto(usuario, descricao="Novembro", data=date(2026, 11, 1), mes=novembro)
+
+    resposta = cliente_autenticado.get(URL, {"mes": outubro.pk})
+
+    assert resposta.status_code == 200
+    assert _descricoes(resposta) == ["Feira", "Uber", "Mercado"]
+
+
+def test_lista_por_categoria(usuario, cliente_autenticado):
+    transporte = _categoria(usuario, "Transporte", "roxo")
+    _gasto(usuario, descricao="Mercado")
+    _gasto(usuario, descricao="Uber", categoria=transporte)
+    _gasto(usuario, descricao="Ônibus", categoria=transporte, mes=_mes(usuario, mes=11),
+           data=date(2026, 11, 3))
+
+    assert _descricoes(cliente_autenticado.get(URL, {"categoria": transporte.pk})) == [
+        "Uber",
+        "Ônibus",
+    ]
+    assert _descricoes(
+        cliente_autenticado.get(URL, {"categoria": transporte.pk, "mes": _mes(usuario).pk})
+    ) == ["Uber"]
+
+
+@pytest.mark.parametrize(
+    "filtro, mensagem",
+    [("mes", "Informe o número do mês."), ("categoria", "Informe o número da categoria.")],
+)
+def test_filtro_que_nao_e_numero(cliente_autenticado, filtro, mensagem):
+    resposta = cliente_autenticado.get(URL, {filtro: "abc"})
+
+    assert resposta.status_code == 400
+    assert resposta.json() == {filtro: [mensagem]}
+
+
+def test_filtro_com_mes_de_outra_conta(usuario, outro_usuario, cliente_autenticado):
+    _gasto(usuario)
+    _gasto(outro_usuario)
+
+    assert cliente_autenticado.get(URL, {"mes": _mes(outro_usuario).pk}).json() == []
+
+
+def _totais(cliente, mes):
+    return cliente.get(f"/api/meses/{mes.pk}/totais/")
+
+
+def test_totais_do_mes(usuario, cliente_autenticado):
+    alimentacao = _categoria(usuario)
+    transporte = _categoria(usuario, "Transporte", "roxo")
+    _gasto(usuario, valor="150.30")
+    _gasto(usuario, valor="49.70")
+    _gasto(usuario, valor="23.45", categoria=transporte)
+
+    resposta = _totais(cliente_autenticado, _mes(usuario))
+
+    assert resposta.status_code == 200
+    assert resposta.json() == {
+        "total": "223.45",
+        "por_categoria": [
+            {"categoria": alimentacao.pk, "nome": "Alimentação", "cor": "laranja",
+             "total": "200.00", "quantidade": 2},
+            {"categoria": transporte.pk, "nome": "Transporte", "cor": "roxo",
+             "total": "23.45", "quantidade": 1},
+        ],
+    }
+
+
+def test_totais_de_mes_sem_gastos(usuario, cliente_autenticado):
+    assert _totais(cliente_autenticado, _mes(usuario)).json() == {
+        "total": "0.00",
+        "por_categoria": [],
+    }
+
+
+def test_totais_de_mes_de_outra_conta(outro_usuario, cliente_autenticado):
+    resposta = _totais(cliente_autenticado, _mes(outro_usuario))
+
+    assert resposta.status_code == 404
+    assert resposta.json() == {"detail": "Não encontrado."}
+
+
+def test_totais_acompanham_as_mudancas(usuario, cliente_autenticado):
+    mes = _mes(usuario)
+    cliente_autenticado.post(URL, _payload(usuario, valor="10.00"), format="json")
+    assert _totais(cliente_autenticado, mes).json()["total"] == "10.00"
+
+    gasto = Gasto.objects.get()
+    cliente_autenticado.patch(_url(gasto), {"valor": "12.50"}, format="json")
+    assert _totais(cliente_autenticado, mes).json()["total"] == "12.50"
+
+    cliente_autenticado.delete(_url(gasto))
+    assert _totais(cliente_autenticado, mes).json()["total"] == "0.00"

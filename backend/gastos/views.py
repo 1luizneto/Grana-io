@@ -15,8 +15,9 @@ from gastos.serializers import (
     CategoriaSerializer,
     GastoSerializer,
     MesReferenciaSerializer,
+    TotaisDoMesSerializer,
 )
-from gastos.services.gastos import RegraViolada, exigir_mes_aberto
+from gastos.services.gastos import RegraViolada, exigir_mes_aberto, totais_do_mes
 
 
 def salvar_ou_erro_de_unicidade(salvar, erro):
@@ -88,6 +89,11 @@ class MesReferenciaViewSet(FiltroPorDonoMixin, ModelViewSet):
             self.ERRO_MES_REPETIDO,
         )
 
+    @action(detail=True)
+    def totais(self, request, pk=None):
+        """Total do mês e por categoria (specs/008-lancar-gastos/contracts/api-gastos.md)."""
+        return Response(TotaisDoMesSerializer(totais_do_mes(self.get_object())).data)
+
     def perform_destroy(self, instance):
         # Mês fechado protege o histórico (FR-005; research R-05). A US-07 acrescenta aqui a
         # recusa de mês com gastos: "Exclua ou mova os gastos antes de excluir o mês." (FR-010).
@@ -101,6 +107,22 @@ class GastoViewSet(FiltroPorDonoMixin, ModelViewSet):
 
     queryset = Gasto.objects.select_related("mes", "categoria")
     serializer_class = GastoSerializer
+
+    # Filtros da lista, aplicados depois do filtro por dono (research R-05).
+    FILTROS = {"mes": "Informe o número do mês.", "categoria": "Informe o número da categoria."}
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if self.action != "list":
+            return queryset
+        for campo, mensagem in self.FILTROS.items():
+            valor = self.request.query_params.get(campo)
+            if valor is None:
+                continue
+            if not valor.isdigit():
+                raise ValidationError({campo: [mensagem]})
+            queryset = queryset.filter(**{f"{campo}_id": int(valor)})
+        return queryset
 
     def perform_create(self, serializer):
         with regras_como_erro_400():

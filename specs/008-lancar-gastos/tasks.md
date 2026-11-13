@@ -125,16 +125,25 @@ FR-008 na criação, FR-011 a FR-013).
 
 ### Tests for User Story 2 ⚠️
 
-- [ ] T013 [P] [US2] Acrescentar a `backend/tests/gastos/test_gastos_service.py`: `totais_do_mes(mes)` com 0.10 + 0.20 → total `Decimal("0.30")` (SC-003); Mercado 150.30 + Feira 49.70 (Alimentação) e Uber 23.45 (Transporte) → total 223.45, Alimentação 200.00 (2 gastos) antes de Transporte 23.45 (1); empate de total em ordem alfabética; gastos de outro mês e de outra conta não entram; mês sem gastos → total 0.00 e lista vazia; todos os totais com 2 casas.
-- [ ] T014 [P] [US2] Acrescentar a `backend/tests/gastos/test_gastos_api.py`: `GET ?mes=` traz só os do mês, por data e lançamento; `?categoria=` filtra; os dois juntos; `?mes=abc` → `400 {"mes": ["Informe o número do mês."]}`; `?categoria=abc` → mensagem da categoria; `?mes=<id da Bia>` → `[]`; `GET /api/meses/{id}/totais/` no formato do [contrato](contracts/api-gastos.md), com valores em texto; totais de mês da Bia → 404; totais refletem lançamento, alteração e exclusão.
+- [X] T013 [P] [US2] Acrescentar a `backend/tests/gastos/test_gastos_service.py`: `totais_do_mes(mes)` com 0.10 + 0.20 → total `Decimal("0.30")` (SC-003); Mercado 150.30 + Feira 49.70 (Alimentação) e Uber 23.45 (Transporte) → total 223.45, Alimentação 200.00 (2 gastos) antes de Transporte 23.45 (1); empate de total em ordem alfabética; gastos de outro mês e de outra conta não entram; mês sem gastos → total 0.00 e lista vazia; todos os totais com 2 casas.
+- [X] T014 [P] [US2] Acrescentar a `backend/tests/gastos/test_gastos_api.py`: `GET ?mes=` traz só os do mês, por data e lançamento; `?categoria=` filtra; os dois juntos; `?mes=abc` → `400 {"mes": ["Informe o número do mês."]}`; `?categoria=abc` → mensagem da categoria; `?mes=<id da Bia>` → `[]`; `GET /api/meses/{id}/totais/` no formato do [contrato](contracts/api-gastos.md), com valores em texto; totais de mês da Bia → 404; totais refletem lançamento, alteração e exclusão.
 
   Rodar e confirmar a **falha**.
 
 ### Implementation for User Story 2
 
-- [ ] T015 [US2] Implementar `totais_do_mes(mes)` em `backend/gastos/services/gastos.py`: `Sum("valor")` por categoria (com nome, cor e quantidade), total geral, `arredondar` na saída, ordem por total decrescente e nome (`ORDEM_ALFABETICA` das categorias). Devolver estruturas Python (dataclasses `TotaisDoMes` e `TotalDaCategoria`). Confirmar T013 **verde**
-- [ ] T016 [US2] Em `GastoViewSet.get_queryset`, filtros `mes` e `categoria` ([R-05](research.md)); em `MesReferenciaViewSet`, `@action(detail=True) totais` com um serializer de saída (`TotaisDoMesSerializer`, valores com `DecimalField`). Confirmar T014 **verde**
-- [ ] T017 [US2] Validar o S3 do [quickstart.md](quickstart.md) com `curl` e limpar
+- [X] T015 [US2] Implementar `totais_do_mes(mes)` em `backend/gastos/services/gastos.py`: `Sum("valor")` por categoria (com nome, cor e quantidade), total geral, `arredondar` na saída, ordem por total decrescente e nome (`ORDEM_ALFABETICA` das categorias). Devolver estruturas Python (dataclasses `TotaisDoMes` e `TotalDaCategoria`). Confirmar T013 **verde**
+- [X] T016 [US2] Em `GastoViewSet.get_queryset`, filtros `mes` e `categoria` ([R-05](research.md)); em `MesReferenciaViewSet`, `@action(detail=True) totais` com um serializer de saída (`TotaisDoMesSerializer`, valores com `DecimalField`). Confirmar T014 **verde**
+- [X] T017 [US2] Validar o S3 do [quickstart.md](quickstart.md) com `curl` e limpar
+
+  > **Resultado (2026-11-13)**: ✅ backend com 354 verdes (339 + 6 do service + 9 da API);
+  > interface 85.
+  > - T013 e T014 falharam primeiro (`totais_do_mes` inexistente).
+  > - Totais com `values().annotate(Sum, Count)` agrupados por categoria e ordem
+  >   `-total` + nome com collation ICU (empate "Água" antes de "Saúde"); `arredondar` na saída.
+  > - Filtros só na ação `list`; `?mes=abc` → 400 no campo; id de outra conta → `[]`.
+  > - S3 com `curl`: lista Feira, Mercado, Uber; totais `223.45` / Alimentação `200.00` (2) /
+  >   Transporte `23.45` (1). Dados de teste excluídos.
 
 **Checkpoint**: lista e totais pela API; suítes verdes.
 
