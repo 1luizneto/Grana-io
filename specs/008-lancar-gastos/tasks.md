@@ -80,8 +80,8 @@ FR-008 na criação, FR-011 a FR-013).
 
 ### Tests for User Story 1 ⚠️
 
-- [ ] T007 [P] [US1] Escrever `backend/tests/gastos/test_gastos_service.py` (parte de mês fechado): `exigir_mes_aberto(aberto)` não lança; com um mês fechado 10/2026 lança `RegraViolada` com a mensagem "O mês 10/2026 está fechado. Reabra o mês para alterar os gastos."; com vários meses, acusa o primeiro fechado; `None` é ignorado.
-- [ ] T008 [P] [US1] Escrever `backend/tests/gastos/test_gastos_api.py` com:
+- [X] T007 [P] [US1] Escrever `backend/tests/gastos/test_gastos_service.py` (parte de mês fechado): `exigir_mes_aberto(aberto)` não lança; com um mês fechado 10/2026 lança `RegraViolada` com a mensagem "O mês 10/2026 está fechado. Reabra o mês para alterar os gastos."; com vários meses, acusa o primeiro fechado; `None` é ignorado.
+- [X] T008 [P] [US1] Escrever `backend/tests/gastos/test_gastos_api.py` com:
   - `TestIsolamentoGasto(CasosDeIsolamento)`: `modelo = Gasto`, `url_lista = "/api/gastos/"`, `payload_alteracao = {"descricao": "Feira"}`, `criar(usuario)` com mês 10/2026 e categoria "Alimentação" do `usuario` (`get_or_create`) e `montar_payload_criacao(usuario)` com os ids do mês e da categoria da Ana;
   - `POST` válido → 201 com exatamente `{"id", "descricao", "valor", "data", "forma_pagamento", "mes", "categoria"}`, `"valor": "150.30"`;
   - valor numérico em JSON (`150.3`) → `"150.30"`; `forma_pagamento` ausente, `""` e `null` → `""`; `"cheque"` → mensagem de forma de pagamento;
@@ -96,10 +96,22 @@ FR-008 na criação, FR-011 a FR-013).
 
 ### Implementation for User Story 1
 
-- [ ] T009 [US1] Criar `backend/gastos/services/gastos.py` com `RegraViolada(Exception)` e `exigir_mes_aberto(*meses)` ([research R-03](research.md)). Confirmar T007 **verde**
-- [ ] T010 [US1] Implementar `GastoSerializer(RegistroComDonoSerializer)` em `backend/gastos/serializers.py`: `fields = ["id", "descricao", "valor", "data", "forma_pagamento", "mes", "categoria", "dono"]`; `descricao` com obrigatório em `blank`; `valor = DecimalField(max_digits=12, decimal_places=2, min_value=Decimal("0.01"))` com as mensagens do [R-02](research.md); `data` com a mensagem de data inválida; `forma_pagamento` opcional aceitando `null` como `""`, com a mensagem do R-08; `mes` e `categoria` com `RelacionadoDoDonoField`; `validate` confere a data contra o mês (o enviado ou o atual, ponto de atenção 3) com `{"data": ["A data precisa estar dentro de MM/AAAA."]}`
-- [ ] T011 [US1] Implementar `GastoViewSet(FiltroPorDonoMixin, ModelViewSet)` em `backend/gastos/views.py` (`queryset` com `select_related("mes", "categoria")`), com `perform_create` chamando `exigir_mes_aberto` e um tradutor de `RegraViolada` para `ValidationError({"detail": ...})`; ação `formas-pagamento` (`url_path="formas-pagamento"`); registrar `gastos` em `backend/gastos/urls.py`. Confirmar T008 **verde** e as guardas de rotas das specs 003 e 004
-- [ ] T012 [US1] Validar o S2 do [quickstart.md](quickstart.md) com `curl` e limpar
+- [X] T009 [US1] Criar `backend/gastos/services/gastos.py` com `RegraViolada(Exception)` e `exigir_mes_aberto(*meses)` ([research R-03](research.md)). Confirmar T007 **verde**
+- [X] T010 [US1] Implementar `GastoSerializer(RegistroComDonoSerializer)` em `backend/gastos/serializers.py`: `fields = ["id", "descricao", "valor", "data", "forma_pagamento", "mes", "categoria", "dono"]`; `descricao` com obrigatório em `blank`; `valor = DecimalField(max_digits=12, decimal_places=2, min_value=Decimal("0.01"))` com as mensagens do [R-02](research.md); `data` com a mensagem de data inválida; `forma_pagamento` opcional aceitando `null` como `""`, com a mensagem do R-08; `mes` e `categoria` com `RelacionadoDoDonoField`; `validate` confere a data contra o mês (o enviado ou o atual, ponto de atenção 3) com `{"data": ["A data precisa estar dentro de MM/AAAA."]}`
+- [X] T011 [US1] Implementar `GastoViewSet(FiltroPorDonoMixin, ModelViewSet)` em `backend/gastos/views.py` (`queryset` com `select_related("mes", "categoria")`), com `perform_create` chamando `exigir_mes_aberto` e um tradutor de `RegraViolada` para `ValidationError({"detail": ...})`; ação `formas-pagamento` (`url_path="formas-pagamento"`); registrar `gastos` em `backend/gastos/urls.py`. Confirmar T008 **verde** e as guardas de rotas das specs 003 e 004
+- [X] T012 [US1] Validar o S2 do [quickstart.md](quickstart.md) com `curl` e limpar
+
+  > **Resultado (2026-11-13)**: ✅ backend com 339 verdes (290 + 4 do service + 8 do kit + 37 da
+  > API); interface 85.
+  > - T007 e T008 falharam primeiro (`gastos.services.gastos` inexistente).
+  > - Ponto de atenção 2 confirmado: o DRF 3.18 usa as chaves `invalid` (inclusive para `"12,50"`
+  >   e `"NaN"`), `min_value`, `max_decimal_places` e `max_digits` (13 dígitos cai em
+  >   `max_digits` antes de `max_whole_digits`). Texto vazio cairia em `invalid`; o `ValorField`
+  >   o trata como ausente, como o `InteiroNaFaixaField` da spec 007.
+  > - Regra de mês fechado no service (`exigir_mes_aberto`), chamada no `perform_create`; o
+  >   gerenciador `regras_como_erro_400` traduz `RegraViolada` para `400 {"detail"}`.
+  > - S2 com `curl`: 201 `"valor": "150.30"`; 400 maior que zero; 400 data fora de 10/2026; 400
+  >   duas casas. Gasto e mês de teste excluídos.
 
 **Checkpoint**: lançar gastos pela API; suítes verdes.
 

@@ -1,3 +1,5 @@
+from contextlib import contextmanager
+
 from django.db import IntegrityError, transaction
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
@@ -6,13 +8,15 @@ from rest_framework.viewsets import ModelViewSet
 
 from core.mixins import FiltroPorDonoMixin
 from gastos.cores import PALETA
-from gastos.models import Categoria, MesReferencia
+from gastos.models import FORMAS_PAGAMENTO, Categoria, Gasto, MesReferencia
 from gastos.serializers import (
     MENSAGEM_MES_REPETIDO,
     MENSAGEM_NOME_REPETIDO,
     CategoriaSerializer,
+    GastoSerializer,
     MesReferenciaSerializer,
 )
+from gastos.services.gastos import RegraViolada, exigir_mes_aberto
 
 
 def salvar_ou_erro_de_unicidade(salvar, erro):
@@ -27,6 +31,15 @@ def salvar_ou_erro_de_unicidade(salvar, erro):
             salvar()
     except IntegrityError as excecao:
         raise ValidationError(erro) from excecao
+
+
+@contextmanager
+def regras_como_erro_400():
+    """Traduz ``RegraViolada`` do service em ``400 {"detail": "<mensagem>"}`` (research R-03)."""
+    try:
+        yield
+    except RegraViolada as regra:
+        raise ValidationError({"detail": str(regra)}) from regra
 
 
 class CategoriaViewSet(FiltroPorDonoMixin, ModelViewSet):
@@ -81,3 +94,20 @@ class MesReferenciaViewSet(FiltroPorDonoMixin, ModelViewSet):
         if instance.fechado:
             raise ValidationError({"detail": "Reabra o mês antes de excluí-lo."})
         super().perform_destroy(instance)
+
+
+class GastoViewSet(FiltroPorDonoMixin, ModelViewSet):
+    """Gastos da pessoa conectada (specs/008-lancar-gastos/contracts/api-gastos.md)."""
+
+    queryset = Gasto.objects.select_related("mes", "categoria")
+    serializer_class = GastoSerializer
+
+    def perform_create(self, serializer):
+        with regras_como_erro_400():
+            exigir_mes_aberto(serializer.validated_data["mes"])
+        super().perform_create(serializer)
+
+    @action(detail=False, url_path="formas-pagamento")
+    def formas_pagamento(self, request):
+        """Formas de pagamento aceitas, na ordem de exibição (research R-08)."""
+        return Response([{"codigo": codigo, "nome": nome} for codigo, nome in FORMAS_PAGAMENTO])
