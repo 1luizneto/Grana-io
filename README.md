@@ -14,9 +14,9 @@ O sistema tem três partes, todas em containers Docker:
 
 > Estado atual: Sprint 2 em andamento. Pela interface já dá para criar conta, entrar, continuar
 > conectado, sair e gerenciar as **categorias de gasto** (toda conta começa com 7 categorias
-> padrão, cada uma com uma cor). A API tem verificação de saúde, cadastro, sessão, categorias e a
-> base de isolamento por usuário que todos os dados financeiros seguem; meses e gastos chegam nas
-> próximas entregas (ver [BACKLOG.md](BACKLOG.md)).
+> padrão, cada uma com uma cor). A API tem verificação de saúde, cadastro, sessão, categorias,
+> **meses de referência** e a base de isolamento por usuário que todos os dados financeiros
+> seguem; a tela do mês e os gastos chegam nas próximas entregas (ver [BACKLOG.md](BACKLOG.md)).
 
 ---
 
@@ -74,6 +74,7 @@ Isso não afeta os dados do banco. Alterações no código Python (`backend/`) e
 | Própria conta (API, exige login) | `GET` http://localhost:8000/api/usuarios/eu/ |
 | Categorias (API, exige login) | `GET`/`POST` http://localhost:8000/api/categorias/, `GET`/`PATCH`/`DELETE` `.../categorias/<id>/` |
 | Paleta de cores (API, exige login) | `GET` http://localhost:8000/api/categorias/cores/ |
+| Meses de referência (API, exige login) | `GET`/`POST` http://localhost:8000/api/meses/, `GET`/`PATCH`/`DELETE` `.../meses/<id>/` |
 
 Todas as rotas da API ficam sob `http://localhost:8000/api/`. O endereço base sozinho responde
 404, porque não é uma rota. Só saúde, cadastro, entrar e renovar funcionam sem login; **todas as
@@ -122,6 +123,13 @@ Outros (contas antigas também as receberam, uma única vez). Na tela "Categoria
 renomear, trocar a cor (paleta de 12 cores) e excluir. O nome é único na conta, sem diferenciar
 maiúsculas ("Pets" e "pets" são o mesmo nome). Detalhes em
 [specs/006-categorias-gasto/contracts/api-categorias.md](specs/006-categorias-gasto/contracts/api-categorias.md).
+
+**Meses de referência.** Um mês (ex.: 10/2026) agrupa os gastos daquele período e existe uma
+única vez por conta. A lista vem em ordem cronológica, e cada mês traz o rótulo pronto
+(`"rotulo": "10/2026"`). Mês e ano não mudam depois de criados (para corrigir, exclua e crie de
+novo). `PATCH` com `{"fechado": true}` fecha o mês e `{"fechado": false}` reabre; mês fechado não
+pode ser excluído. Por enquanto só pela API (a tela é a US-27). Detalhes em
+[specs/007-mes-referencia/contracts/api-meses.md](specs/007-mes-referencia/contracts/api-meses.md).
 
 A verificação de saúde responde `{"status": "ok", "database": "ok"}` quando tudo está no ar,
 ou HTTP 503 com `{"status": "error", "database": "unavailable"}` quando o banco não responde. O

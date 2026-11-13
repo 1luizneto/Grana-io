@@ -238,12 +238,22 @@ FR-007).
 
 ## Phase 7: Polish & Cross-Cutting Concerns
 
-- [ ] T018 [P] Atualizar o `README.md`: "Estado atual" (meses de referência pela API; tela na US-27) e, na seção de rotas, `/api/meses/` com link para o [contrato](contracts/api-meses.md)
-- [ ] T019 Executar o [quickstart.md](quickstart.md) completo (S1 a S6), deixar o banco local sem meses de teste e registrar o resultado
-- [ ] T020 Fechar a Definition of Done:
+- [X] T018 [P] Atualizar o `README.md`: "Estado atual" (meses de referência pela API; tela na US-27) e, na seção de rotas, `/api/meses/` com link para o [contrato](contracts/api-meses.md)
+- [X] T019 Executar o [quickstart.md](quickstart.md) completo (S1 a S6), deixar o banco local sem meses de teste e registrar o resultado
+- [X] T020 Fechar a Definition of Done:
   - suítes verdes e todas as tarefas marcadas; `makemigrations --check` sem pendências;
   - em `BACKLOG.md`, na US-06, marcar ☑ os 4 critérios, com nota no 4º: o estado "fechado" já existe e protege o mês contra exclusão; o bloqueio dos gastos vem com a US-07 e a US-08 (FR-007);
   - na US-07, acrescentar os critérios herdados "Um mês fechado não aceita novos gastos até ser reaberto." e "Um mês com gastos não pode ser excluído (\"Exclua ou mova os gastos antes de excluir o mês.\")." com a nota *(Herdado da US-06 na clarificação da spec 007-mes-referencia.)*, no mesmo formato do critério herdado da US-05.
+
+  > **Resultado (2026-11-13)**: ✅ backend 276 e interface 85 verdes; 20/20 tarefas marcadas;
+  > `makemigrations --check` sem pendências.
+  > - T018: README com o estado atual, a rota `/api/meses/` e um parágrafo sobre os meses.
+  > - T019 (quickstart): S1 `sh testar.sh` verde; S2 201 / 400 "Este mês já foi criado." / 201 da
+  >   Bia / 400 com as duas mensagens; S3 `['01/2026', '10/2026', '03/2027']`; S4 200 / 400 "Reabra
+  >   o mês antes de excluí-lo." / 200 / 204; S5 400 de mês imutável e 404 no mês da Bia; S6 banco
+  >   local sem nenhum mês.
+  > - T020: US-06 com os 4 critérios ☑ (nota no 4º); US-07 com os 2 critérios herdados.
+  > - Fase executada em modo autônomo, a pedido do responsável (ver `DECISOES-AUTONOMAS.md`).
 
 **Checkpoint**: feature pronta para PR na `main`.
 
