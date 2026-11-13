@@ -5,7 +5,7 @@ from decimal import Decimal
 
 import pytest
 
-from gastos.models import Categoria, Gasto, MesReferencia
+from gastos.models import Categoria, Gasto, GastoFixo, MesReferencia
 from tests.isolamento import CasosDeIsolamento
 
 pytestmark = pytest.mark.django_db
@@ -86,8 +86,72 @@ def test_lancar(usuario, cliente_autenticado):
         "forma_pagamento": "pix",
         "mes": payload["mes"],
         "categoria": payload["categoria"],
+        "fixo": None,
     }
     assert Gasto.objects.get().dono == usuario
+
+
+# Repetir todo mês (spec 010, US1; research R-04)
+
+
+def test_repetir_cria_o_gasto_fixo(usuario, cliente_autenticado):
+    payload = _payload(usuario, data="2026-10-10", repetir=True)
+
+    resposta = cliente_autenticado.post(URL, payload, format="json")
+
+    assert resposta.status_code == 201
+    fixo = GastoFixo.objects.get()
+    assert resposta.json()["fixo"] == fixo.pk
+    assert Gasto.objects.get().fixo == fixo
+    assert (fixo.descricao, fixo.valor, fixo.categoria_id, fixo.forma_pagamento) == (
+        "Mercado",
+        Decimal("150.30"),
+        payload["categoria"],
+        "pix",
+    )
+    assert (fixo.dia_vencimento, fixo.inicio, fixo.fim, fixo.ativo) == (
+        10,
+        date(2026, 10, 1),
+        None,
+        True,
+    )
+    assert fixo.dono == usuario
+
+
+def test_repetir_em_mes_fechado(usuario, cliente_autenticado):
+    _mes(usuario, fechado=True)
+
+    resposta = cliente_autenticado.post(URL, _payload(usuario, repetir=True), format="json")
+
+    assert resposta.status_code == 400
+    assert not GastoFixo.objects.exists()
+
+
+def test_repetir_e_tudo_ou_nada(usuario, cliente_autenticado, monkeypatch):
+    import gastos.views
+
+    def falhar(gasto):
+        raise RuntimeError("falha simulada")
+
+    monkeypatch.setattr(gastos.views, "criar_fixo_do_gasto", falhar)
+    cliente_autenticado.raise_request_exception = False
+
+    resposta = cliente_autenticado.post(URL, _payload(usuario, repetir=True), format="json")
+
+    assert resposta.status_code == 500
+    assert not Gasto.objects.exists()
+    assert not GastoFixo.objects.exists()
+
+
+def test_repetir_e_ignorado_na_alteracao(usuario, cliente_autenticado):
+    gasto = _gasto(usuario)
+
+    resposta = cliente_autenticado.patch(
+        f"{URL}{gasto.pk}/", {"repetir": True, "descricao": "Feira"}, format="json"
+    )
+
+    assert resposta.status_code == 200
+    assert not GastoFixo.objects.exists()
 
 
 def test_valor_numerico_sai_com_duas_casas(usuario, cliente_autenticado):

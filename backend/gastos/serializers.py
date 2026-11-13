@@ -1,10 +1,12 @@
+import re
+from datetime import date
 from decimal import Decimal
 
 from rest_framework import serializers
 
 from core.serializers import RegistroComDonoSerializer, RelacionadoDoDonoField
 from gastos.cores import CHOICES
-from gastos.models import FORMAS_PAGAMENTO, Categoria, Gasto, MesReferencia
+from gastos.models import FORMAS_PAGAMENTO, Categoria, Gasto, GastoFixo, MesReferencia
 from gastos.services.categorias import escolher_cor_livre
 
 MENSAGEM_NOME_REPETIDO = "Já existe uma categoria com este nome."
@@ -130,22 +132,13 @@ class ValorField(serializers.DecimalField):
         return super().to_internal_value(data)
 
 
-class GastoSerializer(RegistroComDonoSerializer):
-    """Gasto (specs/008-lancar-gastos/contracts/api-gastos.md).
-
-    A regra de mês fechado envolve dois models e fica no service, chamado pela view (R-04).
-    """
+class CamposDeGastoSerializer(RegistroComDonoSerializer):
+    """Campos comuns ao gasto (spec 008) e ao gasto fixo (spec 010), com as mesmas mensagens."""
 
     descricao = serializers.CharField(
         max_length=100, error_messages={"blank": OBRIGATORIO, "null": OBRIGATORIO}
     )
     valor = ValorField()
-    data = serializers.DateField(
-        error_messages={
-            "invalid": "Informe uma data válida no formato AAAA-MM-DD.",
-            "null": OBRIGATORIO,
-        }
-    )
     forma_pagamento = serializers.ChoiceField(
         choices=FORMAS_PAGAMENTO,
         required=False,
@@ -155,16 +148,44 @@ class GastoSerializer(RegistroComDonoSerializer):
             "invalid_choice": "Escolha uma forma de pagamento: dinheiro, débito, crédito ou Pix."
         },
     )
-    mes = RelacionadoDoDonoField(queryset=MesReferencia.objects.all())
     categoria = RelacionadoDoDonoField(queryset=Categoria.objects.all())
+
+    def validate_forma_pagamento(self, valor):
+        # Sem forma de pagamento é "" no banco e na resposta (spec 008, research R-08).
+        return valor or ""
+
+
+class GastoSerializer(CamposDeGastoSerializer):
+    """Gasto (specs/008-lancar-gastos/contracts/api-gastos.md).
+
+    A regra de mês fechado envolve dois models e fica no service, chamado pela view (R-04).
+    ``repetir`` (só na criação) pede à view que cadastre o gasto como fixo (spec 010, R-04).
+    """
+
+    data = serializers.DateField(
+        error_messages={
+            "invalid": "Informe uma data válida no formato AAAA-MM-DD.",
+            "null": OBRIGATORIO,
+        }
+    )
+    mes = RelacionadoDoDonoField(queryset=MesReferencia.objects.all())
+    repetir = serializers.BooleanField(write_only=True, required=False, default=False)
 
     class Meta:
         model = Gasto
-        fields = ["id", "descricao", "valor", "data", "forma_pagamento", "mes", "categoria", "dono"]
-
-    def validate_forma_pagamento(self, valor):
-        # Sem forma de pagamento é "" no banco e na resposta (research R-08).
-        return valor or ""
+        fields = [
+            "id",
+            "descricao",
+            "valor",
+            "data",
+            "forma_pagamento",
+            "mes",
+            "categoria",
+            "fixo",
+            "repetir",
+            "dono",
+        ]
+        read_only_fields = ["fixo"]
 
     def validate(self, attrs):
         # Num PATCH parcial, confere contra o mês e a data atuais (FR-003).
@@ -190,3 +211,67 @@ class TotaisDoMesSerializer(serializers.Serializer):
 
     total = serializers.DecimalField(max_digits=14, decimal_places=2)
     por_categoria = TotalDaCategoriaSerializer(many=True)
+
+
+class MesAnoField(serializers.Field):
+    """Mês como texto ``AAAA-MM`` (o formato do ``<input type="month">``), gravado como o dia 1
+    (specs/010-gastos-fixos/research.md, R-02)."""
+
+    default_error_messages = {
+        "required": OBRIGATORIO,
+        "null": OBRIGATORIO,
+        "invalid": "Informe o mês no formato AAAA-MM.",
+        "ano": "Informe um ano de 2000 a 2100.",
+    }
+    FORMATO = re.compile(r"(\d{4})-(\d{2})")
+
+    def to_internal_value(self, data):
+        if isinstance(data, str) and not data.strip():
+            if self.allow_null:
+                return None
+            self.fail("required")
+        encontrado = self.FORMATO.fullmatch(data) if isinstance(data, str) else None
+        if not encontrado or not 1 <= int(encontrado.group(2)) <= 12:
+            self.fail("invalid")
+        ano, mes = int(encontrado.group(1)), int(encontrado.group(2))
+        if not 2000 <= ano <= 2100:
+            self.fail("ano")
+        return date(ano, mes, 1)
+
+    def to_representation(self, value):
+        return f"{value.year:04d}-{value.month:02d}"
+
+
+class GastoFixoSerializer(CamposDeGastoSerializer):
+    """Gasto fixo (specs/010-gastos-fixos/contracts/api-fixos.md)."""
+
+    dia_vencimento = InteiroNaFaixaField(
+        min_value=1, max_value=31, mensagem="Informe um dia de 1 a 31."
+    )
+    inicio = MesAnoField()
+    fim = MesAnoField(required=False, allow_null=True)
+
+    class Meta:
+        model = GastoFixo
+        fields = [
+            "id",
+            "descricao",
+            "valor",
+            "categoria",
+            "forma_pagamento",
+            "dia_vencimento",
+            "inicio",
+            "fim",
+            "ativo",
+            "dono",
+        ]
+
+    def validate(self, attrs):
+        # Num PATCH parcial, compara com o início ou o fim atuais (FR-002).
+        inicio = attrs.get("inicio", getattr(self.instance, "inicio", None))
+        fim = attrs.get("fim", getattr(self.instance, "fim", None))
+        if inicio and fim and fim < inicio:
+            raise serializers.ValidationError(
+                {"fim": ["O mês de fim precisa ser igual ou posterior ao de início."]}
+            )
+        return attrs

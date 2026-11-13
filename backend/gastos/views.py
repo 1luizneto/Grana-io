@@ -8,15 +8,17 @@ from rest_framework.viewsets import ModelViewSet
 
 from core.mixins import FiltroPorDonoMixin
 from gastos.cores import PALETA
-from gastos.models import FORMAS_PAGAMENTO, Categoria, Gasto, MesReferencia
+from gastos.models import FORMAS_PAGAMENTO, Categoria, Gasto, GastoFixo, MesReferencia
 from gastos.serializers import (
     MENSAGEM_MES_REPETIDO,
     MENSAGEM_NOME_REPETIDO,
     CategoriaSerializer,
+    GastoFixoSerializer,
     GastoSerializer,
     MesReferenciaSerializer,
     TotaisDoMesSerializer,
 )
+from gastos.services.fixos import criar_fixo_do_gasto
 from gastos.services.gastos import (
     RegraViolada,
     excluir_categoria,
@@ -150,11 +152,17 @@ class GastoViewSet(FiltroPorDonoMixin, ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
+        repetir = serializer.validated_data.pop("repetir", False)
         with regras_como_erro_400():
             exigir_mes_aberto(serializer.validated_data["mes"])
-        super().perform_create(serializer)
+        # "Repetir todo mês" (spec 010, R-04): o gasto e o fixo, tudo ou nada.
+        with transaction.atomic():
+            super().perform_create(serializer)
+            if repetir:
+                criar_fixo_do_gasto(serializer.instance)
 
     def perform_update(self, serializer):
+        serializer.validated_data.pop("repetir", None)  # só vale na criação
         # Vale para o mês de origem e para o de destino, ao mover o gasto (FR-008).
         with regras_como_erro_400():
             exigir_mes_aberto(serializer.instance.mes, serializer.validated_data.get("mes"))
@@ -169,3 +177,10 @@ class GastoViewSet(FiltroPorDonoMixin, ModelViewSet):
     def formas_pagamento(self, request):
         """Formas de pagamento aceitas, na ordem de exibição (research R-08)."""
         return Response([{"codigo": codigo, "nome": nome} for codigo, nome in FORMAS_PAGAMENTO])
+
+
+class GastoFixoViewSet(FiltroPorDonoMixin, ModelViewSet):
+    """Gastos fixos da pessoa conectada (specs/010-gastos-fixos/contracts/api-fixos.md)."""
+
+    queryset = GastoFixo.objects.select_related("categoria")
+    serializer_class = GastoFixoSerializer

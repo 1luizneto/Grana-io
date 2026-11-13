@@ -47,10 +47,18 @@ IA). Modo autônomo (`DECISOES-AUTONOMAS.md`).
 
 ## Phase 3: User Story 1 - Cadastrar um gasto fixo (Priority: P1) 🎯 MVP
 
-- [ ] T004 [P] [US1] Escrever `backend/tests/gastos/test_fixos_api.py`: `TestIsolamentoFixo(CasosDeIsolamento)` (`montar_payload_criacao` com a categoria da Ana; `payload_alteracao = {"valor": "1600.00"}`); `POST` válido → 201 com exatamente as chaves do [contrato](contracts/api-fixos.md) e `"inicio": "2026-11"`, `"fim": null`, `"ativo": true`; dia 0/32/"x" → "Informe um dia de 1 a 31."; `inicio` "11/2026" e "2026-13" → formato; "1999-12" → ano; `fim` antes do início → mensagem no `fim`; `fim` igual ao início aceito; descrição vazia, valor 0 e categoria da Bia → mensagens da spec 008; `GET` em ordem de dia; sem sessão → 401
-- [ ] T005 [P] [US1] Acrescentar a `backend/tests/gastos/test_gastos_api.py`: o gasto tem a chave `"fixo"` (`None` por padrão; ajustar `test_lancar`, ponto de atenção 1); `POST` com `"repetir": true` em 10/2026, data 2026-10-10 → 201, `"fixo"` com o id do fixo novo, fixo com dia 10, início "2026-10", mesmos descrição/valor/categoria/forma; `repetir` em mês fechado → 400 de mês fechado e nenhum fixo criado; falha simulada ao criar o fixo → nenhum gasto criado; `PATCH` com `repetir` não cria fixo. Confirmar a **falha** de T004 e T005
-- [ ] T006 [US1] Implementar `MesAnoField` e `GastoFixoSerializer` em `backend/gastos/serializers.py` ([R-02](research.md), [R-06](research.md)); `GastoSerializer` com `fixo` só leitura e `repetir` só escrita; `GastoFixoViewSet` e a rota `fixos`
-- [ ] T007 [US1] Criar `backend/gastos/services/fixos.py` com `criar_fixo_do_gasto(gasto)` e usá-lo no `GastoViewSet.perform_create` quando `repetir` (numa transação, [R-04](research.md)). Confirmar T004 e T005 **verdes**
+- [X] T004 [P] [US1] Escrever `backend/tests/gastos/test_fixos_api.py`: `TestIsolamentoFixo(CasosDeIsolamento)` (`montar_payload_criacao` com a categoria da Ana; `payload_alteracao = {"valor": "1600.00"}`); `POST` válido → 201 com exatamente as chaves do [contrato](contracts/api-fixos.md) e `"inicio": "2026-11"`, `"fim": null`, `"ativo": true`; dia 0/32/"x" → "Informe um dia de 1 a 31."; `inicio` "11/2026" e "2026-13" → formato; "1999-12" → ano; `fim` antes do início → mensagem no `fim`; `fim` igual ao início aceito; descrição vazia, valor 0 e categoria da Bia → mensagens da spec 008; `GET` em ordem de dia; sem sessão → 401
+- [X] T005 [P] [US1] Acrescentar a `backend/tests/gastos/test_gastos_api.py`: o gasto tem a chave `"fixo"` (`None` por padrão; ajustar `test_lancar`, ponto de atenção 1); `POST` com `"repetir": true` em 10/2026, data 2026-10-10 → 201, `"fixo"` com o id do fixo novo, fixo com dia 10, início "2026-10", mesmos descrição/valor/categoria/forma; `repetir` em mês fechado → 400 de mês fechado e nenhum fixo criado; falha simulada ao criar o fixo → nenhum gasto criado; `PATCH` com `repetir` não cria fixo. Confirmar a **falha** de T004 e T005
+- [X] T006 [US1] Implementar `MesAnoField` e `GastoFixoSerializer` em `backend/gastos/serializers.py` ([R-02](research.md), [R-06](research.md)); `GastoSerializer` com `fixo` só leitura e `repetir` só escrita; `GastoFixoViewSet` e a rota `fixos`
+- [X] T007 [US1] Criar `backend/gastos/services/fixos.py` com `criar_fixo_do_gasto(gasto)` e usá-lo no `GastoViewSet.perform_create` quando `repetir` (numa transação, [R-04](research.md)). Confirmar T004 e T005 **verdes**
+
+  > **Resultado (2026-11-13)**: ✅ backend com 431 verdes (402 + 29); interface 140.
+  > - T004 e T005 falharam primeiro (29 casos: rota inexistente, chave `fixo`, `repetir`).
+  > - Campos comuns de gasto e fixo numa base (`CamposDeGastoSerializer`), com as mesmas
+  >   mensagens; `MesAnoField` para `AAAA-MM`; `dia_vencimento` reaproveita o
+  >   `InteiroNaFaixaField` da spec 007.
+  > - "Repetir todo mês": gasto e fixo na mesma transação; com falha simulada na criação do fixo,
+  >   nenhum dos dois fica.
 
 **Checkpoint**: cadastrar fixos pela API.
 
