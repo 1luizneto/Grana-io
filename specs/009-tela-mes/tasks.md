@@ -82,8 +82,14 @@ de IA). Modo autônomo (decisões em `DECISOES-AUTONOMAS.md`).
 
 **Independent Test**: quickstart S3.
 
-- [ ] T009 [US2] Acrescentar a `Mes.test.jsx`: totais exibidos como a API mandou ("Total do mês" "R$ 223,45"; "Alimentação" "R$ 200,00" "2 gastos"; "1 gasto"); mês sem gastos → "Nenhum gasto neste mês." e "R$ 0,00"; tabela com data DD/MM/AAAA, descrição, categoria, forma pelo nome (ou "—") e valor em R$; lançar "Mercado", "1.234,56", data, Alimentação, Pix → `POST /gastos/` com `{"descricao": "Mercado", "valor": "1234.56", "data": ..., "mes": <id>, "categoria": <id>, "forma_pagamento": "pix"}`, "Gasto lançado.", recarga de gastos e totais, descrição e valor limpos, data e categoria mantidas, foco na descrição; botão "Lançando…" desabilitado durante o envio; erro 400 de campo → mensagem ligada ao campo (`aria-describedby`) e valores mantidos; 400 `detail` → alerta geral; data padrão = hoje dentro do mês, senão dia 1. Confirmar a **falha**
-- [ ] T010 [US2] Criar `frontend/src/components/TotaisMes.jsx`, `frontend/src/components/FormularioGasto.jsx` (modo criar) e `frontend/src/components/TabelaGastos.jsx` (só a tabela) e ligá-los em `Mes.jsx` com o `useGastosDoMes` e o `useCategorias`. Confirmar T009 **verde**
+- [X] T009 [US2] Acrescentar a `Mes.test.jsx`: totais exibidos como a API mandou ("Total do mês" "R$ 223,45"; "Alimentação" "R$ 200,00" "2 gastos"; "1 gasto"); mês sem gastos → "Nenhum gasto neste mês." e "R$ 0,00"; tabela com data DD/MM/AAAA, descrição, categoria, forma pelo nome (ou "—") e valor em R$; lançar "Mercado", "1.234,56", data, Alimentação, Pix → `POST /gastos/` com `{"descricao": "Mercado", "valor": "1234.56", "data": ..., "mes": <id>, "categoria": <id>, "forma_pagamento": "pix"}`, "Gasto lançado.", recarga de gastos e totais, descrição e valor limpos, data e categoria mantidas, foco na descrição; botão "Lançando…" desabilitado durante o envio; erro 400 de campo → mensagem ligada ao campo (`aria-describedby`) e valores mantidos; 400 `detail` → alerta geral; data padrão = hoje dentro do mês, senão dia 1. Confirmar a **falha**
+- [X] T010 [US2] Criar `frontend/src/components/TotaisMes.jsx`, `frontend/src/components/FormularioGasto.jsx` (modo criar) e `frontend/src/components/TabelaGastos.jsx` (só a tabela) e ligá-los em `Mes.jsx` com o `useGastosDoMes` e o `useCategorias`. Confirmar T009 **verde**
+
+  > **Resultado (2026-11-13)**: ✅ interface com 119 verdes (111 + 8); backend 387.
+  > - T009 falhou primeiro em 8 casos (sem totais, tabela e formulário).
+  > - `CampoTexto` passou a aceitar `ref` (React 19) e atributos extras (`min`, `max`,
+  >   `placeholder`, `inputMode`), para devolver o foco à descrição e limitar a data ao mês.
+  > - O formulário já nasce preparado para o modo editar (US3): a página o remonta com `key`.
 
 **Checkpoint**: lançar e ver totais pela tela.
 

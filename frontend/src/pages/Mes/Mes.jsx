@@ -1,7 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import AvisoFormulario from '../../components/AvisoFormulario.jsx'
+import FormularioGasto from '../../components/FormularioGasto.jsx'
 import SeletorMes from '../../components/SeletorMes.jsx'
+import TabelaGastos from '../../components/TabelaGastos.jsx'
+import TotaisMes from '../../components/TotaisMes.jsx'
+import { useCategorias } from '../../hooks/useCategorias.js'
+import { useGastosDoMes } from '../../hooks/useGastosDoMes.js'
 import { useMeses } from '../../hooks/useMeses.js'
 
 // Mês inicial (FR-003): o de hoje, se existir; senão o mais recente da lista (ordem da API).
@@ -60,20 +65,43 @@ export default function Mes() {
             criar={aoCriarMes}
           />
           {id && !mes && <p>Mês não encontrado.</p>}
-          {mes && <DetalheMes key={mes.id} mes={mes} />}
+          {mes && <DetalheMes key={mes.id} mes={mes} avisar={avisar} />}
         </>
       )}
     </section>
   )
 }
 
-function DetalheMes({ mes }) {
+// Um mês: cabeçalho, totais, formulário e tabela. Remontado ao trocar de mês (key).
+function DetalheMes({ mes, avisar }) {
+  const { gastos, totais, formas, carregando, erroCarregar, criar } = useGastosDoMes(mes.id)
+  const { categorias, cores } = useCategorias()
+
+  async function aoLancar(dados) {
+    const resultado = await criar(dados)
+    if (resultado.ok) avisar('sucesso', 'Gasto lançado.')
+    return resultado
+  }
+
   return (
     <div className="detalhe-mes">
       <header className="cabecalho-mes">
         <h2>{mes.rotulo}</h2>
         <span className="situacao-mes">{mes.fechado ? 'Fechado' : 'Aberto'}</span>
       </header>
+      <AvisoFormulario mensagem={erroCarregar} />
+      {carregando ? (
+        <p>Carregando gastos…</p>
+      ) : (
+        <>
+          {totais && <TotaisMes totais={totais} cores={cores} />}
+          <FormularioGasto mes={mes} categorias={categorias} formas={formas} salvar={aoLancar} />
+          <section className="gastos-mes">
+            <h2>Gastos</h2>
+            <TabelaGastos mes={mes} gastos={gastos} categorias={categorias} formas={formas} />
+          </section>
+        </>
+      )}
     </div>
   )
 }

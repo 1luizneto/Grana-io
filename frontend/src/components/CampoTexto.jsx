@@ -9,6 +9,9 @@ export default function CampoTexto({
   aoMudar,
   erros = [],
   autoComplete,
+  inputMode,
+  ref,
+  ...extras
 }) {
   const id = useId()
   const idErros = `${id}-erros`
@@ -18,12 +21,15 @@ export default function CampoTexto({
     <div className="campo">
       <label htmlFor={id}>{rotulo}</label>
       <input
+        ref={ref}
         id={id}
         name={nome}
         type={tipo}
         value={valor}
         onChange={(evento) => aoMudar(evento.target.value)}
         autoComplete={autoComplete}
+        inputMode={inputMode}
+        {...extras}
         aria-invalid={temErros || undefined}
         aria-describedby={temErros ? idErros : undefined}
       />

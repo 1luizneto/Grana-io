@@ -26,6 +26,34 @@ const FORMAS = [
 ]
 const SEM_TOTAIS = { total: '0.00', por_categoria: [] }
 
+const gasto = (id, descricao, valor, data, forma, categoria) => ({
+  id,
+  descricao,
+  valor,
+  data,
+  forma_pagamento: forma,
+  mes: 7,
+  categoria,
+})
+const GASTOS = [
+  gasto(41, 'Feira', '49.70', '2026-10-02', '', 3),
+  gasto(42, 'Mercado', '150.30', '2026-10-05', 'pix', 3),
+  gasto(43, 'Uber', '23.45', '2026-10-05', 'dinheiro', 5),
+]
+const TOTAIS = {
+  total: '223.45',
+  por_categoria: [
+    { categoria: 3, nome: 'Alimentação', cor: 'laranja', total: '200.00', quantidade: 2 },
+    { categoria: 5, nome: 'Transporte', cor: 'roxo', total: '23.45', quantidade: 1 },
+  ],
+}
+
+// Rotas de outubro com os 3 gastos acima.
+const COM_GASTOS = {
+  '/gastos/?mes=7': () => json(200, GASTOS),
+  '/meses/7/totais/': () => json(200, TOTAIS),
+}
+
 // Monta a tela com a API simulada. `rotas` acrescenta ou troca respostas (por fim do endereço).
 function abrir({ rota = '/meses', meses = MESES, rotas = {} } = {}) {
   salvarSessao(LOGIN_OK)
@@ -177,5 +205,152 @@ describe('tela do mês: escolher e criar o mês (US1)', () => {
 
     expect(await within(form).findByRole('alert')).toHaveTextContent('Este mês já foi criado.')
     expect(local()).toHaveTextContent('/meses/7')
+  })
+})
+
+const formularioGasto = (nome = 'Lançar gasto') => screen.getByRole('form', { name: nome })
+const linhasDaTabela = () => within(screen.getByRole('table')).getAllByRole('row').slice(1)
+const textoDasLinhas = () =>
+  linhasDaTabela().map((linha) =>
+    within(linha)
+      .getAllByRole('cell')
+      .slice(0, 5)
+      .map((celula) => celula.textContent),
+  )
+
+describe('tela do mês: lançar gastos e ver os totais (US2)', () => {
+  it('mostra os totais como a API mandou', async () => {
+    abrir({ rota: '/meses/7', rotas: COM_GASTOS })
+
+    const totais = await screen.findByRole('region', { name: 'Totais' })
+    expect(await within(totais).findByText('R$ 223,45')).toBeInTheDocument()
+    expect(within(totais).getByText('Total do mês')).toBeInTheDocument()
+    const itens = within(totais).getAllByRole('listitem')
+    expect(itens[0]).toHaveTextContent('Alimentação')
+    expect(itens[0]).toHaveTextContent('R$ 200,00')
+    expect(itens[0]).toHaveTextContent('2 gastos')
+    expect(itens[1]).toHaveTextContent('Transporte')
+    expect(itens[1]).toHaveTextContent('1 gasto')
+  })
+
+  it('mostra a tabela formatada, na ordem da API', async () => {
+    abrir({ rota: '/meses/7', rotas: COM_GASTOS })
+
+    await screen.findByRole('table')
+    expect(textoDasLinhas()).toEqual([
+      ['02/10/2026', 'Feira', 'Alimentação', '—', 'R$ 49,70'],
+      ['05/10/2026', 'Mercado', 'Alimentação', 'Pix', 'R$ 150,30'],
+      ['05/10/2026', 'Uber', 'Transporte', 'Dinheiro', 'R$ 23,45'],
+    ])
+  })
+
+  it('mês sem gastos: aviso e total zerado', async () => {
+    abrir({ rota: '/meses/7' })
+
+    expect(await screen.findByText('Nenhum gasto neste mês.')).toBeInTheDocument()
+    const totais = screen.getByRole('region', { name: 'Totais' })
+    expect(within(totais).getByText('R$ 0,00')).toBeInTheDocument()
+  })
+
+  it('lança um gasto, recarrega e deixa o formulário pronto para o próximo', async () => {
+    const { fetch, pessoa } = abrir({
+      rota: '/meses/7',
+      rotas: { '/gastos/': () => json(201, { id: 44 }) },
+    })
+    await screen.findByText('Nenhum gasto neste mês.')
+    const form = formularioGasto()
+    const listasAntes = chamadas(fetch, 'GET', '/gastos/?mes=7').length
+
+    await pessoa.type(within(form).getByLabelText('Descrição'), 'Mercado')
+    await pessoa.type(within(form).getByLabelText('Valor'), '1.234,56')
+    await pessoa.selectOptions(within(form).getByRole('combobox', { name: 'Categoria' }), '3')
+    await pessoa.selectOptions(
+      within(form).getByRole('combobox', { name: 'Forma de pagamento' }),
+      'pix',
+    )
+    await pessoa.click(within(form).getByRole('button', { name: 'Lançar' }))
+
+    await esperarSucesso('Gasto lançado.')
+    expect(corpo(chamadas(fetch, 'POST', '/gastos/')[0])).toEqual({
+      descricao: 'Mercado',
+      valor: '1234.56',
+      data: '2026-10-15',
+      mes: 7,
+      categoria: 3,
+      forma_pagamento: 'pix',
+    })
+    expect(chamadas(fetch, 'GET', '/gastos/?mes=7').length).toBeGreaterThan(listasAntes)
+    expect(within(form).getByLabelText('Descrição')).toHaveValue('')
+    expect(within(form).getByLabelText('Valor')).toHaveValue('')
+    expect(within(form).getByLabelText('Data')).toHaveValue('2026-10-15')
+    expect(within(form).getByRole('combobox', { name: 'Categoria' })).toHaveValue('3')
+    expect(within(form).getByRole('combobox', { name: 'Forma de pagamento' })).toHaveValue('')
+    expect(within(form).getByLabelText('Descrição')).toHaveFocus()
+  })
+
+  it('desabilita o botão durante o envio', async () => {
+    let responder
+    const { pessoa } = abrir({
+      rota: '/meses/7',
+      rotas: {
+        '/gastos/': () =>
+          new Promise((resolver) => {
+            responder = resolver
+          }),
+      },
+    })
+    await screen.findByText('Nenhum gasto neste mês.')
+
+    await pessoa.click(within(formularioGasto()).getByRole('button', { name: 'Lançar' }))
+
+    expect(within(formularioGasto()).getByRole('button', { name: 'Lançando…' })).toBeDisabled()
+    responder(json(400, { descricao: ['Este campo é obrigatório.'] }))
+    expect(
+      await within(formularioGasto()).findByRole('button', { name: 'Lançar' }),
+    ).toBeEnabled()
+  })
+
+  it('erro de campo: mensagem ligada ao campo e valores mantidos', async () => {
+    const { pessoa } = abrir({
+      rota: '/meses/7',
+      rotas: { '/gastos/': () => json(400, { valor: ['Informe um valor maior que zero.'] }) },
+    })
+    await screen.findByText('Nenhum gasto neste mês.')
+    const form = formularioGasto()
+
+    await pessoa.type(within(form).getByLabelText('Descrição'), 'Mercado')
+    await pessoa.type(within(form).getByLabelText('Valor'), '0')
+    await pessoa.click(within(form).getByRole('button', { name: 'Lançar' }))
+
+    const valor = within(form).getByLabelText('Valor')
+    await waitFor(() =>
+      expect(valor).toHaveAccessibleDescription('Informe um valor maior que zero.'),
+    )
+    expect(valor).toHaveValue('0')
+    expect(within(form).getByLabelText('Descrição')).toHaveValue('Mercado')
+  })
+
+  it('erro geral da API vira alerta no formulário', async () => {
+    const { pessoa } = abrir({
+      rota: '/meses/7',
+      rotas: {
+        '/gastos/': () =>
+          json(400, { detail: 'O mês 10/2026 está fechado. Reabra o mês para alterar os gastos.' }),
+      },
+    })
+    await screen.findByText('Nenhum gasto neste mês.')
+
+    await pessoa.click(within(formularioGasto()).getByRole('button', { name: 'Lançar' }))
+
+    expect(await within(formularioGasto()).findByRole('alert')).toHaveTextContent(
+      'O mês 10/2026 está fechado.',
+    )
+  })
+
+  it('a data padrão é hoje quando cai no mês; senão, o dia 1', async () => {
+    abrir({ rota: '/meses/6' })
+
+    const form = await screen.findByRole('form', { name: 'Lançar gasto' })
+    expect(within(form).getByLabelText('Data')).toHaveValue('2026-09-01')
   })
 })
